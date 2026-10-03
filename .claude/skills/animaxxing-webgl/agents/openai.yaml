@@ -1,0 +1,7 @@
+interface:
+  display_name: "Animaxxing WebGL"
+  short_description: "GSAP-driven WebGL image planes and shader effects that fall back to the DOM"
+  default_prompt: "Use $animaxxing-webgl with the matching GSAP framework skill to add WebGL image planes and shader effects while keeping this site's images as the accessible fallback."
+
+policy:
+  allow_implicit_invocation: true

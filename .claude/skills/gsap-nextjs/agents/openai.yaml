@@ -1,0 +1,7 @@
+interface:
+  display_name: "GSAP Next.js"
+  short_description: "GSAP page and component lifecycles in Next.js"
+  default_prompt: "Use $gsap-nextjs to add GSAP page transitions and component animation to this Next.js app."
+
+policy:
+  allow_implicit_invocation: true
