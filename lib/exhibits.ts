@@ -270,6 +270,23 @@ const DATA: Exhibit[] = [
     desc: "A section holds still while a timeline plays through it."
   },
   {
+    name: "Stacking cards",
+    group: "scroll",
+    builders: "stackCards",
+    src: "scroll-effects",
+    desc: "Cards pin one over another into a deck, then leave together."
+  },
+  {
+    name: "Zoom-through",
+    group: "scroll",
+    builders: "zoomThrough",
+    src: "scroll-effects",
+    desc: "A word grows until you pass through it into the image, or a window opens to full bleed.",
+    vars: [
+      "Clip"
+    ]
+  },
+  {
     name: "Horizontal run",
     group: "scroll",
     builders: "horizontalRun, runDrift",

@@ -234,7 +234,7 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .flick-btns { display: flex; gap: 10px; }
 /* Scroll stages: a small page that scrolls inside the stage. */
 .ex .stage-art.scroll { padding: 0; }
-.ex .stage-art .win { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.ex .stage-art .win { position: absolute; inset: 0; container-type: size; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
 .ex .stage-art .win:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
 .ex .win .w-pad { height: 100%; min-height: 260px; display: grid; place-items: center; }
 .ex .win .w-pad.dark { background: var(--ink); }
@@ -290,6 +290,15 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win .w-tall { height: 300%; min-height: 900px; }
 .ex .win .w-sticky { position: sticky; top: 0; display: block; width: 100%; object-fit: cover; background: var(--ink); }
 .ex .win .w-bowl { position: relative; min-height: 80%; display: grid; place-items: center; background: var(--ink); color: #fff; padding: 40px var(--gut); }
+.ex .win .w-deck { padding: 0 var(--gut) 40px; }
+.ex .win .w-deckcard { position: relative; display: grid; align-items: end; height: min(240px, 52svh); max-width: 620px; margin: 0 auto 24px; overflow: hidden; background: var(--ink); border: 1px solid rgba(255,255,255,0.35); }
+.ex .win .w-deckcard svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ex .win .w-deckcard b { position: relative; padding: 14px 18px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-size: 13px; }
+.ex .win .w-zoom { position: relative; height: 100cqh; overflow: clip; display: grid; place-items: center; }
+.ex .win .w-zoom > * { position: absolute; inset: 0; }
+.ex .win .w-zoomback, .ex .win .w-zoomclip { width: 100%; height: 100%; }
+.ex .win .w-zoomback svg, .ex .win .w-zoomclip svg { display: block; width: 100%; height: 100%; }
+.ex .win .w-zoomplate { display: block; width: 100%; height: 100%; }
 .ex .win .w-path { min-height: 120%; display: grid; place-items: center; padding: 0 var(--gut); }
 .ex .win .w-path svg { width: min(100%, 900px); overflow: visible; }
 .ex .win .w-path text { fill: currentColor; font-weight: 800; font-stretch: 75%; font-size: 56px; letter-spacing: -0.01em; }

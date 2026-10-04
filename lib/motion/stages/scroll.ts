@@ -15,7 +15,9 @@ import {
   scrollProgress,
   scrollWaypoints,
   scrubStatement,
+  stackCards,
   velocitySkew,
+  zoomThrough,
 } from "../recipes/scroll-effects";
 import { frameSequence, scrubVideo } from "../recipes/media-effects";
 import { morphScrub, pathLoop, pathScrub } from "../recipes/svg-effects";
@@ -270,6 +272,40 @@ const shape = play(["Shape scrub"], ["shape"], SCROLL_HINT, (text) =>
   ),
 );
 
+/* ---------- Stacking cards ---------- */
+
+const stacking = play(["Stacking cards"], ["stack"], SCROLL_HINT, (text) =>
+  windowed(
+    text,
+    `${CUE}<section class="w-deck">${[0, 1, 2, 3].map((k) => `<article class="w-deckcard" data-stack-card>${poster(k + 1, k)}<b>Card ${k + 1}</b></article>`).join("")}</section>${END}`,
+    (win) => [stackCards(all(win, "[data-stack-card]"), { top: 20, offset: 14, scroller: win })],
+  ),
+);
+
+/* ---------- Zoom-through ---------- */
+
+/**
+ * A blue plate with the word cut out of it, so the poster behind shows through the letters. The mask's
+ * text is never painted, so a transparent copy on top gives the m a box to measure: its center sits in
+ * the m's middle stem, a hole in the plate, so the zoom flies through the stem into the poster.
+ */
+const WORD = `font-family="var(--font-archivo), Arial, sans-serif" font-weight="800" font-stretch="75%" font-size="220" letter-spacing="-4" text-anchor="middle" x="500" y="275"`;
+const PLATE = `<svg class="w-zoomplate" viewBox="0 0 1000 400" preserveAspectRatio="xMidYMid slice" aria-label="move."><defs><mask id="zoom-cut"><rect width="1000" height="400" fill="#fff"/><text ${WORD} fill="#000">move.</text></mask></defs><rect width="1000" height="400" fill="#2130ff" mask="url(#zoom-cut)"/><text ${WORD} fill="transparent"><tspan data-zoom-focus>m</tspan>ove.</text></svg>`;
+
+const zoom = play(["Scale", "Clip"], ["scale", "clip"], SCROLL_HINT, (text, p) =>
+  windowed(
+    text,
+    p.variation === "clip"
+      ? `${CUE}<section class="w-zoom"><div class="w-zoomclip">${poster(7, 0)}</div></section>${END}`
+      : `${CUE}<section class="w-zoom"><div class="w-zoomback">${poster(7, 0)}</div>${PLATE}</section>${END}`,
+    (win) => [
+      p.variation === "clip"
+        ? zoomThrough(one(win, ".w-zoom"), one(win, ".w-zoomclip"), { mode: "clip", scroller: win, length: 1.2 })
+        : zoomThrough(one(win, ".w-zoom"), one(win, ".w-zoomplate"), { focus: one(win, "[data-zoom-focus]"), scale: 60, scroller: win, length: 1.2 }),
+    ],
+  ),
+);
+
 /* ---------- Text on path ---------- */
 
 const RING = "M100 20 a80 80 0 1 1 0 160 a80 80 0 1 1 0 -160 a80 80 0 1 1 0 160 a80 80 0 1 1 0 -160";
@@ -305,6 +341,8 @@ export const SCROLL_STAGES: Record<string, StageDef> = {
   "scrubbed-statement": statement,
   parallax: parallaxStage,
   "pinned-scene": pinned,
+  "stacking-cards": stacking,
+  "zoom-through": zoom,
   "horizontal-run": run,
   waypoints,
   progress,

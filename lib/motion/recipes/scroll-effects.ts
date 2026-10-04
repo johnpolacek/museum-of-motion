@@ -495,3 +495,86 @@ export function scrollDirection(
     write(turn);
   });
 }
+
+export type StackOptions = {
+  /** Px from the viewport top where the first card pins. */
+  top?: number;
+  /** Px each later card pins below the one before, so the edges of the deck show. */
+  offset?: number;
+  /** Scale lost per card stacked on top. */
+  shrink?: number;
+  scrub?: number | boolean;
+  scroller?: Scroller;
+};
+
+export function stackCards(
+  cards: HTMLElement[],
+  { top = 80, offset = 16, shrink = 0.05, scrub = SCRUB, scroller }: StackOptions = {},
+): Teardown {
+  if (prefersReducedMotion() || cards.length < 2) return () => {};
+  return own((_dispose, after) => {
+    after(snapshotStyles(cards));
+    const last = cards[cards.length - 1]!;
+    const pinAt = (i: number) => `top top+=${top + i * offset}`;
+    cards.slice(0, -1).forEach((card, i) => {
+      // Every card holds until the last one lands on the deck, then all of them leave together.
+      ScrollTrigger.create({ trigger: card, scroller, start: pinAt(i), endTrigger: last, end: pinAt(cards.length - 1), pin: true, pinSpacing: false });
+      const buried = cards.length - 1 - i;
+      gsap.to(card, {
+        scale: 1 - shrink * buried,
+        transformOrigin: "50% 0%",
+        ease: "none",
+        scrollTrigger: { trigger: cards[i + 1]!, scroller, start: "top bottom", endTrigger: last, end: pinAt(cards.length - 1), scrub },
+      });
+    });
+  });
+}
+
+export type ZoomOptions = {
+  mode?: "scale" | "clip";
+  /** `scale` mode: the part of `target` to fly into, HTML or SVG. Defaults to its center. */
+  focus?: Element;
+  /** `scale` mode: the final scale. */
+  scale?: number;
+  /** `clip` mode: the starting window, as `inset()` arguments. Give all four sides and a radius, so each value tweens to its pair. */
+  inset?: string;
+  /** Pinned distance, in section heights. */
+  length?: number;
+  scrub?: number | boolean;
+  scroller?: Scroller;
+};
+
+export function zoomThrough(
+  section: HTMLElement,
+  target: HTMLElement,
+  { mode = "scale", focus, scale = 30, inset = "30% 34% 30% 34% round 12px", length = 1.5, scrub = SCRUB, scroller }: ZoomOptions = {},
+): Teardown {
+  if (prefersReducedMotion()) return () => {};
+  return own((_dispose, after) => {
+    after(snapshotStyles([...new Set([target, ...gsap.utils.toArray<HTMLElement>(section.children)])]));
+    const behind = Array.from(section.children).filter((child): child is HTMLElement => child !== target && child instanceof HTMLElement);
+    const timeline = gsap.timeline({
+      defaults: { ease: "none" },
+      scrollTrigger: { trigger: section, start: "top top", end: () => `+=${section.offsetHeight * length}`, pin: true, scrub, scroller, anticipatePin: 1, invalidateOnRefresh: true },
+    });
+    if (mode === "clip") {
+      timeline.fromTo(target, { clipPath: `inset(${inset})` }, { clipPath: "inset(0% 0% 0% 0% round 0px)", ease: "power2.inOut" }, 0);
+      return;
+    }
+    // The origin is the focus's center within the target, measured at scale 1. It is measured again at
+    // each refresh, so a font or layout change after the build still flies into the right spot.
+    const origin = () => {
+      const current = gsap.getProperty(target, "scale");
+      gsap.set(target, { scale: 1 });
+      const box = target.getBoundingClientRect();
+      const spot = (focus ?? target).getBoundingClientRect();
+      gsap.set(target, { scale: current });
+      return `${spot.left + spot.width / 2 - box.left}px ${spot.top + spot.height / 2 - box.top}px`;
+    };
+    // force3D off keeps scaled text crisp: a cached layer would blur at this size.
+    timeline
+      .fromTo(target, { scale: 1, transformOrigin: origin }, { scale, ease: "power2.in", force3D: false }, 0)
+      .to(target, { autoAlpha: 0, duration: 0.15 }, 0.85)
+      .fromTo(behind, { scale: 1.15 }, { scale: 1, ease: "power2.out" }, 0);
+  });
+}

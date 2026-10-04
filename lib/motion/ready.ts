@@ -31,6 +31,8 @@ export const LIVE_STAGES = new Set([
   "scrubbed-statement",
   "parallax",
   "pinned-scene",
+  "stacking-cards",
+  "zoom-through",
   "horizontal-run",
   "waypoints",
   "progress",
