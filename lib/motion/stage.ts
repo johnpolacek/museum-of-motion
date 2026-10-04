@@ -5,11 +5,12 @@ import { TEXT_STAGES } from "./stages/text";
 import { TIME_STAGES } from "./stages/time";
 import { POINTER_STAGES } from "./stages/pointer";
 import { SCROLL_STAGES } from "./stages/scroll";
+import { WEBGL_STAGES } from "./stages/webgl";
 
 export type { Knob, KnobSpec, Loop, LoopParams, Play, StageDef } from "./stage-core";
 
 /** Exhibits with a live stage. The rest show the sample text at rest. */
-export const STAGES: Record<string, StageDef> = { ...TEXT_STAGES, ...TIME_STAGES, ...SCROLL_STAGES, ...POINTER_STAGES };
+export const STAGES: Record<string, StageDef> = { ...TEXT_STAGES, ...TIME_STAGES, ...SCROLL_STAGES, ...POINTER_STAGES, ...WEBGL_STAGES };
 
 /** A loop has a timeline; an interactive stage does not. */
 export const isLoop = (run: Loop | Play): run is Loop => "timeline" in run;

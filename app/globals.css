@@ -285,6 +285,17 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win .w-sticky { position: sticky; top: 0; display: block; width: 100%; object-fit: cover; background: var(--ink); }
 .ex .win .w-bowl { position: relative; min-height: 80%; display: grid; place-items: center; background: var(--ink); color: #fff; padding: 40px var(--gut); }
 .ex .win .w-edge { position: absolute; left: 0; bottom: 100%; width: 100%; height: 6vw; min-height: 40px; fill: var(--ink); }
+/* WebGL stages: the <img> is the page; a plane on the shared canvas draws it while WebGL can. */
+.ex .stage-art .gl-frame { margin: 0; height: min(calc(46svh - 110px), 420px); aspect-ratio: 4 / 3; max-width: 92%; }
+.ex .stage-art .gl-column .gl-frame { height: auto; }
+.ex .stage-art .gl-frame img, .ex .stage-art .gl-card img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ex .stage-art .gl-row { display: grid; grid-template-columns: repeat(3, minmax(0, 260px)); gap: clamp(12px, 2vw, 28px); justify-content: center; }
+.ex .stage-art .gl-card { display: block; aspect-ratio: 4 / 3; padding: 0; border: 0; background: none; cursor: pointer; }
+/* Scroll wave flows in the stage, so the stage grows and the page scrolls past the posters. */
+.ex .stage[data-art]:has(.stage-art.flow) > p { display: none; }
+.ex .stage-art.flow { position: relative; inset: auto; padding: 0; }
+.ex .stage-art .gl-column { display: grid; gap: 48px; justify-items: center; width: 100%; }
+.ex .stage-art .gl-column .gl-frame { width: min(70%, 640px); }
 .ex .stage .replay { position: absolute; right: 0; bottom: 16px; font-family: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid currentColor; border-radius: 0; padding: 0; cursor: pointer; }
 .ex .stage .replay:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .ex .scrub { display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; }
@@ -339,6 +350,8 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
   .ex .stage-art .frame, .ex .stage-art .mini { width: 92%; }
   .ex .stage-art .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .ex .stage-art .thumbs { grid-template-columns: repeat(2, minmax(0, 140px)); }
+  .ex .stage-art .gl-row { grid-template-columns: 1fr; width: 70%; }
+  .ex .stage-art .gl-frame, .ex .stage-art .gl-column .gl-frame { width: 92%; }
 }
 @media (max-width: 560px) {
   .mast nav { gap: 16px; }
