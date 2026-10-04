@@ -77,6 +77,54 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex h1 .t { max-width: 100%; }
 .ex .stage { position: relative; overflow: clip; border-top: 1px solid rgba(255,255,255,0.35); border-bottom: 1px solid rgba(255,255,255,0.35); min-height: 46svh; display: grid; align-content: center; padding: 48px 0; }
 .ex .stage p { margin: 0; font-weight: 400; font-size: clamp(40px, 6.4vw, 116px); line-height: 1.0; letter-spacing: -0.03em; }
+/* Stage art: what a stage shows when its exhibit is not the sample text. It fills the stage; the text keeps the height. */
+.ex .stage[data-art] > p { visibility: hidden; }
+.ex .stage-art { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.ex .stage-art.live { pointer-events: auto; }
+.ex .stage-art .frame { margin: 0; width: min(64%, 760px); aspect-ratio: 16 / 9; overflow: hidden; background: var(--ink); }
+.ex .stage-art .frame svg { display: block; width: 100%; height: 100%; }
+.ex .stage-art .drawing { width: min(80%, 800px); height: auto; overflow: visible; }
+.ex .stage-art .figures { display: flex; flex-wrap: wrap; gap: 24px clamp(24px, 6vw, 96px); justify-content: center; }
+.ex .stage-art .fig { display: grid; gap: 8px; justify-items: start; }
+.ex .stage-art .fig .val { font-weight: 700; font-stretch: 75%; font-size: clamp(48px, 8vw, 132px); line-height: 0.9; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.ex .stage-art .mq { width: 100%; overflow: hidden; }
+.ex .stage-art .mq-track { display: flex; width: max-content; }
+.ex .stage-art .mq-row { display: flex; flex: none; gap: 0.3em; padding-right: 0.3em; font-weight: 600; font-stretch: 82%; font-size: clamp(40px, 6vw, 96px); letter-spacing: -0.02em; white-space: nowrap; }
+.ex .stage-art .mq-row .sep { font-weight: 300; opacity: 0.5; }
+.ex .stage-art .logos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: min(90%, 900px); border-top: 1px solid rgba(255,255,255,0.35); border-left: 1px solid rgba(255,255,255,0.35); }
+.ex .stage-art .cell { display: grid; place-items: center; height: clamp(90px, 14vw, 160px); overflow: hidden; border-right: 1px solid rgba(255,255,255,0.35); border-bottom: 1px solid rgba(255,255,255,0.35); }
+.ex .stage-art .cell > * { grid-area: 1 / 1; width: 100%; height: 100%; display: grid; place-items: center; }
+.ex .stage-art .mark { font-size: clamp(18px, 2.6vw, 34px); }
+.ex .stage-art .m0 { font-weight: 800; font-stretch: 125%; letter-spacing: 0.04em; }
+.ex .stage-art .m1 { font-weight: 300; font-style: italic; font-size: clamp(22px, 3vw, 40px); }
+.ex .stage-art .m2 { font-weight: 900; font-stretch: 62%; letter-spacing: 0.12em; }
+.ex .stage-art .m3 { font-weight: 500; letter-spacing: -0.04em; font-size: clamp(22px, 3.2vw, 42px); }
+.ex .stage-art .m4 { font-weight: 700; font-style: italic; font-stretch: 75%; }
+.ex .stage-art .m5 { font-weight: 200; font-stretch: 125%; letter-spacing: 0.2em; }
+.ex .stage-art .m6 { font-weight: 800; letter-spacing: -0.05em; font-size: clamp(22px, 3.4vw, 44px); }
+.ex .stage-art .m7 { font-weight: 600; font-stretch: 100%; letter-spacing: 0.3em; }
+.ex .stage-art .mini { position: relative; width: min(72%, 760px); aspect-ratio: 16 / 9; overflow: hidden; background: #fff; color: var(--ink); }
+.ex .stage-art .pg { position: absolute; inset: 0; padding: 6%; display: grid; align-content: start; gap: 10px; }
+.ex .stage-art .pg b { font-weight: 800; font-stretch: 75%; text-transform: uppercase; font-size: clamp(24px, 4.4vw, 64px); line-height: 0.9; }
+.ex .stage-art .pg i { display: block; height: 10px; background: var(--line); width: 70%; }
+.ex .stage-art .pg i + i { width: 52%; }
+.ex .stage-art .pg-b { background: var(--blue); color: #fff; }
+.ex .stage-art .pg-b i { background: rgba(255,255,255,0.35); }
+.ex .stage-art .panels { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(5, 1fr); }
+.ex .stage-art .panels i { background: var(--ink); transform: translateY(100%); }
+.ex .stage-art .cover-title { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-weight: 800; font-stretch: 75%; text-transform: uppercase; font-size: clamp(24px, 4vw, 56px); opacity: 0; }
+.ex .stage-art .curve { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ex .stage-art .loader { position: absolute; inset: 0; background: var(--ink); color: #fff; display: grid; align-content: end; padding: 6%; gap: 12px; }
+.ex .stage-art .loader .count { font-weight: 800; font-stretch: 75%; font-size: clamp(48px, 9vw, 140px); line-height: 0.85; }
+.ex .stage-art .loader .bar { display: block; height: 2px; background: rgba(255,255,255,0.25); }
+.ex .stage-art .loader .bar i { display: block; height: 100%; background: #fff; transform-origin: 0 50%; transform: scaleX(0); }
+.ex .stage-art.rain { place-items: start; }
+.ex .stage-art .drop { position: absolute; top: 0; left: 0; font-size: clamp(22px, 3vw, 40px); line-height: 1; opacity: 0; }
+.ex .stage-art .sample { margin: 0; font-weight: 400; font-size: clamp(40px, 6.4vw, 116px); line-height: 1.0; letter-spacing: -0.03em; justify-self: start; align-self: center; }
+.ex .stage-art .sample .ln { display: block; overflow: hidden; }
+.ex .stage-art .sample .ln > span { display: block; }
+.ex .stage-art .sound { position: absolute; top: 16px; right: 0; }
+.ex .stage-art .sound[aria-pressed="true"] { background: #fff; color: var(--blue); border-color: #fff; }
 .ex .stage .replay { position: absolute; right: 0; bottom: 16px; font-family: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid currentColor; border-radius: 0; padding: 0; cursor: pointer; }
 .ex .stage .replay:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .ex .scrub { display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; }
@@ -93,8 +141,8 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 /* Stage controls: pause, a scrub rail, and the knobs that shape the loop. */
 .ex .controls { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px 24px; align-items: center; }
 .ex .controls[hidden] { display: none; }
-.ex .controls .ctl { font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; background: none; border: 1px solid rgba(255,255,255,0.5); border-radius: 99px; padding: 7px 14px; cursor: pointer; }
-.ex .controls .ctl:focus-visible, .ex .controls select:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.ex .controls .ctl, .ex .stage-art .ctl { font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; background: none; border: 1px solid rgba(255,255,255,0.5); border-radius: 99px; padding: 7px 14px; cursor: pointer; }
+.ex .controls .ctl:focus-visible, .ex .stage-art .ctl:focus-visible, .ex .controls select:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 .ex .controls .scrub { display: grid; grid-template-columns: 4.5ch 1fr auto; gap: 16px; align-items: center; }
 .ex .controls .knobs { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: end; }
 .ex .controls .knob { display: grid; gap: 6px; min-width: 150px; }
@@ -128,6 +176,7 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
   .grp, .about { grid-template-columns: 1fr; }
   .ex .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ex .controls .knob { min-width: 0; flex: 1 1 40%; }
+  .ex .stage-art .frame, .ex .stage-art .mini { width: 92%; }
 }
 @media (max-width: 560px) {
   .mast nav { gap: 16px; }

@@ -1,0 +1,434 @@
+// Live stages for the text exhibits, 01 to 09. Recipes from the animaxxing skill's split entrances,
+// speak-in, wave, route letters, and the motion vocabulary's shelf.
+import { gsap, SplitText } from "../gsap";
+import { assemble, def, end, EXIT, pinWidths, rnd, split, type Act, type LoopParams, type StageDef } from "../stage-core";
+
+/* ---------- 01 Line mask ---------- */
+
+const ELLIPSE = {
+  closedBottom: "ellipse(20% 0% at 50% 100%)",
+  openBottom: "ellipse(100% 120% at 50% 100%)",
+  openTop: "ellipse(100% 120% at 50% 0%)",
+  closedTop: "ellipse(20% 0% at 50% 0%)",
+} as const;
+
+/** Lays a bar over each line's words, for the highlight. SplitText's revert removes the bars with the split. */
+function addBars(s: SplitText) {
+  return s.lines.map((line) => {
+    const words = s.words.filter((word) => line.contains(word));
+    const lineBox = line.getBoundingClientRect();
+    const boxes = words.map((word) => word.getBoundingClientRect());
+    const left = boxes.length ? Math.min(...boxes.map((b) => b.left)) : lineBox.left;
+    const right = boxes.length ? Math.max(...boxes.map((b) => b.right)) : lineBox.right;
+    const bar = document.createElement("span");
+    bar.setAttribute("aria-hidden", "true");
+    Object.assign(bar.style, {
+      position: "absolute",
+      top: "0",
+      bottom: "0",
+      left: `${left - lineBox.left}px`,
+      width: `${right - left}px`,
+      background: "var(--line-highlight, currentColor)",
+      pointerEvents: "none",
+    });
+    (line as HTMLElement).style.position = "relative";
+    line.appendChild(bar);
+    return { bar, words };
+  });
+}
+
+export const lineMask = def(
+  ["Line mask", "Ellipse", "Highlight"],
+  ["mask", "ellipse", "highlight"],
+  ["duration", "stagger", "hold", "ease"],
+  { duration: 0.8, stagger: 0.06, hold: 2, ease: "signature" },
+  (text, p) => {
+    const splits: SplitText[] = [];
+    const highlight = p.variation === "highlight";
+    const s = split(text, highlight ? { type: "lines,words" } : { type: "lines", mask: "lines" }, splits);
+    const lines = s.lines as HTMLElement[];
+    const out = Math.max(0.2, p.duration * 0.4);
+    const outEach = p.stagger * 0.5;
+    if (p.variation === "mask") {
+      return assemble(text, p, splits, {
+        enter: (tl) => (tl.fromTo(lines, { yPercent: 110 }, { yPercent: 0, duration: p.duration, ease: p.ease, stagger: p.stagger }, 0), end(lines.length, p)),
+        exit: (tl, at) => tl.to(lines, { yPercent: -110, duration: out, ease: EXIT, stagger: outEach }, at),
+      });
+    }
+    if (p.variation === "ellipse") {
+      const masks = s.masks as HTMLElement[];
+      return assemble(text, p, splits, {
+        enter: (tl) => {
+          tl.fromTo(masks, { clipPath: ELLIPSE.closedBottom }, { clipPath: ELLIPSE.openBottom, duration: p.duration, ease: p.ease, stagger: p.stagger }, 0)
+            .fromTo(lines, { yPercent: 40 }, { yPercent: 0, duration: p.duration, ease: p.ease, stagger: p.stagger }, 0);
+          return end(lines.length, p);
+        },
+        exit: (tl, at) =>
+          tl.fromTo(masks, { clipPath: ELLIPSE.openTop }, { clipPath: ELLIPSE.closedTop, duration: out, ease: EXIT, stagger: outEach, immediateRender: false }, at)
+            .to(lines, { yPercent: -40, duration: out, ease: EXIT, stagger: outEach }, at),
+      });
+    }
+    // A bar sweeps across each line, the words appear beneath it, the bar retracts. Out runs the same way.
+    const sweep = Math.max(0.15, p.duration * 0.45);
+    const bars = addBars(s);
+    return assemble(text, p, splits, {
+      enter: (tl) => {
+        bars.forEach(({ bar, words }, i) => {
+          const at = i * p.stagger * 2;
+          tl.set(words, { autoAlpha: 0 }, 0)
+            .fromTo(bar, { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: sweep, ease: "power3.in" }, at)
+            .set(words, { autoAlpha: 1 }, at + sweep)
+            .to(bar, { scaleX: 0, transformOrigin: "100% 50%", duration: sweep, ease: p.ease }, at + sweep);
+        });
+        return (bars.length - 1) * p.stagger * 2 + sweep * 2;
+      },
+      exit: (tl, at) =>
+        bars.forEach(({ bar, words }, i) => {
+          const t = at + i * outEach * 2;
+          tl.fromTo(bar, { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: out, ease: "power3.in", immediateRender: false }, t)
+            .set(words, { autoAlpha: 0 }, t + out)
+            .to(bar, { scaleX: 0, transformOrigin: "100% 50%", duration: out, ease: EXIT }, t + out);
+        }),
+    });
+  },
+);
+
+/* ---------- 02 Characters ---------- */
+
+export const characters = def(
+  ["Characters", "Cascade", "Flip", "Spring", "Scatter", "Fall"],
+  ["rise", "cascade", "flip", "spring", "scatter", "fall"],
+  ["duration", "stagger", "hold", "ease"],
+  { duration: 0.6, stagger: 0.03, hold: 2, ease: "signature" },
+  (text, p) => {
+    const splits: SplitText[] = [];
+    const masked = p.variation === "rise" || p.variation === "fall";
+    const s = split(text, { type: "words,chars", ...(masked ? { mask: "chars" as const } : {}) }, splits);
+    const chars = s.chars as HTMLElement[];
+    const n = chars.length;
+    const out = Math.max(0.2, p.duration * 0.4);
+    const box = text.getBoundingClientRect();
+    const fall = (tl: gsap.core.Timeline, at: number, dir: 1 | -1) =>
+      tl.to(chars, { yPercent: 115 * dir, duration: out, ease: EXIT, stagger: 0.012 }, at);
+    const acts: Record<string, Act> = {
+      rise: {
+        enter: (tl) => (tl.fromTo(chars, { yPercent: 115 }, { yPercent: 0, duration: p.duration, ease: p.ease, stagger: p.stagger }, 0), end(n, p)),
+        exit: (tl, at) => fall(tl, at, 1),
+      },
+      fall: {
+        enter: (tl) => (tl.fromTo(chars, { yPercent: 115 }, { yPercent: 0, duration: p.duration, ease: p.ease, stagger: p.stagger }, 0), end(n, p)),
+        exit: (tl, at) => fall(tl, at, -1),
+      },
+      cascade: {
+        enter: (tl) => (
+          tl.fromTo(
+            chars,
+            { autoAlpha: 0, y: -18, rotation: () => rnd(-14, 14) },
+            { autoAlpha: 1, y: 0, rotation: 0, duration: p.duration, ease: p.ease, stagger: { each: p.stagger, from: "random" } },
+            0,
+          ),
+          end(n, p)
+        ),
+        exit: (tl, at) => tl.to(chars, { autoAlpha: 0, y: 18, rotation: () => rnd(-14, 14), duration: out, ease: EXIT, stagger: { each: 0.012, from: "random" } }, at),
+      },
+      flip: {
+        enter: (tl) => (
+          tl.fromTo(
+            chars,
+            { autoAlpha: 0, rotationX: -90, transformOrigin: "50% 0%", transformPerspective: 600 },
+            { autoAlpha: 1, rotationX: 0, duration: p.duration, ease: p.ease, stagger: p.stagger },
+            0,
+          ),
+          end(n, p)
+        ),
+        exit: (tl, at) => tl.to(chars, { autoAlpha: 0, rotationX: 90, transformOrigin: "50% 100%", duration: out, ease: EXIT, stagger: 0.012 }, at),
+      },
+      spring: {
+        enter: (tl) => (tl.fromTo(chars, { yPercent: 115, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: p.duration, ease: p.ease, stagger: p.stagger }, 0), end(n, p)),
+        exit: (tl, at) => tl.to(chars, { yPercent: -60, autoAlpha: 0, duration: out, ease: EXIT, stagger: 0.012 }, at),
+      },
+      scatter: {
+        enter: (tl) => (
+          tl.fromTo(
+            chars,
+            { autoAlpha: 0, x: () => rnd(-0.3, 0.3) * box.width, y: () => rnd(-0.3, 0.3) * box.height, rotation: () => rnd(-45, 45), scale: 0.6 },
+            { autoAlpha: 1, x: 0, y: 0, rotation: 0, scale: 1, duration: p.duration, ease: p.ease, stagger: { each: p.stagger, from: "center" } },
+            0,
+          ),
+          end(n, p)
+        ),
+        exit: (tl, at) =>
+          tl.to(
+            chars,
+            { autoAlpha: 0, x: () => rnd(-0.3, 0.3) * box.width, y: () => rnd(-0.3, 0.3) * box.height, rotation: () => rnd(-45, 45), scale: 0.6, duration: out, ease: EXIT, stagger: { each: 0.012, from: "edges" } },
+            at,
+          ),
+      },
+    };
+    return assemble(text, p, splits, acts[p.variation] ?? acts.rise);
+  },
+  {
+    cascade: { ease: "back.out(1.8)", duration: 0.45, stagger: 0.02 },
+    flip: { ease: "back.out(1.4)", duration: 0.5 },
+    spring: { ease: "elastic.out(1, 0.5)", duration: 1.1 },
+    scatter: { ease: "power3.out", stagger: 0.012 },
+  },
+);
+
+/* ---------- 03 Word slide ---------- */
+
+export const wordSlide = def(["Word slide"], ["slide"], ["duration", "stagger", "hold", "ease"], { duration: 0.5, stagger: 0.05, hold: 2, ease: "signature" }, (text, p) => {
+  const splits: SplitText[] = [];
+  const words = split(text, { type: "words" }, splits).words as HTMLElement[];
+  const side = (i: number) => (i % 2 === 0 ? -1 : 1);
+  return assemble(text, p, splits, {
+    enter: (tl) => (
+      tl.fromTo(words, { autoAlpha: 0, xPercent: (i: number) => side(i) * 40 }, { autoAlpha: 1, xPercent: 0, duration: p.duration, ease: p.ease, stagger: p.stagger }, 0),
+      end(words.length, p)
+    ),
+    exit: (tl, at) => tl.to(words, { autoAlpha: 0, xPercent: (i: number) => -side(i) * 40, duration: Math.max(0.2, p.duration * 0.4), ease: EXIT, stagger: 0.03 }, at),
+  });
+});
+
+/* ---------- 04 Scramble ---------- */
+
+const NOISE = "01{}/<>()=;";
+export const scramble = def(["Scramble"], ["scramble"], ["duration", "stagger", "hold"], { duration: 0.9, stagger: 0.15, hold: 2, ease: "none" }, (text, p) => {
+  const splits: SplitText[] = [];
+  // Scramble replaces text, so each line becomes its own plain-text element first.
+  const lines = split(text, { type: "lines" }, splits).lines as HTMLElement[];
+  const copy = lines.map((l) => l.textContent ?? "");
+  return assemble(text, p, splits, {
+    enter: (tl) => {
+      lines.forEach((line, i) =>
+        tl.fromTo(line, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.01 }, i * p.stagger).to(
+          line,
+          { duration: p.duration, ease: "none", scrambleText: { text: copy[i], chars: NOISE, speed: 0.6, revealDelay: 0.15 } },
+          i * p.stagger,
+        ),
+      );
+      return end(lines.length, p);
+    },
+    exit: (tl, at) =>
+      lines.forEach((line, i) =>
+        tl.to(line, { duration: 0.45, ease: "none", scrambleText: { text: copy[i].replace(/\S/g, "0"), chars: NOISE, speed: 0.8 } }, at + i * 0.05).to(
+          line,
+          { autoAlpha: 0, duration: 0.14, ease: EXIT },
+          at + i * 0.05 + 0.45,
+        ),
+      ),
+  });
+});
+
+/* ---------- 05 Speak-in ---------- */
+
+/** Word entrances from the speak-in recipe, as start states; each lands at rest. */
+const WORD_INS: gsap.TweenVars[] = [
+  { y: 16 },
+  { y: -12 },
+  { scale: 0.6, transformOrigin: "50% 100%" },
+  { filter: "blur(8px)" },
+  { x: -14 },
+  { rotationX: -80, transformOrigin: "50% 100%", transformPerspective: 600 },
+];
+const REST: gsap.TweenVars = { x: 0, y: 0, scale: 1, rotationX: 0, filter: "blur(0px)" };
+
+export const speakIn = def(["Speak-in"], ["speak"], ["duration", "hold"], { duration: 0.4, stagger: 0, hold: 2, ease: "power3.out" }, (text, p) => {
+  const splits: SplitText[] = [];
+  const words = split(text, { type: "words" }, splits).words as HTMLElement[];
+  // The last word is the emphasis: it speaks letter by letter and pops.
+  const last = words[words.length - 1];
+  const letters = split(last, { type: "chars" }, splits).chars as HTMLElement[];
+  return assemble(text, p, splits, {
+    enter: (tl) => {
+      let t = 0;
+      words.forEach((word, i) => {
+        const len = (word.textContent ?? "").replace(/\W/g, "").length;
+        if (word === last) {
+          tl.set(word, { autoAlpha: 1 }, 0).fromTo(
+            letters,
+            { scale: 0, rotation: (j: number) => (j % 2 ? 24 : -24), autoAlpha: 0 },
+            { scale: 1, rotation: 0, autoAlpha: 1, duration: p.duration * 1.6, ease: "elastic.out(1, 0.45)", stagger: 0.05 },
+            t + 0.1,
+          );
+          t += 0.1 + letters.length * 0.05 + p.duration * 1.6;
+        } else {
+          tl.fromTo(word, { ...WORD_INS[i % WORD_INS.length], autoAlpha: 0 }, { ...REST, autoAlpha: 1, duration: p.duration, ease: p.ease }, t);
+          // Speaking pace: longer words take longer to say.
+          t += 0.06 + 0.008 * len + (word.textContent?.endsWith(".") ? 0.65 : 0) + p.duration * 0.25;
+        }
+      });
+      return t;
+    },
+    exit: (tl, at) => tl.to(words, { autoAlpha: 0, y: -10, duration: 0.25, ease: EXIT, stagger: 0.02 }, at),
+  });
+});
+
+/* ---------- 06 Weight wave ---------- */
+
+export const weightWave = def(["Weight wave"], ["wave"], ["duration", "stagger", "hold", "ease"], { duration: 0.7, stagger: 0.03, hold: 1, ease: "power2.inOut" }, (text, p) => {
+  const splits: SplitText[] = [];
+  const chars = split(text, { type: "words,chars" }, splits).chars as HTMLElement[];
+  const rest = Number(getComputedStyle(text).fontWeight) || 400;
+  const far = rest >= 600 ? 100 : 900;
+  // Each letter keeps its resting width, so the line reads with normal tracking at rest. As it gains
+  // weight it narrows by exactly the width the weight adds, so the wave never collides or reflows.
+  const restW = chars.map((c) => c.getBoundingClientRect().width);
+  pinWidths(chars, far);
+  const farW = chars.map((c) => c.getBoundingClientRect().width);
+  chars.forEach((c, i) => (c.style.width = `${restW[i]}px`));
+  const squeeze = (i: number) => Math.min(1, restW[i] / (farW[i] || 1));
+  return assemble(text, p, splits, {
+    enter: (tl) => {
+      tl.fromTo(
+        chars,
+        { fontWeight: rest, scaleX: 1 },
+        { fontWeight: far, scaleX: (i: number) => squeeze(i), duration: p.duration * 0.43, ease: p.ease, stagger: p.stagger },
+        0,
+      ).to(chars, { fontWeight: rest, scaleX: 1, duration: p.duration * 0.57, ease: p.ease, stagger: p.stagger }, p.duration * 0.26);
+      return p.duration * 0.83 + p.stagger * (chars.length - 1);
+    },
+  });
+});
+
+/* ---------- 07 Letter wave ---------- */
+
+type Move = (chars: HTMLElement[], p: LoopParams, em: number) => gsap.TweenVars;
+/** The wave recipe's moves, as the out-and-back half of each. Weight moves go lighter, so letters need no extra room. */
+const WAVE_MOVES: Record<string, Move> = {
+  hop: (_c, _p, em) => ({ y: -0.12 * em, ease: "power2.out" }),
+  breathe: () => ({ scale: 1.07, transformOrigin: "50% 100%" }),
+  lean: () => ({ rotation: 7, transformOrigin: "50% 100%" }),
+  lighten: () => ({ fontWeight: 100 }),
+  shear: () => ({ skewX: 12, ease: "power2.inOut" }),
+  squash: () => ({ scaleY: 0.82, transformOrigin: "50% 100%", ease: "power2.inOut" }),
+  twist: () => ({ scale: 1.1, rotation: () => rnd(-12, 12), transformOrigin: "50% 50%", ease: "power2.inOut" }),
+};
+const WAVE_KEYS = Object.keys(WAVE_MOVES);
+
+export const letterWave = def(
+  ["All", "Hop", "Breathe", "Lean", "Lighten", "Shear", "Squash", "Twist"],
+  ["all", ...WAVE_KEYS],
+  ["duration", "stagger", "hold"],
+  { duration: 0.25, stagger: 0.03, hold: 1, ease: "sine.inOut" },
+  (text, p) => {
+    const splits: SplitText[] = [];
+    const chars = split(text, { type: "words,chars" }, splits).chars as HTMLElement[];
+    pinWidths(chars);
+    const em = parseFloat(getComputedStyle(text).fontSize) || 16;
+    const keys = p.variation === "all" ? WAVE_KEYS : [p.variation];
+    const pass = p.duration + p.stagger * (chars.length - 1);
+    return assemble(text, p, splits, {
+      enter: (tl) => {
+        keys.forEach((key, i) => {
+          const at = i * (pass + p.hold);
+          const { ease, ...vars } = WAVE_MOVES[key](chars, p, em);
+          // Out and back per letter: repeat and yoyo inside the stagger, so each letter turns on its own beat.
+          tl.to(chars, { ...vars, duration: p.duration / 2, ease: (ease as string) ?? p.ease, stagger: { each: p.stagger, yoyo: true, repeat: 1 } }, at);
+        });
+        return keys.length * (pass + p.hold) - p.hold;
+      },
+    });
+  },
+);
+
+/* ---------- 08 Route letters ---------- */
+
+export const routeLetters = def(
+  ["Letters", "Sides"],
+  ["letters", "sides"],
+  ["duration", "stagger", "hold", "ease"],
+  { duration: 0.75, stagger: 0.02, hold: 2, ease: "power4.out" },
+  (text, p) => {
+    const splits: SplitText[] = [];
+    const chars = split(text, { type: "words,chars" }, splits).chars as HTMLElement[];
+    const box = (text.closest(".stage") ?? text).getBoundingClientRect();
+    const sides = p.variation === "sides";
+    // The route version spreads letters across the viewport; on the stage, across the stage.
+    const spread = (i: number) =>
+      sides
+        ? { x: (i % 2 ? 1 : -1) * box.width * 0.6, y: 0, rotation: 0, scale: 1 }
+        : { x: rnd(-0.6, 0.6) * box.width, y: rnd(-0.6, 0.6) * box.height, rotation: rnd(-90, 90), scale: 0.5 };
+    const starts = chars.map((_, i) => spread(i));
+    const ends = chars.map((_, i) => spread(i));
+    return assemble(text, p, splits, {
+      enter: (tl) => (
+        tl.fromTo(
+          chars,
+          { autoAlpha: 0, x: (i: number) => starts[i].x, y: (i: number) => starts[i].y, rotation: (i: number) => starts[i].rotation, scale: (i: number) => starts[i].scale },
+          { autoAlpha: 1, x: 0, y: 0, rotation: 0, scale: 1, duration: p.duration, ease: p.ease, stagger: { each: p.stagger, from: sides ? "center" : "random" } },
+          0,
+        ),
+        end(chars.length, p)
+      ),
+      exit: (tl, at) =>
+        tl.to(
+          chars,
+          {
+            autoAlpha: 0,
+            x: (i: number) => ends[i].x,
+            y: (i: number) => ends[i].y,
+            rotation: (i: number) => ends[i].rotation,
+            scale: sides ? 1 : 1.6,
+            duration: 0.28,
+            ease: "power2.in",
+            stagger: { each: 0.012, from: sides ? "center" : "edges" },
+          },
+          at,
+        ),
+    });
+  },
+);
+
+/* ---------- 09 Paired entrances ---------- */
+
+type Pair = { from: gsap.TweenVars; to: gsap.TweenVars; out: gsap.TweenVars };
+const PAIRS: Record<string, Pair> = {
+  fade: { from: { autoAlpha: 0 }, to: { autoAlpha: 1 }, out: { autoAlpha: 0 } },
+  rise: { from: { autoAlpha: 0, y: 8 }, to: { autoAlpha: 1, y: 0 }, out: { autoAlpha: 0, y: -4 } },
+  drop: { from: { autoAlpha: 0, y: -8 }, to: { autoAlpha: 1, y: 0 }, out: { autoAlpha: 0, y: 4 } },
+  slide: { from: { autoAlpha: 0, x: -16 }, to: { autoAlpha: 1, x: 0 }, out: { autoAlpha: 0, x: -8 } },
+  scale: { from: { autoAlpha: 0, scale: 0.96 }, to: { autoAlpha: 1, scale: 1 }, out: { autoAlpha: 0, scale: 0.98 } },
+  pop: { from: { autoAlpha: 0, scale: 0.4 }, to: { autoAlpha: 1, scale: 1 }, out: { autoAlpha: 0, scale: 0.6 } },
+  wipeUp: { from: { clipPath: "inset(0% 0% 100% 0%)" }, to: { clipPath: "inset(0% 0% 0% 0%)" }, out: { clipPath: "inset(100% 0% 0% 0%)" } },
+  wipeAcross: { from: { clipPath: "inset(0% 100% 0% 0%)" }, to: { clipPath: "inset(0% 0% 0% 0%)" }, out: { clipPath: "inset(0% 0% 0% 100%)" } },
+  flip: {
+    from: { autoAlpha: 0, rotationX: -60, transformPerspective: 800, transformOrigin: "50% 0%" },
+    to: { autoAlpha: 1, rotationX: 0 },
+    out: { autoAlpha: 0, rotationX: 25 },
+  },
+  focus: { from: { autoAlpha: 0, filter: "blur(8px)" }, to: { autoAlpha: 1, filter: "blur(0px)" }, out: { autoAlpha: 0, filter: "blur(6px)" } },
+  weight: { from: { autoAlpha: 0, fontWeight: 100, y: 4 }, to: { autoAlpha: 1, fontWeight: 400, y: 0 }, out: { autoAlpha: 0, fontWeight: 100 } },
+};
+const PAIR_KEYS = Object.keys(PAIRS);
+
+export const paired = def(
+  ["Fade", "Rise", "Drop", "Slide", "Scale", "Pop", "Wipe up", "Wipe across", "Flip", "Focus", "Weight"],
+  PAIR_KEYS,
+  ["duration", "stagger", "hold", "ease"],
+  { duration: 0.4, stagger: 0.09, hold: 1.5, ease: "power2.out" },
+  (text, p) => {
+    const splits: SplitText[] = [];
+    // The shelf moves whole elements, so each line of the sample is one item.
+    const lines = split(text, { type: "lines" }, splits).lines as HTMLElement[];
+    const pair = PAIRS[p.variation] ?? PAIRS.fade;
+    return assemble(text, p, splits, {
+      enter: (tl) => (tl.fromTo(lines, pair.from, { ...pair.to, duration: p.duration, ease: p.ease, stagger: p.stagger }, 0), end(lines.length, p)),
+      exit: (tl, at) => tl.to(lines, { ...pair.out, duration: Math.max(0.14, p.duration * 0.5), ease: "power2.in", stagger: p.stagger * 0.5 }, at),
+    });
+  },
+  { pop: { ease: "back.out(2.4)" }, wipeUp: { ease: "power2.out", duration: 0.5 }, wipeAcross: { duration: 0.5 }, flip: { duration: 0.5 }, focus: { duration: 0.5 }, weight: { ease: "power2.inOut", duration: 0.6 } },
+);
+
+
+export const TEXT_STAGES: Record<string, StageDef> = {
+  "line-mask": lineMask,
+  characters,
+  "word-slide": wordSlide,
+  scramble,
+  "speak-in": speakIn,
+  "weight-wave": weightWave,
+  "letter-wave": letterWave,
+  "route-letters": routeLetters,
+  "paired-entrances": paired,
+};

@@ -5,9 +5,11 @@ import { CustomEase } from "gsap/CustomEase";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Flip } from "gsap/Flip";
 import { ScrambleTextPlugin } from "gsap/ScrambleTextPlugin";
+import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
+import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 import { useGSAP } from "@gsap/react";
 
-gsap.registerPlugin(useGSAP, SplitText, CustomEase, ScrollTrigger, Flip, ScrambleTextPlugin);
+gsap.registerPlugin(useGSAP, SplitText, CustomEase, ScrollTrigger, Flip, ScrambleTextPlugin, DrawSVGPlugin, MotionPathPlugin);
 
 // MOTION.md: one entrance curve, one exit curve.
 CustomEase.create("signature", "M0,0 C0.2,1.5 0.35,1 1,1");

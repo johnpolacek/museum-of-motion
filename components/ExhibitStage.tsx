@@ -4,7 +4,7 @@
 // with pause, a scrub rail, the recipe's variations, and the knobs that apply to it.
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { prefersReducedMotion } from "@/lib/motion/gsap";
-import { createLoop, STAGES, type Knob, type Loop, type LoopParams } from "@/lib/motion/stage";
+import { createLoop, STAGES, type Knob, type KnobSpec, type Loop, type LoopParams } from "@/lib/motion/stage";
 import { useExhibitPhase } from "./ExhibitMotion";
 
 const EASES = ["signature", "power3.out", "expo.out", "back.out(1.8)", "elastic.out(1, 0.5)", "none"];
@@ -12,6 +12,12 @@ const EASES = ["signature", "power3.out", "expo.out", "back.out(1.8)", "elastic.
 type Props = { slug: string; desc: string };
 
 const secs = (n: number) => n.toFixed(2);
+
+const KNOB_DEFAULTS: Record<"duration" | "stagger" | "hold", KnobSpec> = {
+  duration: { label: "Duration", min: 0.1, max: 2, step: 0.05, unit: "s" },
+  stagger: { label: "Stagger", min: 0, max: 0.4, step: 0.01, unit: "s" },
+  hold: { label: "Hold", min: 0, max: 5, step: 0.1, unit: "s" },
+};
 
 function subscribeReduced(onChange: () => void) {
   const query = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -114,6 +120,7 @@ export function ExhibitStage({ slug, desc }: Props) {
 
   const set = <K extends keyof LoopParams>(key: K, value: LoopParams[K]) => setParams((p) => ({ ...p, [key]: value }));
   const has = (knob: Knob) => def.knobs.includes(knob);
+  const spec = (key: "duration" | "stagger" | "hold"): KnobSpec => ({ ...KNOB_DEFAULTS[key], ...def.specs?.[key] });
 
   return (
     <>
@@ -148,13 +155,10 @@ export function ExhibitStage({ slug, desc }: Props) {
           <span className="num">{secs(total)} s</span>
         </label>
         <div className="knobs">
-          {has("duration") && (
-            <Knob label="Duration" value={params.duration} min={0.1} max={2} step={0.05} unit="s" onChange={(v) => set("duration", v)} />
+          {(["duration", "stagger", "hold"] as const).map(
+            (key) =>
+              has(key) && <Knob key={key} {...spec(key)} value={params[key]} onChange={(v) => set(key, v)} />,
           )}
-          {has("stagger") && (
-            <Knob label="Stagger" value={params.stagger} min={0} max={0.4} step={0.01} unit="s" onChange={(v) => set("stagger", v)} />
-          )}
-          {has("hold") && <Knob label="Hold" value={params.hold} min={0} max={5} step={0.1} unit="s" onChange={(v) => set("hold", v)} />}
           {has("ease") && (
             <label className="knob">
               <span>Ease</span>
@@ -199,12 +203,12 @@ export function ExhibitStage({ slug, desc }: Props) {
   );
 }
 
-function Knob(props: { label: string; value: number; min: number; max: number; step: number; unit: string; onChange: (v: number) => void }) {
+function Knob(props: KnobSpec & { value: number; onChange: (v: number) => void }) {
   const { label, value, min, max, step, unit, onChange } = props;
   return (
     <label className="knob">
       <span>
-        {label} <span className="num">{value.toFixed(2)} {unit}</span>
+        {label} <span className="num">{unit === "s" ? value.toFixed(2) : Math.round(value)} {unit}</span>
       </span>
       <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.currentTarget.value))} />
     </label>
