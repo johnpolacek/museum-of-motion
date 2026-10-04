@@ -51,10 +51,11 @@ const DATA: Exhibit[] = [
   {
     name: "Characters",
     group: "time",
-    builders: "charsRiseIn, charsCascadeIn, charsFlipIn, charsSpringIn, charsScatterIn, charsFallOut",
+    builders: "charsImplodeIn, charsExplodeOut, charsRiseIn, charsCascadeIn, charsFlipIn, charsSpringIn, charsScatterIn, charsFallOut",
     src: "split-entrances",
-    desc: "Letters rise, tip, spring, or scatter into place.",
+    desc: "Letters slam together from all around and blow apart, or rise, tip, spring, and scatter.",
     vars: [
+      "Rise",
       "Cascade",
       "Flip",
       "Spring",

@@ -37,7 +37,7 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 | A brand's signature curve for every `ease` option | [Signature curves](references/motion-vocabulary.md#signature-curves) |
 | Loading flashes, auth-dependent content, or layout shifts | Matching installed framework skill's `references/initialization.md`, **Data readiness and layout stability** |
 | Character animation: font readiness, kerning, masks, stable split/revert; weight or width moves inside a line of text | [Text stability](references/text-stability.md) |
-| Character, word, line, scramble, or glitch entrances/exits, ellipse line reveals, highlighter line sweeps | [Split entrances](references/recipes/split-entrances.md) |
+| Character, word, line, scramble, or glitch entrances/exits, implode and explode, ellipse line reveals, highlighter line sweeps | [Split entrances](references/recipes/split-entrances.md) |
 | Page items, including scattering headlines | [Route letters](references/recipes/route-letters.md) |
 | Short display copy arriving at speaking pace | [Speak-in](references/recipes/speak-in.md) |
 | Text typed behind a caret, deleted, or a word that retypes through a list | [Typewriter](references/recipes/typewriter.md) |

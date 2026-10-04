@@ -150,6 +150,7 @@ Character effects are for display type. Keep reading text immediately readable; 
 | `charsCascadeIn` / `Out` | chars | `y: -18`, random `rotation ±14`, `back.out(1.8)`, stagger 0.02 from random | A dealer flicking cards. |
 | `charsFlipIn` / `Out` | chars | `rotationX: -90` about the top edge | Each letter tips over. |
 | `charsScatterIn` / `Out` | chars | random `x ±120`, `y ±60`, `rotation ±45`, `scale 0.6`, `power3.out`, stagger from center | Letters converge from wherever they were thrown. The route version scales the spread to the viewport. |
+| `charsImplodeIn` / `charsExplodeOut` | chars | in: from straight out of the line's center, `(reach + distance) × 0.7–1.3`, `rotation ±120`, `scale 1.6–2.6`, 0.9s `power4.out`, edges first; out: the same way, 0.45s `power3.in`, center first | A headline that slams together from all around, or blows apart. The loudest character move; one per screen. |
 | `charsWeightWave` | chars, widths pinned | `fontWeight` dips to the far end of the axis and back, stagger 0.03 | A wave of weight through a line. |
 | `wordsSlideIn` / `Out` | words | `x ±40` alternating sides, `power2.out`, stagger 0.05 | Words zip together. |
 | `linesMaskIn` / `Out` | lines, masked | `yPercent: 110 → 0`, 0.28s, `power3.out`, stagger 0.05 | Whole lines wiped up behind masks. |

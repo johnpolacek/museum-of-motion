@@ -18,6 +18,7 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - Kill a parent timeline of split runners mid-way: `revertText` restores each target, and a new runner starts from clean markup.
 - A setup that throws leaves GSAP's global context untouched: later tweens are not recorded by the failed context.
 - Typewriter: the element keeps its size while typing, the overlay grows one character at a time in order, `typeOut` deletes from the end and ends hidden, the caret blinks under three times a second and goes, and `revertTyping` restores the markup when killed. `retype` reads every word once from a hidden twin, stops on the last word, and `revert` puts the first back.
+- Implode starts every character out along its line from the center and lands it exactly; explode sends each the same way and ends hidden, with the heading restored.
 - Scramble runners visibly scramble, end on the real words, and restore them when killed. Every noise character matches its source's kind: capitals for capitals, lowercase for lowercase, digits for digits; punctuation is blank or itself, never noise.
 - Glitch runners jump each type visibly, end on the exact markup and `position` and `transform`, keep the original text readable while copies show, strip ids from copies, and restore through `revertText` when killed. Copies show and hide at most once each.
 - Highlight runners leave no bar behind at settled or when killed, and bars span each line's words, not the full line box, in LTR and RTL.

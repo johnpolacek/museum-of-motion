@@ -100,8 +100,8 @@ export const lineMask = def(
 /* ---------- Characters ---------- */
 
 export const characters = def(
-  ["Characters", "Cascade", "Flip", "Spring", "Scatter", "Fall"],
-  ["rise", "cascade", "flip", "spring", "scatter", "fall"],
+  ["Implode", "Rise", "Cascade", "Flip", "Spring", "Scatter", "Fall"],
+  ["implode", "rise", "cascade", "flip", "spring", "scatter", "fall"],
   ["duration", "stagger", "hold", "ease"],
   { duration: 0.6, stagger: 0.03, hold: 2, ease: "signature" },
   (text, p) => {
@@ -112,9 +112,41 @@ export const characters = def(
     const n = chars.length;
     const out = Math.max(0.2, p.duration * 0.4);
     const box = text.getBoundingClientRect();
+    // From split-entrances' charsImplodeIn and charsExplodeOut: each character sits straight out from
+    // the line's center, farther the farther it rests from it. Drawn once, so every pass is the same.
+    const cx = box.left + box.width / 2;
+    const cy = box.top + box.height / 2;
+    const reach = Math.max(box.width * 0.6, 240);
+    const burst = chars.map((c) => {
+      const r = c.getBoundingClientRect();
+      let dx = r.left + r.width / 2 - cx;
+      let dy = r.top + r.height / 2 - cy;
+      const length = Math.hypot(dx, dy);
+      const angle = rnd(0, Math.PI * 2);
+      [dx, dy] = length < 1 ? [Math.cos(angle), Math.sin(angle)] : [dx / length, dy / length];
+      const distance = (reach + length) * rnd(0.7, 1.3);
+      return { x: dx * distance, y: dy * distance * 0.7 + rnd(-reach, reach) * 0.15, rotation: rnd(-120, 120), scale: rnd(1.6, 2.6) };
+    });
     const fall = (tl: gsap.core.Timeline, at: number, dir: 1 | -1) =>
       tl.to(chars, { yPercent: 115 * dir, duration: out, ease: EXIT, stagger: 0.012 }, at);
     const acts: Record<string, Act> = {
+      implode: {
+        enter: (tl) => (
+          tl.fromTo(
+            chars,
+            { autoAlpha: 0, x: (i: number) => burst[i].x, y: (i: number) => burst[i].y, rotation: (i: number) => burst[i].rotation, scale: (i: number) => burst[i].scale },
+            { autoAlpha: 1, x: 0, y: 0, rotation: 0, scale: 1, duration: p.duration, ease: p.ease, stagger: { each: p.stagger, from: "edges" } },
+            0,
+          ),
+          end(n, p)
+        ),
+        exit: (tl, at) =>
+          tl.to(
+            chars,
+            { autoAlpha: 0, x: (i: number) => burst[i].x, y: (i: number) => burst[i].y, rotation: (i: number) => -burst[i].rotation, scale: (i: number) => burst[i].scale, duration: Math.max(0.3, out), ease: EXIT, stagger: { each: 0.008, from: "center" } },
+            at,
+          ),
+      },
       rise: {
         enter: (tl) => (tl.fromTo(chars, { yPercent: 115 }, { yPercent: 0, duration: p.duration, ease: p.ease, stagger: p.stagger }, 0), end(n, p)),
         exit: (tl, at) => fall(tl, at, 1),
@@ -169,9 +201,10 @@ export const characters = def(
           ),
       },
     };
-    return assemble(text, p, splits, acts[p.variation] ?? acts.rise);
+    return assemble(text, p, splits, acts[p.variation] ?? acts.implode);
   },
   {
+    implode: { ease: "power4.out", duration: 0.9, stagger: 0.01 },
     cascade: { ease: "back.out(1.8)", duration: 0.45, stagger: 0.02 },
     flip: { ease: "back.out(1.4)", duration: 0.5 },
     spring: { ease: "elastic.out(1, 0.5)", duration: 1.1 },

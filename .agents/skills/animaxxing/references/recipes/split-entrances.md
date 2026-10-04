@@ -273,6 +273,73 @@ export const charsScatterOut: SplitRunner = (element, options = {}) =>
   );
 
 /**
+ * Where each character flies from or to: straight out from the line's center, farther for
+ * characters already far from it, with a little random spread. A character at the center
+ * takes a random direction.
+ */
+function burstOffsets(chars: Element[], element: HTMLElement, reach: number): Array<{ x: number; y: number }> {
+  const box = element.getBoundingClientRect();
+  const cx = box.left + box.width / 2;
+  const cy = box.top + box.height / 2;
+  return chars.map((char) => {
+    const r = char.getBoundingClientRect();
+    let dx = r.left + r.width / 2 - cx;
+    let dy = r.top + r.height / 2 - cy;
+    const length = Math.hypot(dx, dy);
+    if (length < 1) {
+      const angle = gsap.utils.random(0, Math.PI * 2);
+      dx = Math.cos(angle);
+      dy = Math.sin(angle);
+    } else {
+      dx /= length;
+      dy /= length;
+    }
+    const distance = (reach + length) * gsap.utils.random(0.7, 1.3);
+    return { x: dx * distance, y: dy * distance * 0.7 + gsap.utils.random(-reach, reach) * 0.15 };
+  });
+}
+
+/** Characters rush in from all around and slam together into the line. */
+export const charsImplodeIn: SplitRunner = (element, options = {}) =>
+  withSplit(element, options, { type: "chars", smartWrap: true }, (split, tl) => {
+    const reach = Math.max(element!.getBoundingClientRect().width * 0.6, 240);
+    const offsets = burstOffsets(split.chars, element!, reach);
+    tl.from(split.chars, {
+      x: (i: number) => offsets[i]!.x,
+      y: (i: number) => offsets[i]!.y,
+      rotation: () => gsap.utils.random(-120, 120),
+      scale: () => gsap.utils.random(1.6, 2.6),
+      autoAlpha: 0,
+      duration: 0.9,
+      ease: "power4.out",
+      stagger: { each: 0.01, from: "edges" },
+    });
+  });
+
+/** And blows apart from the center, each character flying straight out. */
+export const charsExplodeOut: SplitRunner = (element, options = {}) =>
+  withSplit(
+    element,
+    options,
+    { type: "chars", smartWrap: true },
+    (split, tl) => {
+      const reach = Math.max(element!.getBoundingClientRect().width * 0.6, 240);
+      const offsets = burstOffsets(split.chars, element!, reach);
+      tl.to(split.chars, {
+        x: (i: number) => offsets[i]!.x,
+        y: (i: number) => offsets[i]!.y,
+        rotation: () => gsap.utils.random(-120, 120),
+        scale: () => gsap.utils.random(1.6, 2.6),
+        autoAlpha: 0,
+        duration: 0.45,
+        ease: "power3.in",
+        stagger: { each: 0.008, from: "center" },
+      }).set(element, { autoAlpha: 0 });
+    },
+    { autoAlpha: 0 },
+  );
+
+/**
  * A weight wave through the line: each character dips to the far end of the
  * axis and comes back. Widths are pinned first so letters breathe in place.
  */
