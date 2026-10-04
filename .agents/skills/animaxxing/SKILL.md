@@ -83,6 +83,7 @@ Copy only the selected recipe and its named local helpers. Return shapes differ 
 - An invisible start does not make incomplete data ready. The controller supplies resolved targets or reserved regions; never use an entrance to disguise guest or empty content.
 - Keep split markup only while an effect needs it (speak-in finishes and an active wave persist). Revert at the controller's cleanup boundary; preserve accessible text and nested controls.
 - Use `overwrite: "auto"`; clear temporary styles and `will-change` when their phase ends.
+- Park a start position with `gsap.set` or `fromTo`, never with a CSS transform the tween also moves: GSAP reads CSS `translateY(100%)` as pixel `y` and adds `yPercent` on top, so a cover lands a full height short. A CSS transform is fine as a resting pose that a `from` tween lands on.
 - Reduced motion reaches the documented settled or exit state and still fires completion callbacks; no ambient motion. Use the project's preference helper, including any app override. Builders read it when they build; on a change, the controller tears down and rebuilds.
 - Killing a parent timeline never reaches a nested builder's interrupt callback. Kill the parent, then call each builder's revert, such as `revertText` for split runners.
 - One effect per target: two owners must never write one element's transform. Stop pointer and ambient effects before an outro moves their target.
