@@ -1,6 +1,6 @@
 # Recipe: counters and marquees
 
-A number that counts up to its value, a seamless looping marquee, and a logo grid that swaps one cell at a time. Both start from markup that reads correctly without JavaScript.
+A number that counts up to its value, digits that roll to each new value, a seamless looping marquee, and a logo grid that swaps one cell at a time. Each starts from markup that reads correctly without JavaScript.
 
 Lifecycle: see the [controller contract](#controller-contract); the controller calls each `revert` on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -441,12 +441,173 @@ export function logoCycle(
 
 A hold never interrupts a swap in progress; the next swap waits until every hold clears. Swapped logos are real content, so assistive technology reads whichever logos are in the cells; keep the grid out of live regions. The cycle runs past five seconds, so wire `pause` and `play` to a visible control.
 
+## odometer
+
+A figure whose digits sit in columns that roll to each new value, like a car odometer. Use it for a number that changes while the page is open, such as a live count or a price; `countUp` is for a figure arriving once. The element's text is its first value. `set` takes a number, formatted like that first value, or a string. Rising values roll every column forward and falling values roll it back, so 19 to 20 turns the ones column through 9 to 0, not back down the column.
+
+```html
+<span class="stat" data-odometer>1,204</span>
+```
+
+```css
+/* Equal-width digits keep the columns from shifting as they roll. */
+.stat { font-variant-numeric: tabular-nums; }
+```
+
+```ts
+export type OdometerOptions = {
+  /** Seconds each column rolls. */
+  duration?: number;
+  /** Seconds between columns, starting at the right. */
+  stagger?: number;
+  /** Accepts a registered CustomEase name. */
+  ease?: string;
+  /** Locale of the figure's formatting. Defaults to the document's `lang`. */
+  locale?: string;
+};
+export type Odometer = {
+  /** Rolls to a number, formatted like the first value, or to a string as given. Returns the roll, or undefined when nothing moves. */
+  set: (value: number | string) => gsap.core.Timeline | undefined;
+  revert: Teardown;
+};
+
+/** Each column holds 0–9 twice, so a roll can pass 9 to 0 in either direction. */
+const COLUMN_DIGITS = 20;
+const isDigit = (char: string) => char >= "0" && char <= "9";
+/** The characters that are not digits, in place, so two values with the same shape reuse their columns. */
+const shapeOf = (text: string) => text.replace(/\d/g, "0");
+
+export function odometer(
+  element: HTMLElement,
+  { duration = 0.9, stagger = 0.04, ease = "power3.out", locale }: OdometerOptions = {},
+): Odometer {
+  let text = (element.textContent ?? "").trim();
+  const figureLocale = numberLocale(locale);
+  const figure = parseFigure(text, decimalMark(figureLocale));
+  const format = figure
+    ? (n: number) =>
+        `${figure.prefix}${new Intl.NumberFormat(figureLocale, {
+          minimumFractionDigits: figure.decimals,
+          maximumFractionDigits: figure.decimals,
+        }).format(n)}${figure.suffix}`
+    : (n: number) => String(n);
+  const valueOf = (value: string) => parseFigure(value, decimalMark(figureLocale))?.value ?? NaN;
+  const toText = (value: number | string) => (typeof value === "number" ? format(value) : value.trim());
+
+  if (prefersReducedMotion()) {
+    return {
+      set: (value) => {
+        text = toText(value);
+        element.textContent = text;
+        return undefined;
+      },
+      revert: () => {},
+    };
+  }
+
+  type Column = { digit: number; sizer: HTMLElement; strip: HTMLElement };
+  let columns: Column[] = [];
+  let roll: gsap.core.Timeline | undefined;
+  const shown = document.createElement("span");
+  const spoken = document.createElement("span");
+
+  /** Column offset for a position in 0–19. */
+  const place = (strip: HTMLElement, position: number) => gsap.set(strip, { yPercent: (-100 / COLUMN_DIGITS) * position });
+  /** Where a column sits now, in 0–19, read from its transform. */
+  const positionOf = (strip: HTMLElement) => -Number(gsap.getProperty(strip, "yPercent")) / (100 / COLUMN_DIGITS);
+
+  /** Rebuilds the shown characters. `start` gives each new column, counted from the right, its first digit. */
+  const render = (value: string, start: (fromRight: number) => number) => {
+    const digits = [...value].filter(isDigit).length;
+    let seen = 0;
+    columns = [];
+    shown.replaceChildren(
+      ...[...value].map((char) => {
+        if (!isDigit(char)) return document.createTextNode(char);
+        const fromRight = digits - 1 - seen++;
+        // The hidden sizer gives the column its width and baseline; the strip rolls over it, clipped to one line.
+        const slot = document.createElement("span");
+        Object.assign(slot.style, { display: "inline-block", position: "relative", clipPath: "inset(0)" });
+        const sizer = document.createElement("span");
+        sizer.textContent = char;
+        sizer.style.visibility = "hidden";
+        const strip = document.createElement("span");
+        Object.assign(strip.style, { position: "absolute", left: "0", top: "0", width: "100%", textAlign: "center" });
+        for (let i = 0; i < COLUMN_DIGITS; i++) {
+          const line = document.createElement("span");
+          line.style.display = "block";
+          line.textContent = String(i % 10);
+          strip.append(line);
+        }
+        slot.append(sizer, strip);
+        const digit = Number(char);
+        place(strip, start(fromRight));
+        columns.push({ digit, sizer, strip });
+        return slot;
+      }),
+    );
+  };
+
+  const revert = own((dispose, after) => {
+    after(() => {
+      element.textContent = text;
+    });
+    dispose(() => roll?.kill());
+    shown.setAttribute("aria-hidden", "true");
+    Object.assign(spoken.style, VISUALLY_HIDDEN);
+    spoken.textContent = text;
+    render(text, (fromRight) => {
+      const digits = [...text].filter(isDigit);
+      return Number(digits[digits.length - 1 - fromRight]);
+    });
+    element.replaceChildren(shown, spoken);
+  });
+
+  const set = (value: number | string) => {
+    const next = toText(value);
+    if (next === text) return undefined;
+    const rising = !(valueOf(next) < valueOf(text));
+    // Positions before the roll, read before anything is rebuilt, counted from the right.
+    const before = columns.map((column) => positionOf(column.strip) % 10).reverse();
+    roll?.kill();
+    if (shapeOf(next) !== shapeOf(text)) render(next, (fromRight) => before[fromRight] ?? 0);
+    text = next;
+    spoken.textContent = next;
+    const targets = [...next].filter(isDigit).map(Number);
+    roll = gsap.timeline();
+    columns.forEach((column, i) => {
+      const target = targets[i] ?? 0;
+      const order = columns.length - 1 - i;
+      const from = positionOf(column.strip) % 10;
+      column.digit = target;
+      column.sizer.textContent = String(target);
+      if (Math.abs(from - target) < 0.001) return place(column.strip, target);
+      // Forward rolls run 0–19 upward; backward rolls start in the second set and run down.
+      const start = rising ? from : from + 10;
+      const end = rising ? (target >= from ? target : target + 10) : target <= from ? target + 10 : target;
+      place(column.strip, start);
+      roll!.to(
+        column.strip,
+        { yPercent: (-100 / COLUMN_DIGITS) * end, duration, ease, onComplete: () => place(column.strip, target) },
+        order * stagger,
+      );
+    });
+    return roll;
+  };
+
+  return { set, revert };
+}
+```
+
+The shown digits are hidden from assistive technology, which reads the current value from a visually hidden twin. That twin is not announced when it changes; wrap the figure in `role="status"` only if every change should be spoken. `revert` leaves the element's text at its latest value.
+
 ## Controller contract
 
 | Builder | Phase | Returns | Reduced motion |
 |---|---|---|---|
 | `countUp` | Intro, or when the figure scrolls into view | `{ timeline, revert }` | Final value shown; completion fires |
 | `marquee` | Settled, once fonts and images in the row have loaded | `{ pause, play, revert }` | No-op; row static, wrapping or scrolling natively in CSS |
+| `odometer` | Initial state, then the app calls `set` on each new value | `{ set, revert }` | `set` writes the new text at once |
 | `logoCycle` | Settled, once the cells' logos have loaded | `{ pause, play, revert }` | No-op; the first logos stay, the pool stays hidden |
 
 - A counted figure needs no pre-paint hiding when built at initial state: it writes the start value before paint.

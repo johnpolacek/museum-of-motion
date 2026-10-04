@@ -25,7 +25,7 @@ Reference demo: none yet. Check visual quality, shader tuning, and frame pacing 
 - The `<img>` turns transparent after a prepared stage frame; it stays in the accessibility tree and keeps its accessible name while its ancestors are visible.
 - A wrapper's `visibility: hidden` leaves no plane pixels on the canvas. Hidden-at-build images still resolve readiness; revealing the wrapper draws correctly without a DOM-image flash. Repeat hide and show after initialization.
 - Without WebGL: no canvas, `ready` resolves `false`, and the image's inline style is untouched.
-- Reduced motion: no canvas, and wipe timelines complete at once with their callbacks.
+- Reduced motion: no canvas, and wipe and glitch timelines complete at once with their callbacks.
 - An image served without CORS keeps its DOM rendering, never becomes a texture, and its plane reports `webgl` false; one served with `Access-Control-Allow-Origin` but without `crossorigin` loads a readable copy and draws.
 - Lose the context with `WEBGL_lose_context`: every image shows at once and drawing stops. Restore it: planes rebuild (one new program and texture each) and keep their uniform values.
 - Revert every plane: GL deletes match creations for textures, programs, shaders, buffers, and vertex arrays, and each image's inline style matches its pre-build state.
@@ -36,6 +36,7 @@ Reference demo: none yet. Check visual quality, shader tuning, and frame pacing 
 - The lens changes sampled image pixels and returns to the original rendering at zero strength. Constant `smoothstep` edges in submitted shaders are increasing, as required by GLSL; a permissive software driver alone cannot validate this constraint.
 - Wave: scrolling bends the plane within `max` and it straightens to 0 at rest. After revert no ScrollTrigger remains and scrolling changes nothing.
 - Wipe: builds hidden at 0, `enter()` ends at 1, an `exit()` mid-way turns back from where it is, and revert restores the starting value.
+- Glitch: builds hidden, `enter()` shows the plane and settles `uGlitch` at 0, sampled rows jump while it is high and match the clean frame at 0, `exit()` ends hidden, and revert restores both uniforms.
 
 ## Manual checks
 

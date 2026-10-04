@@ -17,7 +17,9 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - Entrance splits revert at settled; only an active wave or speak-in finishes keep markup, until their cleanup boundary.
 - Kill a parent timeline of split runners mid-way: `revertText` restores each target, and a new runner starts from clean markup.
 - A setup that throws leaves GSAP's global context untouched: later tweens are not recorded by the failed context.
+- Typewriter: the element keeps its size while typing, the overlay grows one character at a time in order, `typeOut` deletes from the end and ends hidden, the caret blinks under three times a second and goes, and `revertTyping` restores the markup when killed. `retype` reads every word once from a hidden twin, stops on the last word, and `revert` puts the first back.
 - Scramble runners visibly scramble, end on the real words, and restore them when killed.
+- Glitch runners jump each type visibly, end on the exact markup and `position` and `transform`, keep the original text readable while copies show, strip ids from copies, and restore through `revertText` when killed. Copies show and hide at most once each.
 - Highlight runners leave no bar behind at settled or when killed, and bars span each line's words, not the full line box, in LTR and RTL.
 - Ellipse runners show whole lines at settled, with descenders and accents unclipped at both endpoints.
 - No inline `transform`, `will-change`, or `transition` remains on route items at settled.
@@ -42,6 +44,8 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - Reveal targets waiting below the fold stay in the accessibility tree and tab order; tabbing into one shows it at once.
 - Scroll down and back through every scrubbed effect; each returns exactly to its start values.
 - Pinned scenes and runs: no jump entering or leaving the pin; content below lands in place.
+- `stackCards`: each card pins `offset` px below the last, buried cards shrink by `shrink` per card above, the deck leaves together with its spacing, and teardown leaves no pin spacer or inline style.
+- `zoomThrough`: in `scale` mode the focus point holds still while the target grows, the target ends hidden and the back at scale 1; in `clip` mode the window opens to `inset(0)`; teardown restores every child's style.
 - `scrollWaypoints`: the traveller rests in place at the top, covers each marker's box exactly when that marker is centered, and lands again after a resize or a moved marker plus refresh; revert leaves no trigger or inline transform.
 - `runDrift` items travel from `-travel` toward `+travel` across the run and never show past their frames; `morphScrub` returns to the authored shape scrolling back up, and to the authored `d` after revert.
 - A `drift` curtain leaves no transform on the content wrapper after `reveal()` or `revert`; fixed UI stays in the shell.
@@ -59,6 +63,7 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 ## Pointer
 
 - Magnetic, tilt, and follower respond to the mouse, ignore touch and pen, and never stick after a tap.
+- Spotlight: the circle grows under the mouse, follows it, and shrinks on leave; a held touch opens it under the finger and a lift or cancel closes it; focus inside opens the whole layer; reduced motion places it on the pointer without easing; teardown restores the layer's `clip-path`.
 - Leaving the target returns it exactly to rest; teardown leaves no inline transform or `--pointer-*`.
 - The follower appears at the pointer, never sliding in from a corner, and hides when the mouse leaves the window.
 - Drag a track of links: it moves and snaps without following the link; a plain click follows it.
@@ -73,6 +78,8 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 
 ## Endless drag
 
+- Sortable: a drag opens the slot as the held item crosses each neighbor's middle and drops into it with every transform cleared; Space, arrows, and Escape pick up, move, and cancel with focus kept on the handle; the live region announces each step; `onReorder` fires once per move; reduced motion sorts without lift or slide; revert restores the item and handle style attributes exactly and keeps the order.
+- Swipe to dismiss: a short drag springs back, a long drag or a quick flick dismisses, the items below slide into the gap, `onDismiss` fires once, vertical touch swipes still scroll, the dismiss button and Delete work, and revert restores every style attribute exactly.
 - Clones are `aria-hidden` and `inert` with no ids; each real item is announced once and Tab visits only real items.
 - `dragLoop`: a drag past either end wraps with no gap across the viewport and lands on an item; a sideways wheel moves the same position and lands; a vertical wheel scrolls the page.
 - Tab brings each real item into view in the loop, including after a clone set wraps and while a wheel snap or throw is pending, and centers each tile in the grid; the viewport's own scroll stays 0.
@@ -100,10 +107,12 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 
 ## SVG, counters, and marquees
 
+- Text on a path: `pathScrub` moves only `startOffset`, follows scroll both ways, and rests at `to` under reduced motion; `pathLoop` stays within one lap, pauses on command and off screen; both restore the authored `startOffset`.
 - Drawn strokes start hidden without a flash and end at the SVG's own appearance after revert.
 - A morphed icon returns to its original `d` on revert; `set()` after revert does nothing.
 - Counted figures keep prefix, suffix, separators, and decimals and end on the exact source text. Test three or more decimals, such as `99.999%`, and the page locale's decimal mark.
 - While counting, neighbors do not shift and assistive technology finds only the final value.
+- Odometer: rising values roll each column forward through 9 to 0 and falling values roll back; a new value mid-roll continues from where the columns are; assistive technology reads the latest value once; `revert` leaves that value as plain text.
 - Marquee clones are `aria-hidden` and `inert` with no duplicate ids; each item is announced and focused once.
 - The marquee loops seamlessly, slows on hover, and pauses on focus, off screen, and on `pause()`.
 - Resizing rebuilds the clones to fill; revert restores the original markup exactly.
@@ -122,6 +131,10 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 
 ## Media, components, and hover
 
+- Directional fill: the fill opens from the edge the mouse entered and collapses onto the edge it left; keyboard focus fills from `focusFrom`; a tap fills and clears on lift; teardown restores the fill's `clip-path`.
+- State button: the button keeps its size; `loading` sets `aria-busy` and spins; `success` finishes the lap forward, draws the check, announces, and returns to the label; `error` shakes and announces; reduced motion swaps only; revert removes icons and status and restores the label's `style` attribute exactly, none included.
+- Press feedback: a press squashes and a release springs back to scale 1; the ripple centers on the press point, or the center for Enter and Space; a cancelled touch springs back; teardown removes ripples in flight and restores `position`, `overflow`, and transform.
+- Shake: swings narrow each time and end at rest, the element's own transform returns on completion or kill, reduced motion stays still and still completes, and the error text and `aria-invalid` appear with it.
 - Menu: links are out of the tab order at rest; `close()` mid-open turns the wipe back from where it is; revert leaves no inline style.
 - Enter and exit: the closed state paints at build, before GSAP's first tick; `close()` from the open rest plays the exit, not the entrance reversed; `close()` mid-entrance reverses without reaching the exit, and `open()` mid-exit returns to the pause; each rest fires its callback once; `easeReverse` changes the reversed curve; revert restores inline styles.
 - Dialog: focus lands inside through `showModal()` and returns to the trigger natively; Escape runs the exit while `open` stays true, then closes; `close(value)` sets `returnValue`.

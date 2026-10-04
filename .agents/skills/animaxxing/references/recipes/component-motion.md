@@ -1,6 +1,6 @@
 # Recipe: component motion
 
-A full-screen menu, an interruptible entrance with a different exit, native `<dialog>` enter and exit, an accordion panel, and a sliding tab indicator. The app keeps its markup, styling, and state (`aria-expanded`, `inert`, the focus trap, `hidden`, `open`, `aria-selected`); builders only move inline styles between states the app has chosen, and teardown restores them.
+A full-screen menu, an interruptible entrance with a different exit, native `<dialog>` enter and exit, an accordion panel, a sliding tab indicator, and a button that shows loading, success, and failure. The app keeps its markup, styling, and state (`aria-expanded`, `inert`, the focus trap, `hidden`, `open`, `aria-selected`); builders only move inline styles between states the app has chosen, and teardown restores them.
 
 Lifecycle: the framework controller creates each builder once the component is mounted, calls `open`, `close`, or `moveTo` when app state changes, and `revert` on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -568,6 +568,149 @@ tablist.addEventListener("click", (event) => {
 });
 ```
 
+## stateButton
+
+A button that shows its work: pressed, its label lifts away and a spinner turns while the app waits; on success the spinner finishes its turn before a check draws itself; on failure the button shakes and the label comes back. Then it settles to its label. The button never changes size: the label stays in place to hold its width, at `opacity: 0`, while the icons sit over it.
+
+The app owns the request and calls the builder's methods as it goes. The builder sets `aria-busy` while loading and announces the result through a visually hidden status beside the button, since a check or a shake says nothing to a screen reader.
+
+```html
+<button class="send" type="submit"><span data-state-label>Send</span></button>
+```
+
+```ts
+export type StateButtonOptions = {
+  /** The text that lifts away. Defaults to `[data-state-label]` inside the button. */
+  label?: HTMLElement;
+  /** Seconds the check or the error holds before the label returns. */
+  hold?: number;
+  /** Seconds per spinner turn. */
+  turn?: number;
+};
+export type StateButton = {
+  loading(): gsap.core.Timeline;
+  /** Finishes the spin, draws the check, announces `message`, then returns to the label. */
+  success(message?: string): gsap.core.Timeline;
+  /** Stops the spin, shakes, announces `message`, and returns to the label. */
+  error(message?: string): gsap.core.Timeline;
+  /** Straight back to the label. */
+  reset(): gsap.core.Timeline;
+  revert: Teardown;
+};
+
+const SPINNER = `<svg viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-dasharray="42 100"/></svg>`;
+const CHECK = `<svg viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12.5 10 17.5 19 7"/></svg>`;
+/** Swings for the error shake, narrowing to rest. */
+const SWINGS = [1, -0.8, 0.55, -0.3, 0.12, 0];
+
+export function stateButton(
+  button: HTMLElement,
+  { label = button.querySelector<HTMLElement>("[data-state-label]") ?? undefined, hold = 1.4, turn = 0.8 }: StateButtonOptions = {},
+): StateButton {
+  if (!label) throw new Error("stateButton needs a [data-state-label] element inside the button");
+  const target = label;
+  const reduced = prefersReducedMotion();
+  const runs = relay();
+  let spin: gsap.core.Tween | undefined;
+  let spinner!: HTMLElement;
+  let check!: HTMLElement;
+  let status!: HTMLElement;
+  let mark!: SVGPolylineElement;
+
+  const revert = own((dispose, after) => {
+    // The label's style attribute comes back exactly, including none at all. Registered first, so it runs last.
+    const labelStyle = target.getAttribute("style");
+    after(() => {
+      gsap.set(target, { clearProps: "opacity,visibility,transform,translate" });
+      // Read the attribute first: Chrome can write a just-cleared inline style back as style="" after a removal.
+      void target.getAttribute("style");
+      if (labelStyle === null) target.removeAttribute("style");
+      else target.setAttribute("style", labelStyle);
+    });
+    after(snapshotStyles([button], ["position", "transform", "translate"]));
+    const busy = button.getAttribute("aria-busy");
+    after(() => (busy === null ? button.removeAttribute("aria-busy") : button.setAttribute("aria-busy", busy)));
+    if (getComputedStyle(button).position === "static") button.style.position = "relative";
+    const icon = (html: string) => {
+      const holder = document.createElement("span");
+      holder.setAttribute("aria-hidden", "true");
+      Object.assign(holder.style, { position: "absolute", inset: "0", display: "grid", placeItems: "center", pointerEvents: "none", visibility: "hidden", opacity: "0" });
+      holder.innerHTML = html;
+      button.append(holder);
+      after(() => holder.remove());
+      return holder;
+    };
+    spinner = icon(SPINNER);
+    check = icon(CHECK);
+    mark = check.querySelector("polyline")!;
+    status = document.createElement("span");
+    status.setAttribute("role", "status");
+    Object.assign(status.style, { position: "absolute", width: "1px", height: "1px", overflow: "hidden", clipPath: "inset(50%)", whiteSpace: "nowrap" });
+    button.after(status);
+    after(() => status.remove());
+    dispose(() => {
+      runs.kill();
+      spin?.kill();
+      gsap.killTweensOf([button, target, spinner, check, mark]);
+    });
+  });
+
+  const length = 20;
+  /** The label returns and every icon goes. */
+  const settle = (tl: gsap.core.Timeline, at: number | string) =>
+    tl
+      .to([spinner, check], { autoAlpha: 0, duration: reduced ? 0 : 0.2 }, at)
+      .fromTo(target, { autoAlpha: 0, y: reduced ? 0 : 10 }, { autoAlpha: 1, y: 0, duration: reduced ? 0 : 0.35, ease: "back.out(1.8)" }, "<0.05")
+      .call(() => button.removeAttribute("aria-busy"));
+
+  return {
+    loading() {
+      const tl = runs.next();
+      button.setAttribute("aria-busy", "true");
+      status.textContent = "";
+      tl.to(target, { autoAlpha: 0, y: reduced ? 0 : -10, duration: reduced ? 0 : 0.2, ease: "power2.in" }).to(spinner, { autoAlpha: 1, duration: reduced ? 0 : 0.2 }, "<0.1");
+      spin?.kill();
+      if (!reduced) spin = gsap.fromTo(spinner, { rotation: 0 }, { rotation: 360, duration: turn, ease: "none", repeat: -1 });
+      return tl;
+    },
+    success(message = "Done") {
+      const tl = runs.next();
+      status.textContent = message;
+      // Finish the turn in progress at the same speed, so the spinner never jumps.
+      const left = spin ? (1 - spin.progress()) * turn : 0;
+      spin?.kill();
+      if (!reduced) tl.to(spinner, { rotation: 360, duration: left, ease: "none" });
+      tl.to(spinner, { autoAlpha: 0, duration: reduced ? 0 : 0.15 })
+        .set(mark, { attr: { "stroke-dasharray": length, "stroke-dashoffset": reduced ? 0 : length } })
+        .set(check, { autoAlpha: 1 })
+        .to(mark, { attr: { "stroke-dashoffset": 0 }, duration: reduced ? 0 : 0.4, ease: "power2.out" });
+      return settle(tl, `+=${hold}`);
+    },
+    error(message = "That didn't work. Try again.") {
+      const tl = runs.next();
+      status.textContent = message;
+      spin?.kill();
+      tl.to(spinner, { autoAlpha: 0, duration: reduced ? 0 : 0.15 });
+      settle(tl, ">");
+      if (!reduced) {
+        const width = 8;
+        for (const swing of SWINGS) tl.to(button, { x: swing * width, duration: 0.4 / SWINGS.length, ease: "sine.inOut" }, swing === SWINGS[0] ? "<" : ">");
+      }
+      return tl;
+    },
+    reset() {
+      const tl = runs.next();
+      spin?.kill();
+      status.textContent = "";
+      return settle(tl, 0);
+    },
+    revert,
+  };
+}
+```
+
+The check's stroke is drawn by its dash offset, with no plugin. The spinner turns only while loading and stops on success, error, reset, or revert; it never runs ambient. Under reduced motion nothing spins, draws, or shakes: the label swaps out and back, and the status still announces the result.
+
 ## Controller contract
 
 | Builder | Create | Returns | Reduced motion |
@@ -577,6 +720,7 @@ tablist.addEventListener("click", (event) => {
 | `dialogMotion` | Settled, once per `<dialog>` | `{ open, close, revert }` | `open()` shows at once; `close()` closes on the next tick |
 | `disclosure` | Settled, once per panel | `{ open, close, revert }` | Height snaps; inline height still clears once open |
 | `tabIndicator` | Settled, once tab widths are final | `{ moveTo, revert }` | Jumps onto the tab |
+| `stateButton` | Settled, once the button is mounted; call `loading`, `success`, `error`, or `reset` as the request runs | `{ loading, success, error, reset, revert }` | Label swaps at once, nothing spins or shakes; the status still announces |
 
 - State first, motion second, in the same task: set `aria-expanded`, `inert`, `hidden`, or `open`, then call the builder. Hang the closing state change on the returned timeline's `onComplete`, or `enterExit`'s `onClose`; every timeline completes, under reduced motion too.
 - `open()` and `close()` may interrupt each other; the next call tweens from where things are. Nothing here navigates, changes attributes, or moves focus, except `dialogMotion`'s `showModal()` and `close()`.

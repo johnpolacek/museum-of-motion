@@ -1,6 +1,6 @@
 # Recipe: scroll effects
 
-Ten scroll-linked effects: reveals, a scrubbed statement, parallax, a pinned scene, a horizontal run with optional item drift, an element that travels between waypoints, a progress rule, a velocity skew, a header theme that follows the section beneath it, and a scroll direction state.
+Twelve scroll-linked effects: reveals, a scrubbed statement, parallax, a pinned scene, cards that stack as they pin, a zoom through to the next layer, a horizontal run with optional item drift, an element that travels between waypoints, a progress rule, a velocity skew, a header theme that follows the section beneath it, and a scroll direction state.
 
 Lifecycle: the framework controller builds these once the owner is measurable, refreshes ScrollTrigger when fonts, media, data, or scroll restoration change layout, and calls each idempotent teardown on unmount. Builders never kill triggers they did not create. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -674,6 +674,133 @@ export function scrollDirection(
 
 Runs under reduced motion: the header still hides and returns, without a transition. Pair it with smooth scroll freely; the trigger reads the eased position.
 
+## stackCards
+
+Cards pin one below another as the page scrolls, each sliding over the last, and the cards beneath shrink a little so the pile reads as a deck. When the last card arrives the whole deck scrolls away together. Each card pins on its own trigger, so cards may differ in height.
+
+```html
+<section class="deck">
+  <article data-stack-card>…</article>
+  <article data-stack-card>…</article>
+  <article data-stack-card>…</article>
+</section>
+```
+
+```css
+/* Positioned, so each later card paints over the pinned ones. Give cards an opaque background. */
+[data-stack-card] { position: relative; }
+```
+
+```ts
+export type StackOptions = {
+  /** Px from the viewport top where the first card pins. */
+  top?: number;
+  /** Px each later card pins below the one before, so the edges of the deck show. */
+  offset?: number;
+  /** Scale lost per card stacked on top. */
+  shrink?: number;
+  scrub?: number | boolean;
+  scroller?: Scroller;
+};
+
+export function stackCards(
+  cards: HTMLElement[],
+  { top = 80, offset = 16, shrink = 0.05, scrub = SCRUB, scroller }: StackOptions = {},
+): Teardown {
+  if (prefersReducedMotion() || cards.length < 2) return () => {};
+  return own((_dispose, after) => {
+    after(snapshotStyles(cards));
+    const last = cards[cards.length - 1]!;
+    const pinAt = (i: number) => `top top+=${top + i * offset}`;
+    cards.slice(0, -1).forEach((card, i) => {
+      // Every card holds until the last one lands on the deck, then all of them leave together.
+      ScrollTrigger.create({ trigger: card, scroller, start: pinAt(i), endTrigger: last, end: pinAt(cards.length - 1), pin: true, pinSpacing: false });
+      const buried = cards.length - 1 - i;
+      gsap.to(card, {
+        scale: 1 - shrink * buried,
+        transformOrigin: "50% 0%",
+        ease: "none",
+        scrollTrigger: { trigger: cards[i + 1]!, scroller, start: "top bottom", endTrigger: last, end: pinAt(cards.length - 1), scrub },
+      });
+    });
+  });
+}
+```
+
+The static CSS is a plain column of cards, the fallback without JavaScript and under reduced motion. Keep each card shorter than the viewport minus `top`, or its lower part scrolls under the next card before it can be read.
+
+## zoomThrough
+
+A small thing becomes the whole screen as the page scrolls. The section pins while a timeline scrubs, then releases. Two modes:
+
+- `scale`: `target` grows from a focus point until the viewer passes through it, then fades, uncovering the layer behind it. Point `focus` at the part to fly into, such as the counter of an "O"; its center becomes the transform origin.
+- `clip`: `target`, usually an image or video, opens from a small window (`inset`) to full bleed.
+
+```html
+<section class="zoom">
+  <figure class="zoom-back">…the layer revealed behind…</figure>
+  <h2 class="zoom-front">Every way a page can m<span data-zoom-focus>o</span>ve</h2>
+</section>
+```
+
+```css
+.zoom { position: relative; height: 100vh; height: 100svh; overflow: clip; display: grid; place-items: center; }
+.zoom > * { grid-area: 1 / 1; }
+```
+
+```ts
+export type ZoomOptions = {
+  mode?: "scale" | "clip";
+  /** `scale` mode: the part of `target` to fly into, HTML or SVG. Defaults to its center. */
+  focus?: Element;
+  /** `scale` mode: the final scale. */
+  scale?: number;
+  /** `clip` mode: the starting window, as `inset()` arguments. Give all four sides and a radius, so each value tweens to its pair. */
+  inset?: string;
+  /** Pinned distance, in section heights. */
+  length?: number;
+  scrub?: number | boolean;
+  scroller?: Scroller;
+};
+
+export function zoomThrough(
+  section: HTMLElement,
+  target: HTMLElement,
+  { mode = "scale", focus, scale = 30, inset = "30% 34% 30% 34% round 12px", length = 1.5, scrub = SCRUB, scroller }: ZoomOptions = {},
+): Teardown {
+  if (prefersReducedMotion()) return () => {};
+  return own((_dispose, after) => {
+    after(snapshotStyles([...new Set([target, ...gsap.utils.toArray<HTMLElement>(section.children)])]));
+    const behind = Array.from(section.children).filter((child): child is HTMLElement => child !== target && child instanceof HTMLElement);
+    const timeline = gsap.timeline({
+      defaults: { ease: "none" },
+      scrollTrigger: { trigger: section, start: "top top", end: () => `+=${section.offsetHeight * length}`, pin: true, scrub, scroller, anticipatePin: 1, invalidateOnRefresh: true },
+    });
+    if (mode === "clip") {
+      timeline.fromTo(target, { clipPath: `inset(${inset})` }, { clipPath: "inset(0% 0% 0% 0% round 0px)", ease: "power2.inOut" }, 0);
+      return;
+    }
+    // The origin is the focus's center within the target, measured at scale 1. It is measured again at
+    // each refresh, so a font or layout change after the build still flies into the right spot.
+    const origin = () => {
+      const current = gsap.getProperty(target, "scale");
+      gsap.set(target, { scale: 1 });
+      const box = target.getBoundingClientRect();
+      const spot = (focus ?? target).getBoundingClientRect();
+      gsap.set(target, { scale: current });
+      return `${spot.left + spot.width / 2 - box.left}px ${spot.top + spot.height / 2 - box.top}px`;
+    };
+    // force3D off keeps scaled text crisp: a cached layer would blur at this size.
+    timeline
+      .fromTo(target, { scale: 1, transformOrigin: origin }, { scale, ease: "power2.in", force3D: false }, 0)
+      .to(target, { autoAlpha: 0, duration: 0.15 }, 0.85)
+      .fromTo(behind, { scale: 1.15 }, { scale: 1, ease: "power2.out" }, 0);
+  });
+}
+```
+
+Under reduced motion and without JavaScript, the section shows both layers at rest; design the front layer so the back still reads around it, or hide the back in that state with the pre-paint marker. The front scales from a single point, so text is best kept to a short display line.
+
 ## Controller contract
 
 | Builder | Create | Returns | Reduced motion |
@@ -681,6 +808,8 @@ Runs under reduced motion: the header still hides and returns, without a transit
 | `revealOnScroll` | Initial state, before paint, for targets that are not route items | teardown | No-op; content visible |
 | `scrubStatement`, `parallax`, `velocitySkew` | Settled, once text and media are measurable | teardown | No-op; static |
 | `pinnedScene` | Settled, after fonts and media above it have sized | teardown | No-op; stacked fallback |
+| `stackCards` | Settled, same as a scene | teardown | No-op; a plain column of cards |
+| `zoomThrough` | Settled, same as a scene | teardown | No-op; both layers at rest |
 | `horizontalRun` | Settled, same as a scene | `{ revert, animation }` | No-op; native scroller |
 | `runDrift` | Settled, right after its run | teardown | No-op; static |
 | `scrollWaypoints` | Settled, once the traveller and markers are laid out | teardown | No-op; the traveller stays in its place |

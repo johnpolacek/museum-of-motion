@@ -1,6 +1,6 @@
 ---
 name: animaxxing
-description: "Build GSAP motion without restyling, as single effects or the full treatment. For \"we're animaxxing\", every element enters from a blank page, rests, and leaves. Effects: split-text entrances, scattering headlines, speak-in, letter waves, scroll reveals, scrubbed statements, parallax, pinned scenes, horizontal runs, scroll waypoints, smooth scrolling, curtain, curve, and preloader covers, Flip layout and shared-element morphs, image reveals, hover previews, video and frame scrubbing, menu, dialog, accordion, tab, enter/exit motion, label rolls, underline sweeps, magnetic buttons, tilt cards, cursor followers, image trails, momentum and proximity hover, drag-and-throw tracks, endless drag loops, wrapping grids, flick card stacks, CustomEase curves, section paging, sound cues, SVG draws and morphs, count-up figures, marquees, confetti, emoji rain, particle controls, blast-off exits, and hover stuck on touch. Pair with the matching GSAP framework skill. Not for branding, redesign, routing, or GSAP API questions."
+description: "Build GSAP motion without restyling, as single effects or the full treatment: for \"we're animaxxing\", every element enters from a blank page, rests, and leaves. Text: split, scramble, glitch, typewriter, and speak-in entrances, scattering headlines, letter waves, text on a path, count-ups, odometers. Scroll: reveals, scrubbing, parallax, pinned scenes, stacking cards, zoom-through, horizontal runs, waypoints, smooth scroll, paging. Pointer: magnetic, tilt, spotlights, directional fills, press ripples, shakes, cursor followers, image trails, proximity, label rolls, underlines. Drag: throw tracks, endless loops, card stacks, sortable lists, swipe to dismiss. Also page covers, Flip and shared-element morphs, menus, dialogs, tabs, state buttons, media and SVG effects, marquees, CustomEase, sound, confetti, particles, and hover stuck on touch. Pair with the matching GSAP framework skill. Not for branding, redesign, routing, or GSAP API questions."
 license: MIT
 metadata:
   short-description: Reusable GSAP text, scroll, pointer, layout, SVG, and particle motion for any brand
@@ -37,23 +37,27 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 | A brand's signature curve for every `ease` option | [Signature curves](references/motion-vocabulary.md#signature-curves) |
 | Loading flashes, auth-dependent content, or layout shifts | Matching installed framework skill's `references/initialization.md`, **Data readiness and layout stability** |
 | Character animation: font readiness, kerning, masks, stable split/revert | [Text stability](references/text-stability.md) |
-| Character, word, line, or scramble entrances/exits, ellipse line reveals, highlighter line sweeps | [Split entrances](references/recipes/split-entrances.md) |
+| Character, word, line, scramble, or glitch entrances/exits, ellipse line reveals, highlighter line sweeps | [Split entrances](references/recipes/split-entrances.md) |
 | Page items, including scattering headlines | [Route letters](references/recipes/route-letters.md) |
 | Short display copy arriving at speaking pace | [Speak-in](references/recipes/speak-in.md) |
+| Text typed behind a caret, deleted, or a word that retypes through a list | [Typewriter](references/recipes/typewriter.md) |
 | Ambient headline ripple | [Wave](references/recipes/wave.md) |
-| Scroll reveals and pop-ins, scrubbed statements, parallax and footer reveals, pinned scenes, horizontal runs and drift inside them, an element traveling between section waypoints, progress, velocity skew, header theme per section, hide-on-scroll headers | [Scroll effects](references/recipes/scroll-effects.md) |
-| Magnetic buttons, tilt cards, cursor follower and its scrolling label, momentum hover, proximity scaling and dock effects, image trails, drag-and-throw tracks | [Pointer effects](references/recipes/pointer-effects.md) |
+| Scroll reveals and pop-ins, scrubbed statements, parallax and footer reveals, pinned scenes, stacking cards, zoom-through to the next scene, horizontal runs and drift inside them, an element traveling between section waypoints, progress, velocity skew, header theme per section, hide-on-scroll headers | [Scroll effects](references/recipes/scroll-effects.md) |
+| Magnetic buttons, tilt cards, spotlight reveals, cursor follower and its scrolling label, momentum hover, proximity scaling and dock effects, image trails, drag-and-throw tracks, swipe to dismiss | [Pointer effects](references/recipes/pointer-effects.md) |
 | Endless drag galleries: a wrapping loop with snap, wheel, and drift; a 2D grid that wraps on both axes; a fanned card stack dealt by drag or flick | [Endless drag](references/recipes/endless-drag.md) |
+| Lists reordered by dragging a handle or with the keyboard | [Sortable](references/recipes/sortable.md) |
 | Full-screen sections changing on a wheel flick, swipe, or key | [Section pager](references/recipes/section-pager.md) |
 | Opt-in sound on interactions and timelines, ambient beds | [Sound cues](references/recipes/sound-cues.md) |
-| Line drawing, icon morphs, a mark following a path, a section edge that morphs with scroll | [SVG effects](references/recipes/svg-effects.md) |
-| Count-up figures, looping marquees, logo walls that cycle | [Counters and marquees](references/recipes/counters-and-marquees.md) |
+| Line drawing, icon morphs, a mark following a path, a section edge that morphs with scroll, text riding a path or turning around a badge | [SVG effects](references/recipes/svg-effects.md) |
+| Count-up figures, odometer digits rolling to new values, looping marquees, logo walls that cycle | [Counters and marquees](references/recipes/counters-and-marquees.md) |
 | Eased page scrolling with Lenis or ScrollSmoother | [Smooth scroll](references/recipes/smooth-scroll.md) |
 | Curtain page transitions, tilted, titled, clip-path wipe, or drifting covers, curved SVG swipe covers, first-visit preloaders | [Page covers](references/recipes/page-covers.md) |
 | Filter, reorder, and expand layouts; shared-element morphs across pages | [Layout Flip](references/recipes/layout-flip.md) |
 | Image wipe reveals, hover image previews, scroll-scrubbed video, canvas frame sequences | [Media effects](references/recipes/media-effects.md) |
-| Label rolls, underline sweeps, image zoom on hover and focus | [Hover effects](references/recipes/hover-effects.md) |
-| Menu overlays, interruptible enter/exit with reverse easing, dialog enter and exit, accordion height, sliding tab indicators | [Component motion](references/recipes/component-motion.md) |
+| Label rolls, underline sweeps, direction-aware fills, image zoom on hover and focus |
+| A control that squashes and ripples when pressed, by any input | [Press feedback](references/recipes/press-feedback.md) |
+| A shake for an error or refused action | [Accents](references/motion-vocabulary.md#accents) | [Hover effects](references/recipes/hover-effects.md) |
+| Menu overlays, interruptible enter/exit with reverse easing, dialog enter and exit, accordion height, sliding tab indicators, buttons that show loading, success, and failure | [Component motion](references/recipes/component-motion.md) |
 | Dispersal on a call to action | [Blast-off](references/recipes/blast-off.md) |
 | Confetti bursts and emoji rain thrown under gravity | [Physics effects](references/recipes/physics-effects.md) |
 | Particle buttons, cards, links, or command fields | [Particle effects](references/recipes/particle-effects.md) plus [field/attach helpers](references/recipes/particle-field.md) |

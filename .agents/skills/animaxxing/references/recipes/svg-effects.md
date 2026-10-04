@@ -1,10 +1,10 @@
 # Recipe: SVG effects
 
-Four SVG effects on the project's own SVG, keeping its strokes and fills: strokes that draw in and out, an icon morph, a mark that follows a path, and a shape that morphs with scroll.
+Five SVG effects on the project's own SVG, keeping its strokes and fills: strokes that draw in and out, an icon morph, a mark that follows a path, a shape that morphs with scroll, and text that rides a path.
 
 Lifecycle: see the [controller contract](#controller-contract); the controller calls each `revert` on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
-Dependencies: `gsap`, `gsap/DrawSVGPlugin`, `gsap/MorphSVGPlugin`, `gsap/MotionPathPlugin`. Register only the ones used. `morphScrub` also needs `gsap/ScrollTrigger`.
+Dependencies: `gsap`, `gsap/DrawSVGPlugin`, `gsap/MorphSVGPlugin`, `gsap/MotionPathPlugin`. Register only the ones used. `morphScrub` and `pathScrub` also need `gsap/ScrollTrigger`.
 
 ```ts
 import gsap from "gsap";
@@ -268,6 +268,101 @@ export function followPath(
 
 The controller pauses it off screen. The endless loop needs a user pause (WCAG 2.2.2): wire the page's control to `pause()` and `play()`.
 
+## Text on a path
+
+A line of text rides an SVG path. `pathScrub` slides it along an open curve as the page scrolls, both ways, so it rests whenever scrolling stops. `pathLoop` turns it around a closed path, such as a circular badge; it is ambient. Both move the `textPath`'s `startOffset` and nothing else. The text stays real SVG text, read by assistive technology and selectable. Also needs `gsap/ScrollTrigger` for `pathScrub`.
+
+```html
+<svg viewBox="0 0 600 200" class="path-line">
+  <path id="line-curve" d="M20 160 C160 20 440 20 580 160" fill="none" />
+  <text><textPath href="#line-curve" startOffset="0%">Every way a page can move</textPath></text>
+</svg>
+
+<!-- A badge: the circle is drawn twice in one path, so a loop of one lap is seamless. Keep the text under one lap. -->
+<svg viewBox="0 0 200 200" class="path-badge">
+  <path id="badge-ring" d="M100 20 a80 80 0 1 1 0 160 a80 80 0 1 1 0 -160 a80 80 0 1 1 0 160 a80 80 0 1 1 0 -160" fill="none" />
+  <text><textPath href="#badge-ring">Museum of Motion · Every way ·</textPath></text>
+</svg>
+```
+
+```ts
+export type PathScrubOptions = {
+  /** `startOffset` in percent when the trigger enters, and when it leaves. */
+  from?: number;
+  to?: number;
+  /** The element whose pass drives the slide; defaults to the text's `svg`. */
+  trigger?: Element;
+  start?: string;
+  end?: string;
+  scrub?: number | boolean;
+  scroller?: Element | string;
+};
+
+/** Slides text along its path with scroll. Reduced motion places it at `to`. */
+export function pathScrub(
+  textPath: SVGTextPathElement,
+  { from = 100, to = 0, trigger, start = "top bottom", end = "center center", scrub = 0.6, scroller }: PathScrubOptions = {},
+): Teardown {
+  return own((_dispose, after) => {
+    after(snapshot([textPath], ["startOffset"], []));
+    if (prefersReducedMotion()) {
+      textPath.setAttribute("startOffset", `${to}%`);
+      return;
+    }
+    gsap.fromTo(
+      textPath,
+      { attr: { startOffset: `${from}%` } },
+      {
+        attr: { startOffset: `${to}%` },
+        ease: "none",
+        scrollTrigger: { trigger: trigger ?? textPath.ownerSVGElement ?? textPath, start, end, scrub, scroller },
+      },
+    );
+  });
+}
+
+export type PathLoopOptions = {
+  /** Seconds per lap. */
+  duration?: number;
+  /** 1 runs along the path's direction, -1 against it. */
+  direction?: 1 | -1;
+};
+
+/** Turns text around a closed path drawn as two laps. Ambient; pauses off screen. */
+export function pathLoop(textPath: SVGTextPathElement, { duration = 16, direction = 1 }: PathLoopOptions = {}): Follower {
+  if (prefersReducedMotion()) return { pause: () => {}, play: () => {}, revert: () => {} };
+  let tween: gsap.core.Tween | undefined;
+  let paused = false;
+  let visible = true;
+  const sync = () => (paused || !visible ? tween?.pause() : tween?.play());
+  const revert = own((dispose, after) => {
+    after(snapshot([textPath], ["startOffset"], []));
+    // Half the two-lap path is one lap, so 0% and 50% look the same.
+    const [a, b] = direction > 0 ? [0, 50] : [50, 0];
+    tween = gsap.fromTo(textPath, { attr: { startOffset: `${a}%` } }, { attr: { startOffset: `${b}%` }, duration, ease: "none", repeat: -1 });
+    const seen = new IntersectionObserver(([entry]) => {
+      visible = entry?.isIntersecting ?? true;
+      sync();
+    });
+    seen.observe(textPath.ownerSVGElement ?? textPath);
+    dispose(() => seen.disconnect());
+  });
+  return {
+    pause: () => {
+      paused = true;
+      sync();
+    },
+    play: () => {
+      paused = false;
+      sync();
+    },
+    revert,
+  };
+}
+```
+
+Set the text's size and `letter-spacing` so it fits: text past the path's end is not drawn. Give the scrub's `end` a point where the line should rest, such as `center center`. The loop runs past five seconds, so wire `pause` and `play` to a visible control.
+
 ## Controller contract
 
 | Builder | Phase | Returns | Reduced motion |
@@ -276,6 +371,8 @@ The controller pauses it off screen. The endless loop needs a user pause (WCAG 2
 | `drawOut` | Outro | `{ timeline, revert }` | Removed at once, completion fires |
 | `morphToggle` | Settled; `set()` on each state change | `{ set, revert }` | Instant swap |
 | `followPath` | Settled | `{ pause, play, revert }` | No-op |
+| `pathScrub` | Settled, once the trigger is measurable | teardown | Text placed at `to` |
+| `pathLoop` | Settled | `{ pause, play, revert }` | No-op |
 | `morphScrub` | Settled, once the trigger is measurable; the controller refreshes ScrollTrigger on layout change | teardown | No-op; authored shape |
 
 - SVG markers for pre-paint hiding use `data-draw`; `drawIn` renders its start before the controller releases them.

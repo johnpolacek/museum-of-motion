@@ -34,6 +34,8 @@ export type PlaneUniforms = {
   uVelocity: Uniform<number>;
   /** Wipe: 0 hides the image, 1 shows it whole. */
   uProgress: Uniform<number>;
+  /** Glitch strength: bands and blocks jump sideways; 0 at rest. */
+  uGlitch: Uniform<number>;
   /** Seconds, from GSAP's ticker. */
   uTime: Uniform<number>;
 };
@@ -90,6 +92,8 @@ uniform float uContain;
 uniform vec2 uMouse;
 uniform float uHover;
 uniform float uProgress;
+uniform float uGlitch;
+uniform float uTime;
 varying vec2 vUv;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
@@ -101,10 +105,16 @@ float noise(vec2 p) {
 }
 
 void main() {
+  // Glitch: twelve times a second, a few horizontal bands and blocks jump sideways.
+  float tick = floor(uTime * 12.0);
+  float band = hash(vec2(floor(vUv.y * 16.0), tick));
+  float block = hash(floor(vUv * vec2(6.0, 10.0)) + tick);
+  float jump = (step(0.7, band) * (band - 0.85) * 0.6 + step(0.85, block) * (block - 0.925) * 0.8) * uGlitch;
+  vec2 at = vUv + vec2(jump, 0.0);
   // Hover: a lens that magnifies toward the pointer.
-  vec2 toMouse = vUv - uMouse;
+  vec2 toMouse = at - uMouse;
   float lens = (1.0 - smoothstep(0.0, 0.45, length(toMouse))) * uHover;
-  vec2 uv = (vUv - toMouse * lens * 0.25 - 0.5) * uUvScale + 0.5;
+  vec2 uv = (at - toMouse * lens * 0.25 - 0.5) * uUvScale + 0.5;
   float inside = mix(1.0, step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0), uContain);
   vec4 color = texture2D(uTexture, clamp(uv, 0.0, 1.0));
   // Wipe: top to bottom behind a noisy edge.
@@ -170,6 +180,7 @@ export function imagePlane(
     uHover: { value: 0 },
     uVelocity: { value: 0 },
     uProgress: { value: 1 },
+    uGlitch: { value: 0 },
     uTime: { value: 0 },
     ...extra,
   };

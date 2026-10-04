@@ -1,6 +1,6 @@
 # Recipe: uniform effects
 
-Three effects that drive an [image plane](image-planes.md)'s uniforms with GSAP: a hover lens, a scroll-velocity wave, and a wipe for reveals and exits. Each owns only its uniforms, so all three can share a plane. With no WebGL or reduced motion, the plane's `webgl` is false: hover and wave build nothing, and the wipe's timelines finish at once on the plain image with their callbacks. `webgl` also turns false when the image proves unreadable or the plane reverts; from then on wipe timelines finish at once.
+Four effects that drive an [image plane](image-planes.md)'s uniforms with GSAP: a hover lens, a scroll-velocity wave, a wipe for reveals and exits, and a glitch. Each owns only its uniforms, so the lens and wave share a plane with either the wipe or the glitch; the wipe and the glitch both show and hide the plane through `uProgress`, so use one of them per plane. With no WebGL or reduced motion, the plane's `webgl` is false: hover and wave build nothing, and the wipe's timelines finish at once on the plain image with their callbacks. `webgl` also turns false when the image proves unreadable or the plane reverts; from then on wipe timelines finish at once.
 
 Lifecycle: the framework controller attaches effects after building the plane, calls the wipe's `enter` and `exit` in its intro and outro, and reverts effects before the plane on unmount.
 
@@ -178,7 +178,58 @@ export function wipe(plane: ImagePlane, { duration = 1.2, ease = "power2.inOut",
     },
   };
 }
+
+export type GlitchOptions = {
+  /** Seconds of glitching per run. */
+  duration?: number;
+  /** Starts with the plane hidden, ready for `enter`. False starts it shown. */
+  hidden?: boolean;
+};
+
+export type Glitch = {
+  /** Shows the image breaking up, then settling clean. */
+  enter(): gsap.core.Timeline;
+  /** Breaks the image up more and more, then hides it. */
+  exit(): gsap.core.Timeline;
+  /** One burst on a shown image, settling clean. */
+  burst(): gsap.core.Timeline;
+  revert: Teardown;
+};
+
+/**
+ * Bands and blocks jump sideways on `uGlitch`, in steps from the shader's clock. Nothing blinks:
+ * the plane shows once on `enter` and hides once on `exit`. Without WebGL, timelines finish at once.
+ */
+export function glitch(plane: ImagePlane, { duration = 0.6, hidden = true }: GlitchOptions = {}): Glitch {
+  const { uGlitch, uProgress } = plane.uniforms;
+  const start = [uGlitch.value, uProgress.value] as const;
+  let running: gsap.core.Timeline | undefined;
+  if (plane.webgl) uProgress.value = hidden ? 0 : 1;
+  const run = (build: (tl: gsap.core.Timeline) => void) => {
+    running?.kill();
+    running = gsap.timeline();
+    if (plane.webgl) build(running);
+    else running.to({}, { duration: 0 });
+    return running;
+  };
+  return {
+    enter: () =>
+      run((tl) => tl.set(uProgress, { value: 1 }, 0).fromTo(uGlitch, { value: 1 }, { value: 0, duration, ease: "power2.in" }, 0)),
+    exit: () =>
+      run((tl) =>
+        tl.fromTo(uGlitch, { value: 0 }, { value: 1, duration: duration * 0.6, ease: "power2.out" }).set(uProgress, { value: 0 }).set(uGlitch, { value: 0 }),
+      ),
+    burst: () => run((tl) => tl.fromTo(uGlitch, { value: 1 }, { value: 0, duration, ease: "power2.in" })),
+    revert() {
+      running?.kill();
+      gsap.killTweensOf([uGlitch, uProgress]);
+      [uGlitch.value, uProgress.value] = start;
+    },
+  };
+}
 ```
+
+The glitch moves pixels sideways only: no color split, and the plane shows and hides once, well under three flashes a second. For a glitch on text, use the `animaxxing` skill's split-entrances `glitchIn` and `glitchOut`.
 
 A hidden wipe needs care above the fold: the `<img>` shows until the plane draws, then the plane starts hidden. Hold the image in the framework's initial state, through a wrapper or class rather than the image's own inline `opacity`, and await the plane's `ready` within the deadline in the framework skill's `references/initialization.md`; on `false` or timeout, reveal the `<img>` without WebGL, such as with the `animaxxing` skill's `media-effects` reveal. Below the fold, build the plane early and call `enter` from a ScrollTrigger; the swap happens off screen. A lost context during a hidden wipe shows the whole `<img>`, which keeps the content readable.
 
@@ -202,9 +253,9 @@ plane.revert();
 | Phase | Call |
 |---|---|
 | initial state | `wipe(plane)` starts the plane hidden; the `<img>` shows until the plane draws. |
-| intro | `enter()`, after `plane.ready` for images on screen. |
+| intro | `enter()` on the wipe or the glitch, after `plane.ready` for images on screen. |
 | settled | `hoverDistortion` and `scrollWave` run on their own input; nothing ambient runs without input. |
-| outro | Stop hover and wave by reverting them, then `exit()`. |
+| outro | Stop hover and wave by reverting them, then `exit()`. A glitch's `burst()` can run any time the image is shown. |
 | unmount | Each teardown kills its tweens, trigger, and listeners and restores its uniforms; then the plane reverts. |
 
-Reduced motion builds no plane, so hover and wave do nothing and the wipe's timelines complete at once with their callbacks.
+Reduced motion builds no plane, so hover and wave do nothing and the wipe's and glitch's timelines complete at once with their callbacks.

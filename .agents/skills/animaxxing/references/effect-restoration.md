@@ -17,20 +17,25 @@ Apply when adapting any recipe. Each recipe rolls back its own setup when constr
 
 | Recipe | Teardown must cover |
 |---|---|
-| Split entrances / route letters | Timelines, every split, masks, original item styles, and any suspended CSS transition. |
+| Split entrances / route letters | Timelines, every split, masks, original item styles, and any suspended CSS transition; a glitch's copies, the wrapper around the original nodes, and the element's `position` and `transform`. |
+| Typewriter | The run, the overlay and caret, the wrapper around the original nodes, the element's `position`; `retype`'s caret, hidden twin, word, and `aria-hidden`. |
 | Speak-in | Nested word/character splits, persistent tilt/weight finishes, widths, and timeline callbacks. |
 | Wave | Scheduled next cycles, active tweens, splits, pinned glyph widths, and inline weight. |
-| Scroll effects | Triggers, pin spacers, splits, scrubbed and reveal tweens, the settle tween, focus listeners, the run's `overflow`, the header's `data-nav-theme` and the root's scroll direction attributes, and inline motion values a pinned revert leaves behind. Inner `containerAnimation` triggers first. |
-| Pointer effects | Listeners, `quickTo` values and inertia throws left inline, every trail image, the cursor label's track children and loop, `--pointer-*` properties, the `Draggable` and any throw in flight, its inline touch and selection styles, observers, and the viewport's `overflow`. |
+| Scroll effects | Triggers, pin spacers, splits, scrubbed and reveal tweens, the settle tween, focus listeners, the run's `overflow`, the header's `data-nav-theme` and the root's scroll direction attributes, inline motion values a pinned revert leaves behind, the deck's card transforms, and the zoom's target and layer transforms, opacity, and clip-path. Inner `containerAnimation` triggers first. |
+| Pointer effects | Listeners, `quickTo` values and inertia throws left inline, every trail image, the cursor label's track children and loop, a swiped item's and its followers' exact `style` attributes, `--pointer-*` properties, the spotlight layer's `clip-path`, the `Draggable` and any throw in flight, its inline touch and selection styles, observers, and the viewport's `overflow`. |
 | SVG effects | Draw timelines, stroke dash styles, the original `d` of a morphed path, the follower's transform and origin, and any morph in flight. |
-| Counters and marquees | The count tween, original text, reserved width, the counting and visually hidden spans, the marquee strip and clones, observers, listeners, and the hover ease; the logo cycle's swap and timer, each logo's original parent and order, and its exact `style` attribute. |
+| Counters and marquees | The count tween, original text, reserved width, the text path's `startOffset`, the counting and visually hidden spans, the odometer's roll, columns, and latest text, the marquee strip and clones, observers, listeners, and the hover ease; the logo cycle's swap and timer, each logo's original parent and order, and its exact `style` attribute. |
 | Blast-off | Tweens and splits across the composition, including container transforms and button changes. |
 | Smooth scroll | The engine's ticker callback and scroll listener, its classes and inline styles on the document or wrapper, and a stopped state. |
 | Page covers | The running sweep, panel transforms and visibility, pointer blocking, the title's text and styles, and the preloader's count, bar, `aria-valuenow`, and position. |
 | Media effects | Reveal timelines and their inline clip and transform, preview layers and `aria-hidden`, `quickTo` values, the video's `muted` and `playsInline` and its deferred tween and trigger, the sequence's observer, in-flight image requests, and canvas width and height attributes. |
 | Component motion | The timeline in flight; the menu panel's `visibility` and `clip-path` and its links' opacity and transforms; the dialog's `cancel` and `close` listeners, opacity, transform, and `--dialog-backdrop`; the disclosure's inline `height` and `overflow`; the indicator's transform, origin, and observer. Never the dialog's `open`, `hidden`, or ARIA. |
-| Hover effects | Listeners, tweens started from them, the roll's mask and copy with the label's original nodes moved back, the underline span and the link's position, the image's transform and the frame's overflow. |
+| Hover effects | Listeners, tweens started from them, the roll's mask and copy with the label's original nodes moved back, the underline span and the link's position, the fill's `clip-path`, the image's transform and the frame's overflow. |
+| State button | The relay and spin, the spinner and check, the status element, `aria-busy`, the button's `position` and transform, and the label's exact `style` attribute. |
+| Press feedback | Listeners, the squash tween, ripples in flight, and the control's `position`, `overflow`, and transform. |
+| Shake | The swing timeline and the element's own `transform`. |
 | Endless drag | The throw or deal in flight and the velocity tracker, the Draggable, landing tweens, the wheel's rest call, the drift ticker, observers, listeners, every clone, item and tile transforms and sizes, the grid's `data-drag-grid`, the deck's `data-flick` and each card's `inert`, and every `style` attribute under the viewport exactly as it was, including none. |
+| Sortable | The Draggables, slide and settle tweens, listeners, the live region, each item's and handle's exact `style` attribute, and the handles' `aria-pressed`. The order stays: it is app state. |
 | Physics effects | The run's timeline and every spawned piece, and its share of the live budget. Never the shared layer. |
 | Section pager | The move in flight, the Observer, key and focus listeners, section transforms and `z-index`, the container's `data-pager`, and the document's `overflow` and `overscroll-behavior`. |
 | Sound cues | Gesture and visibility listeners, in-flight file loads, every sounding source, and the audio context. Never the toggle or stored preference. |

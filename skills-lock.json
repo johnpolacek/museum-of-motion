@@ -5,13 +5,13 @@
       "source": "johnpolacek/animaxxing-skills",
       "sourceType": "github",
       "skillPath": "skills/animaxxing/SKILL.md",
-      "computedHash": "640d745b1120f89c8ad417dff79f9e25e13e88e2edd48f733bac378f5cf15295"
+      "computedHash": "5278cfcce18b54065a3a866f82093cd79b66b64058d4d2e2e67a2c09ba266b72"
     },
     "animaxxing-webgl": {
       "source": "johnpolacek/animaxxing-skills",
       "sourceType": "github",
       "skillPath": "skills/animaxxing-webgl/SKILL.md",
-      "computedHash": "87c32859f3f6bc7fc6b7fcb6e700254eb866b5bcd835ea4b09912370a0563d62"
+      "computedHash": "33288d1f07274c188d910d7ec419b582e70908be77f9170320297a5d573db754"
     },
     "gsap-core": {
       "source": "greensock/gsap-skills",

@@ -1,6 +1,6 @@
 # Recipe: hover effects
 
-Hover treatments for controls: a label that rolls over to a copy of itself, an underline that sweeps in, and a card image that zooms inside its frame. Mouse hover (`pointerType === "mouse"`) and `:focus-visible` share one hot state; touch, pen, and click- or tap-derived focus never enter it, so nothing sticks after a tap. The check runs per event, so a hybrid device gains the effects when a mouse arrives. None changes the control's box, accessible name, colors, or font.
+Hover treatments for controls: a label that rolls over to a copy of itself, an underline that sweeps in, a fill that enters from the edge the mouse crossed, and a card image that zooms inside its frame. Mouse hover (`pointerType === "mouse"`) and `:focus-visible` share one hot state; touch, pen, and click- or tap-derived focus never enter it, so nothing sticks after a tap. The check runs per event, so a hybrid device gains the effects when a mouse arrives. None changes the control's box, accessible name, colors, or font.
 
 Lifecycle: build per the [contract](#controller-contract); the framework controller calls the idempotent teardown on unmount, which removes injected markup and restores inline styles. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -251,6 +251,106 @@ export function underlineSweep(link: HTMLElement): Teardown {
 }
 ```
 
+## directionalFill
+
+A fill slides in from the edge the mouse came through and leaves through the edge it exits. The fill is the app's own overlay element; only its `clip-path` moves, so its color stays as styled. Keyboard focus fills from `focusFrom`, and a tap fills from the nearest edge and clears when the finger lifts, so nothing sticks.
+
+```html
+<a class="tile" href="/work"><span class="tile-fill" aria-hidden="true"></span><span class="tile-label">Work</span></a>
+```
+
+```css
+.tile { position: relative; isolation: isolate; }
+.tile-fill { position: absolute; inset: 0; z-index: -1; background: var(--accent); clip-path: inset(0 0 100% 0); }
+```
+
+```ts
+export type Edge = "top" | "right" | "bottom" | "left";
+export type DirectionalFillOptions = {
+  duration?: number;
+  /** Edge keyboard focus fills from. */
+  focusFrom?: Edge;
+};
+
+/** The fill's clip, collapsed onto each edge. */
+const COLLAPSED: Record<Edge, string> = {
+  top: "inset(0% 0% 100% 0%)",
+  right: "inset(0% 0% 0% 100%)",
+  bottom: "inset(100% 0% 0% 0%)",
+  left: "inset(0% 100% 0% 0%)",
+};
+const FULL = "inset(0% 0% 0% 0%)";
+
+/** The edge nearest a point, weighed by the box's aspect so a wide tile's sides are not too easy to hit. */
+function nearestEdge(box: DOMRect, x: number, y: number): Edge {
+  const dx = (x - box.left - box.width / 2) / box.width;
+  const dy = (y - box.top - box.height / 2) / box.height;
+  return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : dy > 0 ? "bottom" : "top";
+}
+
+export function directionalFill(target: HTMLElement, fill: HTMLElement, { duration = 0.3, focusFrom = "bottom" }: DirectionalFillOptions = {}): Teardown {
+  const reduced = prefersReducedMotion();
+  return own((dispose, after) => {
+    after(snapshotStyles([fill], ["clip-path"]));
+    dispose(() => gsap.killTweensOf(fill));
+    gsap.set(fill, { clipPath: COLLAPSED.top });
+    let hovered = false;
+    let focused = false;
+    let pressed = false;
+    let shown = false;
+    const go = (show: boolean, edge: Edge) => {
+      if (show === shown) return;
+      shown = show;
+      // Entering starts collapsed on the entry edge; leaving collapses onto the exit edge.
+      if (show) gsap.set(fill, { clipPath: COLLAPSED[edge] });
+      gsap.to(fill, {
+        clipPath: show ? FULL : COLLAPSED[edge],
+        duration: reduced ? 0 : show ? duration : duration * 0.8,
+        ease: show ? "power3.out" : "power2.in",
+        overwrite: "auto",
+      });
+    };
+    const edgeOf = (event: PointerEvent) => nearestEdge(target.getBoundingClientRect(), event.clientX, event.clientY);
+    const sync = (edge: Edge) => go(hovered || focused || pressed, edge);
+
+    listen(dispose, target, "pointerenter", (event) => {
+      if (event.pointerType !== "mouse") return;
+      hovered = true;
+      sync(edgeOf(event));
+    });
+    listen(dispose, target, "pointerleave", (event) => {
+      if (event.pointerType !== "mouse") return;
+      hovered = false;
+      sync(edgeOf(event));
+    });
+    listen(dispose, target, "pointerdown", (event) => {
+      if (event.pointerType === "mouse") return;
+      pressed = true;
+      sync(edgeOf(event));
+    });
+    const lift = (event: PointerEvent) => {
+      if (event.pointerType === "mouse" || !pressed) return;
+      pressed = false;
+      sync(edgeOf(event));
+    };
+    listen(dispose, target, "pointerup", lift);
+    listen(dispose, target, "pointercancel", lift);
+    listen(dispose, target, "focusin", (event) => {
+      if (!(event.target as Element).matches(":focus-visible")) return;
+      focused = true;
+      sync(focusFrom);
+    });
+    listen(dispose, target, "focusout", (event) => {
+      if (target.contains(event.relatedTarget as Node | null)) return;
+      focused = false;
+      sync(focusFrom);
+    });
+  });
+}
+```
+
+Keep the label's color readable on both the plain tile and the fill, since the fill reveals under it without changing it. A very fast diagonal entry reads its edge from the first event inside the tile, which may be a step past the edge it crossed.
+
 ## imageZoom
 
 The card's image scales up slightly while the card or its link is hot. Its parent frame clips it; the builder adds inline `overflow: clip` only when the frame is unclipped, and restores it. Give the image its own frame: clipping the card would clip focus rings inside it.
@@ -317,6 +417,7 @@ for (const card of page.querySelectorAll<HTMLElement>("[data-hover='zoom']")) st
 |---|---|---|---|
 | `textRoll` | Settled, once the label's font is ready | teardown | No-op; markup untouched (an instant swap would show nothing) |
 | `underlineSweep` | Settled | teardown | Line appears and clears at once, without moving: an affordance, kept |
+| `directionalFill` | Settled | teardown | Fills and clears at once from the same edges; taps and focus still fill |
 | `imageZoom` | Settled, once the frame's layout is final | teardown | No-op |
 
 - Do not combine these with `magnetic`, `tilt`, or a particle hot state on one target. A card may zoom its image while its link rolls a label: different boxes.

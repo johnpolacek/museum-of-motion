@@ -92,6 +92,53 @@ const SETTLED = { x: 0, y: 0, scale: 1, rotationX: 0, filter: "blur(0px)" };
 
 Cells abbreviate `duration` and `ease`; they are not copyable literals. Entrances merge `autoAlpha: 1` into the destination and exits merge `autoAlpha: 0`, except wipes, which hold `autoAlpha: 1` and animate only the clip. Pass the matching settled vars to `pair`.
 
+## Accents
+
+Small answers to an action, played once on the element the action touched.
+
+### shake
+
+A quick, damped side-to-side shake: the element says "no". It never carries the message alone: set `aria-invalid` and show the error text, linked with `aria-describedby`, in the same moment, so a screen reader hears what the shake shows.
+
+```ts
+import gsap from "gsap";
+
+export type ShakeOptions = {
+  /** Widest swing in px. */
+  distance?: number;
+  duration?: number;
+  onComplete?: () => void;
+};
+
+/** Swings narrow each time and end where they started. */
+const SWINGS = [1, -0.8, 0.55, -0.3, 0.12, 0];
+
+/** Shakes `target` once. Reduced motion skips the move; completion still fires. */
+export function shake(target: HTMLElement, { distance = 10, duration = 0.4, onComplete }: ShakeOptions = {}): gsap.core.Timeline {
+  const tl = gsap.timeline({ defaults: { overwrite: "auto" } });
+  if (onComplete) tl.eventCallback("onComplete", onComplete);
+  if (prefersReducedMotion()) return tl.to({}, { duration: 0 });
+  // The swings play over the element's own transform, and hand it back exactly when done.
+  const saved = [target.style.getPropertyValue("transform"), target.style.getPropertyPriority("transform")] as const;
+  const restore = () => {
+    gsap.set(target, { clearProps: "transform,translate" });
+    if (saved[0]) target.style.setProperty("transform", saved[0], saved[1]);
+  };
+  const each = duration / SWINGS.length;
+  for (const swing of SWINGS) tl.to(target, { x: swing * distance, duration: each, ease: "sine.inOut" });
+  tl.eventCallback("onComplete", () => {
+    restore();
+    onComplete?.();
+  });
+  tl.eventCallback("onInterrupt", restore);
+  return tl;
+}
+```
+
+| Accent | Move | Role |
+|---|---|---|
+| `shake` | `x` swings ±10px narrowing to 0 over 0.4s, `sine.inOut` | A wrong password, an invalid field, a refused action. Once per error; never on a loop. |
+
 ## Split families
 
 Character effects are for display type. Keep reading text immediately readable; speak-in is for short display copy only.
@@ -109,6 +156,8 @@ Character effects are for display type. Keep reading text immediately readable; 
 | `linesEllipseIn` / `Out` | lines, masked | mask `clip-path: ellipse(20% 0%)` swells to cover the line from its bottom edge while the line rises `yPercent 40 → 0`, 0.8s, `power3.out`, stagger 0.05 | A softer, rounder line reveal for display copy. |
 | `linesHighlightIn` / `Out` | lines, words | a `--line-highlight` bar sweeps `scaleX 0 → 1` over each line's words, the words appear, the bar retracts toward the line end; 0.12s between lines | A marker pass across a statement or pull quote. |
 | `scrambleIn` / `Out` | none | ScrambleText over `01{}/<>()=;` | Text resolving out of noise. Display only; needs ScrambleTextPlugin. |
+| `typeIn` / `typeOut` | an `aria-hidden` overlay; the text stays in place at `opacity 0` | one character at a time at ~22/s, uneven, slower after spaces and punctuation; the caret blinks twice at 1.06s and goes; out deletes at twice the speed | Text typed by a person. Plain text and `<br>` only. Code: [typewriter.md](recipes/typewriter.md). |
+| `glitchIn` / `Out` | clipped copies (`slice`, `blocks`, `scanline`, `ghost`), the element (`skew`), or chars (`weight`) | stepped jumps at 12/s, `±0.12em`, shrinking over 0.6s in, growing over 0.35s out | A signal dropping, then snapping clean. One per screen; no color split. |
 
 Split runners use `aria: "auto"`, revert on completion, and never split under reduced motion. Weight moves pin each character to its width at the heaviest weight it reaches (`inline-block`, centered) so the axis moves without reflow. Code: [split-entrances.md](recipes/split-entrances.md).
 
@@ -154,6 +203,8 @@ Scroll effects follow reading position, not page phase. Use at most one scrubbed
 | `scrubStatement` | words `opacity 0.15 → 1`, scrubbed through the reading zone | One display statement filling in as it is read. |
 | `parallax` | `y ∓ data-parallax` px, scrubbed across the section | Depth between media and captions. Small travel. |
 | `pinnedScene` | caller's timeline, pinned for `length` section heights | Steps, a product reveal, a diagram assembling. The loudest; one per page. |
+| `stackCards` | each card pins `16px` below the last; buried cards `scale −0.05` each, scrubbed; the deck leaves together | Features or case studies piling into a deck. Opaque cards. |
+| `zoomThrough` | pinned; `scale 1 → 30` from a focus point then fade, the back `scale 1.15 → 1`; or `clip-path inset(30% 34%) → 0` | A word or frame the reader passes through into the next scene. One per page. |
 | `horizontalRun` | track `x → -overflow`, pinned | A gallery or timeline run sideways. Native scroller when skipped. |
 | `runDrift` | `[data-run-drift]` items `x ∓ travel` px as each crosses the run's viewport | Depth inside a horizontal run: images slide within their frames. |
 | `scrollWaypoints` | one element `Flip.fit`s onto each later `[data-waypoint]` marker, scrubbed so it lands as the marker reaches the viewport's middle | A product shot docking beside each feature. One traveller per page. |
@@ -174,12 +225,17 @@ Scrubs smooth with `scrub: 0.6`; parallax locks to the scrollbar. Build phases: 
 | `morphToggle` | MorphSVG to the alternate shape, 0.35s, `power2.inOut` | Menu to close, play to pause. Follows the control's state. |
 | `followPath` | MotionPath along a path, 6s a lap, linear | A mark tracing a route. Ambient. |
 | `morphScrub` | MorphSVG toward the alternate shape, scrubbed from `top bottom` to `top top` | A curved section edge flattening as the section arrives. |
+| `pathScrub` | `textPath` `startOffset 100% → 0%`, scrubbed from `top bottom` to `center center` | A line of text riding a curve into place as it is read. |
+| `pathLoop` | `startOffset 0% → 50%` of a two-lap path, 16s a lap, linear | A turning circular badge. Ambient; needs a pause control. |
 | `countUp` | 0 to the element's own value, 1.6s, `power3.out` | Statistics landing on their figure. Width reserved. |
+| `odometer` | Digit columns roll to each new value, 0.9s, `power3.out`, 0.04s from the right | A live count or price that changes in place. Tabular digits. |
 | `marquee` | Row loops by its own width at 60px/s | Logos, tags, or a running headline. Needs a pause control. |
 | `logoCycle` | Every 2s one cell's logo slides out `yPercent -100` as the next from the pool slides in, 0.6s `power3.inOut` | A client wall with more logos than cells. Needs a pause control. |
 | `dragLoop` | Row wraps endlessly under drag, throw, and sideways wheel; lands on an item in 0.6s, `power3.out`; optional drift | A throwable gallery with no ends. Drift needs a pause control. |
 | `dragGrid` | Tiles wrap on both axes under drag, throw, and wheel; focus centers a tile | A pannable canvas of work, often full screen. |
 | `flickCards` | Front card `0`, neighbors `xPercent ±25/±45`, `rotation ±10/±15`, `scale 0.9/0.8`; a drag or flick deals the next card, 0.8s `elastic.out(1, 0.8)` | A deck of featured work or testimonials. Only the front card is reachable; pair with previous and next buttons. |
+| `sortable` | held item `scale 1.03` follows the handle; neighbors slide `y ±slot` in 0.2s `power2.out`; the drop settles in 0.3s `back.out(1.4)` and the DOM takes the order | A list the visitor reorders. Keyboard: Space picks up, arrows move, Space drops, Escape cancels. Code: [sortable.md](recipes/sortable.md). |
+| `swipeDismiss` | follows a sideways drag, fading to 0.35; past 40% or a 800px/s flick it leaves `x ±(width + 40)` in 0.25s `power2.in` and the items below slide up 0.3s `power3.out`; short of that it springs back `elastic.out(1, 0.6)` | Notifications, rows, and cards the visitor throws away. A dismiss button or Delete does the same. |
 
 Code: [svg-effects.md](recipes/svg-effects.md), [counters-and-marquees.md](recipes/counters-and-marquees.md), [endless-drag.md](recipes/endless-drag.md).
 
@@ -207,15 +263,19 @@ A curtain or curve cover and a shared-element morph never share a navigation: th
 | `dialogMotion` | `--dialog-backdrop 0 → 1`, panel `opacity 0 → 1` with `scale 0.96`, or `xPercent`/`yPercent ±100` for a drawer, 0.3s, `power3.out`; exit 0.21s `power2.in`, then `dialog.close()` | Native `<dialog>` enter and exit. Escape runs the exit. |
 | `disclosure` | `height 0 ↔ auto`, 0.3s, `power2.inOut`, `overflow: hidden` only while moving | An accordion panel. The one sanctioned layout tween. |
 | `tabIndicator` | `x` and `scaleX` from its own resting box onto the tab, 0.3s, `power3.out` | The selected tab's underline or pill. Re-fits on resize. |
+| `stateButton` | label `autoAlpha 0, y −10` out; spinner turns 0.8s a lap while loading; success finishes the lap, then a check draws in 0.4s; error shakes `x ±8px`; label returns `y 10 → 0` with `back.out(1.8)` | A submit button that shows loading, success, and failure without changing size. The status announces each result. |
 | `imageReveal` | frame `clip-path inset` closed → open, 1s `power3.inOut`; image `scale 1.15 → 1`, `power2.out` | Editorial image entrance; `onScroll` variant for galleries. Clip only, never hidden. A CSS `mask` on the frame opens the image inside a brand shape. |
 | `hoverPreview` | one image follows the mouse (`quickTo` 0.35s), 0.25s crossfade on item change | Work lists and indexes. Mouse-only decoration; the link stays the way in. |
 | `proximity` | each item's `scale` up to 1.6 and optional `lift` by pointer distance within 160px, shaped by `sine.inOut`, `quickTo` 0.3s | A dock of icons or a thumbnail grid rippling under the cursor. Mouse-only decoration. |
 | `imageTrail` | an image every 80px of mouse travel pops in with `back.out(2)`, drifts with the pointer, and shrinks away over 0.9s; at most 10 alive | A hero or work index with images spilling from the cursor. Never over reading text. |
+| `spotlight` | layer `clip-path: circle(r at x y)`; `r 0 → 120px` in 0.5s `back.out(1.6)`, follows in 0.35s, `r → 0` in 0.3s `power2.in`; focus opens the whole layer | A second layer under a poster or photo, uncovered by the mouse, a held touch, or focus. |
 | `cursorFollower` with `label` | over `[data-cursor-text]`, the dot gives way to a pill scrolling that text at 60px/s | "View project" on work links. Restates the link; `aria-hidden`. |
 | `scrubVideo` | `currentTime 0 → duration`, scrubbed across a section | A product turn or process read at scroll speed. Poster under reduced motion. |
 | `frameSequence` | canvas frame `0 → n-1`, nearest loaded frame, scrubbed | An image sequence with bounded loading; one per page. |
 | `textRoll` | label `yPercent 0 → -travel`, copy `travel → 0`, 0.35s, `power3.out` | A button or link label rolling over to itself on hover and focus. Whole label, no split. |
 | `underlineSweep` | `scaleX 0 → 1` from the inline start, `1 → 0` toward the inline end, 0.3s, `power2.out` | An injected hairline under a link; `--underline-*` custom properties restyle it. Instant under reduced motion. |
+| `directionalFill` | overlay `clip-path` opens from the entry edge, 0.3s `power3.out`; collapses onto the exit edge, 0.24s `power2.in` | Tiles, rows, and buttons that answer where the mouse came from. Focus fills from `focusFrom`; a tap clears on lift. |
+| `pressFeedback` | `scale → 0.94`, 0.12s `power2.out` on press; `→ 1`, 0.5s `elastic.out(1, 0.45)` on release; ink circle `scale 0 → 1`, `opacity 0.3 → 0`, 0.6s from the press point | Buttons and cards answering a press from mouse, touch, pen, or Enter and Space. Code: [press-feedback.md](recipes/press-feedback.md). |
 | `imageZoom` | `scale 1 → 1.05`, 0.6s, `power2.out`, inside a clipped frame | A card's image answering the card or its link; never clip the card itself. |
 
 Code: [media-effects.md](recipes/media-effects.md), [component-motion.md](recipes/component-motion.md), [hover-effects.md](recipes/hover-effects.md).
@@ -263,9 +323,10 @@ Width changes can invalidate split positions and the wave's pinned widths; heigh
 Particle and pointer effects respond to input; text and scroll effects do not.
 
 - [The field helper](recipes/particle-field.md#input-and-density) combines hover, keyboard focus, and touch presses. Controls work cold.
-- [Pointer effects](recipes/pointer-effects.md): `magnetic`, `tilt`, `cursorFollower`, `momentumHover`, `proximity`, and `imageTrail` answer the mouse only and never gate a control. `dragTrack`, `dragLoop`, `dragGrid`, and `flickCards` work with mouse, touch, and keyboard; vertical swipes keep scrolling the page unless a full-screen grid claims both axes.
+- [Pointer effects](recipes/pointer-effects.md): `magnetic`, `tilt`, `cursorFollower`, `momentumHover`, `proximity`, and `imageTrail` answer the mouse only and never gate a control. `spotlight` also opens under a held touch and for keyboard focus, since its layer may hold content. `dragTrack`, `dragLoop`, `dragGrid`, `flickCards`, `sortable`, and `swipeDismiss` work with mouse, touch, and keyboard; vertical swipes keep scrolling the page unless a full-screen grid claims both axes.
 - Hover effects share one hot state for mouse hover and `:focus-visible`; touch, pen, and click-derived focus never enter it.
-- One pointer response per control: magnetic, tilt, a hover effect, or a particle hot state. Momentum hover is for decoration beside controls, never on them. Proximity may scale links, as in a dock, but never replaces their focus style.
+- `pressFeedback` answers every input, including Enter and Space from the center; a touch that turns into a scroll cancels and springs back.
+- One pointer response per control: magnetic, tilt, a hover effect, press feedback, or a particle hot state. Momentum hover is for decoration beside controls, never on them. Proximity may scale links, as in a dock, but never replaces their focus style.
 - The framework skill's `references/devices.md` owns viewport tiers, orientation, and CPU budgets.
 
 ## Ambient motion
@@ -274,7 +335,8 @@ Loops that run while a surface idles, such as the wave, button embers, or an out
 
 - One ambient effect per target; none is required.
 - Pause off screen. Particle fields use an `IntersectionObserver`; the wave and follower expose `pause()` for the controller.
-- The wave, particle controls, follower, marquee, logo cycle, and drifting `dragLoop` expose `pause` and `play` (`resume` on the wave) for the page's pause control or motion setting.
+- A looping `retype` cycles words until paused; without `loop` it stops on the last word.
+- The wave, particle controls, follower, text `pathLoop`, marquee, logo cycle, looping `retype`, and drifting `dragLoop` expose `pause` and `play` (`resume` on the wave) for the page's pause control or motion setting.
 - On small screens, lower particle density and limit wave character counts.
 - Every cycle ends where it started; embers die.
 - None under reduced motion: nothing is split or spawned.

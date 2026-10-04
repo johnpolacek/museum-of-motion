@@ -505,6 +505,223 @@ export const scrambleOut: SplitRunner = (element, options = {}) => {
 };
 ```
 
+## Glitch
+
+A heading breaks up like a bad signal for a moment, then snaps clean. Six types:
+
+- `slice`: horizontal bands jump sideways.
+- `blocks`: rectangular chunks shift on both axes.
+- `skew`: the whole line jolts through sharp skews.
+- `ghost`: offset copies in the text's own color echo, then collapse into it.
+- `weight`: letters jump between weights, then settle. Needs a variable weight axis, as `charsWeightWave` does.
+- `scanline`: bands arrive one at a time from the top, each landing with a jump.
+
+Jumps are stepped, twelve a second, and shrink as the text settles (or grow as it leaves). They move ink sideways; nothing blinks. Only `ghost` shows and hides anything, once each way, so a run stays well under three flashes a second ([WCAG 2.3.1](https://www.w3.org/WAI/WCAG22/Understanding/three-flashes-or-below-threshold)). The layered types hide the element's own content with `opacity: 0`, so assistive technology still reads it, and lay `aria-hidden` clipped copies over it; the copies carry no ids. There is no color split: copies stay in the text's color.
+
+```ts
+export type GlitchType = "slice" | "blocks" | "skew" | "ghost" | "weight" | "scanline";
+export type GlitchOptions = MotionOptions & {
+  type?: GlitchType;
+  /** Seconds of glitching. Defaults: 0.6 in, 0.35 out. */
+  duration?: number;
+  /** Largest jump, as a fraction of the font size. */
+  intensity?: number;
+};
+export type GlitchRunner = (target: HTMLElement | null, options?: GlitchOptions) => gsap.core.Timeline;
+
+/** Jumps per second. Stepped, so it reads as a signal dropping, not as motion. */
+const GLITCH_RATE = 12;
+
+/** A clip rectangle as `inset()` percentages: top, right, bottom, left. */
+type Cell = [number, number, number, number];
+function cellGrid(rows: number, cols: number): Cell[] {
+  const cells: Cell[] = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      cells.push([(r / rows) * 100, 100 - ((c + 1) / cols) * 100, 100 - ((r + 1) / rows) * 100, (c / cols) * 100]);
+    }
+  }
+  return cells;
+}
+const GLITCH_CELLS: Record<Exclude<GlitchType, "skew" | "weight">, Cell[]> = {
+  slice: cellGrid(6, 1),
+  blocks: cellGrid(3, 4),
+  scanline: cellGrid(10, 1),
+  ghost: [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+};
+
+/**
+ * Hides the element's content with opacity, so it is still read, and lays one clipped copy
+ * per cell over it. The restore puts the original nodes and the `position` back exactly.
+ */
+function glitchLayers(element: HTMLElement, cells: Cell[]): { layers: HTMLElement[]; restore: () => void } {
+  const position = [element.style.getPropertyValue("position"), element.style.getPropertyPriority("position")] as const;
+  if (getComputedStyle(element).position === "static") element.style.position = "relative";
+  const source = document.createElement("span");
+  source.style.opacity = "0";
+  source.append(...Array.from(element.childNodes));
+  element.append(source);
+  const layers = cells.map(([top, right, bottom, left]) => {
+    const layer = document.createElement("span");
+    layer.setAttribute("aria-hidden", "true");
+    Object.assign(layer.style, {
+      position: "absolute",
+      inset: "0",
+      padding: "inherit",
+      boxSizing: "border-box",
+      pointerEvents: "none",
+      // Cells overlap by a pixel, so no hairline seam shows between them at rest.
+      clipPath: `inset(calc(${top}% - 0.5px) calc(${right}% - 0.5px) calc(${bottom}% - 0.5px) calc(${left}% - 0.5px))`,
+    });
+    for (const node of Array.from(source.childNodes)) {
+      const copy = node.cloneNode(true);
+      if (copy instanceof Element) {
+        copy.removeAttribute("id");
+        copy.querySelectorAll("[id]").forEach((child) => child.removeAttribute("id"));
+      }
+      layer.append(copy);
+    }
+    element.append(layer);
+    return layer;
+  });
+  let restored = false;
+  const restore = () => {
+    if (restored) return;
+    restored = true;
+    layers.forEach((layer) => layer.remove());
+    source.replaceWith(...Array.from(source.childNodes));
+    if (position[0]) element.style.setProperty("position", position[0], position[1]);
+    else element.style.removeProperty("position");
+  };
+  return { layers, restore };
+}
+
+/** Stepped jumps for the layered types. `amount(i)` scales step i: falling for entrances, rising for exits. */
+function layeredGlitch(
+  tl: gsap.core.Timeline,
+  type: Exclude<GlitchType, "skew" | "weight">,
+  layers: HTMLElement[],
+  steps: number,
+  shift: number,
+  entering: boolean,
+): void {
+  const at = (i: number) => i / GLITCH_RATE;
+  const amount = (i: number) => (entering ? 1 - i / steps : (i + 1) / steps);
+  const jump = (scale: number) => gsap.utils.random(-shift, shift) * scale;
+  const still = { x: 0, y: 0 };
+  if (type === "ghost") {
+    const [main, ...ghosts] = layers;
+    if (entering) tl.set(main!, { autoAlpha: 0 }, 0).set(main!, { autoAlpha: 1 }, at(1));
+    tl.set(ghosts, { opacity: 0.45 }, 0);
+    for (let i = 0; i < steps; i++) {
+      ghosts.forEach((ghost, g) => tl.set(ghost, { x: (g ? 1 : -1) * Math.abs(jump(amount(i))) * 1.5, y: jump(amount(i) * 0.2) }, at(i)));
+    }
+    tl.set(ghosts, { ...still, autoAlpha: 0 }, at(steps));
+    return;
+  }
+  if (type === "scanline") {
+    const each = steps / layers.length;
+    layers.forEach((layer, k) => {
+      const turn = Math.floor(k * each);
+      if (entering) {
+        tl.set(layer, { autoAlpha: 0 }, 0)
+          .set(layer, { autoAlpha: 1, x: jump(1) }, at(turn))
+          .set(layer, still, at(turn + 1));
+      } else {
+        tl.set(layer, { x: jump(1) }, at(turn)).set(layer, { autoAlpha: 0 }, at(turn + 1));
+      }
+    });
+    return;
+  }
+  // slice and blocks: a third of the cells jump at each step, the rest sit still.
+  const vertical = type === "blocks" ? 0.4 : 0;
+  for (let i = 0; i < steps; i++) {
+    layers.forEach((layer) => {
+      const moves = Math.random() < 0.34;
+      tl.set(layer, moves ? { x: jump(amount(i)), y: jump(amount(i) * vertical) } : still, at(i));
+    });
+  }
+  if (entering) tl.set(layers, still, at(steps));
+  else tl.set(layers, { autoAlpha: 0 }, at(steps));
+}
+
+function glitch(entering: boolean): GlitchRunner {
+  return (element, options = {}) => {
+    const settled = { autoAlpha: entering ? 1 : 0 };
+    if (!element) return build(options);
+    revertText(element);
+    if (prefersReducedMotion()) return build(options).set(element, settled);
+    const type = options.type ?? "slice";
+    const duration = options.duration ?? (entering ? 0.6 : 0.35);
+    const steps = Math.max(2, Math.round(duration * GLITCH_RATE));
+    const shift = (parseFloat(getComputedStyle(element).fontSize) || 16) * (options.intensity ?? 0.12);
+    const amount = (i: number) => (entering ? 1 - i / steps : (i + 1) / steps);
+
+    if (type === "weight") {
+      const rest = Number(getComputedStyle(element).fontWeight) || WEIGHT.rest;
+      return withSplit(
+        element,
+        options,
+        { type: "chars", smartWrap: true },
+        (split, tl) => {
+          pinWidths(split.chars, Math.max(rest, WEIGHT.display));
+          for (let i = 0; i < steps; i++) {
+            split.chars.forEach((char) =>
+              tl.set(char, { fontWeight: gsap.utils.random(WEIGHT.rest - 300, WEIGHT.display + 100, 100), y: gsap.utils.random(-shift, shift) * amount(i) * 0.3 }, i / GLITCH_RATE),
+            );
+          }
+          tl.set(split.chars, entering ? { fontWeight: rest, y: 0 } : { autoAlpha: 0 }, steps / GLITCH_RATE);
+          if (!entering) tl.set(element, { autoAlpha: 0 });
+        },
+        settled,
+      );
+    }
+
+    let restore = () => {};
+    return guarded(
+      () => {
+        const tl = build(options);
+        const release = track(element, tl, () => restore());
+        tl.set(element, { autoAlpha: 1 }, 0);
+        if (type === "skew") {
+          const transform = element.style.transform;
+          restore = () => {
+            gsap.set(element, { clearProps: "transform" });
+            if (transform) element.style.transform = transform;
+          };
+          for (let i = 0; i < steps; i++) {
+            tl.set(element, { x: gsap.utils.random(-shift, shift) * amount(i), skewX: gsap.utils.random(-24, 24) * amount(i) }, i / GLITCH_RATE);
+          }
+          tl.set(element, { x: 0, skewX: 0 }, steps / GLITCH_RATE);
+        } else {
+          const made = glitchLayers(element, GLITCH_CELLS[type]);
+          restore = made.restore;
+          layeredGlitch(tl, type, made.layers, steps, shift, entering);
+        }
+        if (!entering) tl.set(element, { autoAlpha: 0 });
+        tl.eventCallback("onComplete", () => {
+          release();
+          options.onComplete?.();
+        });
+        tl.eventCallback("onInterrupt", release);
+        return tl;
+      },
+      () => {
+        activeRuns.delete(element);
+        restore();
+      },
+    );
+  };
+}
+
+/** The text breaks up, then settles clean. */
+export const glitchIn: GlitchRunner = glitch(true);
+/** The text breaks up more and more, then is gone. */
+export const glitchOut: GlitchRunner = glitch(false);
+```
+
+Keep the intensity low on body-sized text; the effect is for display type. Glitch an element whose text is plain or simply nested: copies clone its markup, so interactive children are not suited. `skew` and the layered types restore exactly on completion, interruption, or `revertText`; `weight` reverts its split the way the other character runners do.
+
 ## Wiring
 
 ```ts
