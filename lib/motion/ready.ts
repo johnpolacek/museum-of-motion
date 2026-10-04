@@ -14,6 +14,7 @@ export const LIVE_STAGES = new Set([
   "line-draw",
   "path-follow",
   "count-up",
+  "odometer",
   "marquee",
   "logo-cycle",
   "curtain",

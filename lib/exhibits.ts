@@ -153,6 +153,13 @@ const DATA: Exhibit[] = [
     desc: "Figures count to their final value and keep their format."
   },
   {
+    name: "Odometer",
+    group: "time",
+    builders: "odometer",
+    src: "counters-and-marquees",
+    desc: "Digit columns roll to each new value, forward when it rises and back when it falls."
+  },
+  {
     name: "Marquee",
     group: "time",
     builders: "marquee",

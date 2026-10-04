@@ -181,6 +181,68 @@ const countUp = def(["Count-up"], ["count"], ["duration", "stagger", "hold", "ea
   );
 });
 
+/* ---------- Odometer ---------- */
+
+// Each figure ticks through three readings. Shapes stay the same, so the columns never rebuild.
+const READINGS: Array<{ label: string; values: string[] }> = [
+  { label: "Visitors", values: ["12,480", "12,486", "12,503"] },
+  { label: "Price", values: ["$49", "$59", "$61"] },
+  { label: "On time", values: ["98.6%", "99.1%", "97.4%"] },
+];
+/** Each column holds 0–9 twice, so a roll can pass 9 to 0 either way, as in the recipe. */
+const COLUMN = 20;
+const digitsOf = (s: string) => [...s].filter((c) => c >= "0" && c <= "9").map(Number);
+const numberOf = (s: string) => Number(s.replace(/[^\d.]/g, ""));
+/** The recipe's roll: forward through 9 to 0 when rising, back through the second set when falling. */
+const rollSpan = (from: number, to: number, rising: boolean): [number, number] =>
+  rising ? [from, to >= from ? to : to + 10] : [from + 10, to <= from ? to + 10 : to];
+
+const odometer = def(["Odometer"], ["roll"], ["duration", "stagger", "hold", "ease"], { duration: 0.9, stagger: 0.04, hold: 1.2, ease: "signature" }, (text, p) => {
+  const slot = (d: number) =>
+    `<span class="odo-slot"><span class="odo-size">${d}</span><span class="odo-strip">${Array.from({ length: COLUMN }, (_, i) => `<span>${i % 10}</span>`).join("")}</span></span>`;
+  const { layer, remove } = art(
+    text,
+    `<div class="figures odo">${READINGS.map(
+      (r) =>
+        `<div class="fig"><span class="val num">${[...r.values[0]].map((c) => (c >= "0" && c <= "9" ? slot(Number(c)) : c)).join("")}</span><span class="lab">${r.label}</span></div>`,
+    ).join("")}</div>`,
+  );
+  const figs = Array.from(layer.querySelectorAll<HTMLElement>(".fig"));
+  const y = (position: number) => (-100 / COLUMN) * position;
+  return assemble(
+    text,
+    p,
+    [],
+    {
+      enter: (tl) => {
+        let last = 0;
+        figs.forEach((fig, f) => {
+          const strips = Array.from(fig.querySelectorAll<HTMLElement>(".odo-strip"));
+          const { values } = READINGS[f];
+          const at = f * 0.12;
+          tl.fromTo(fig, { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.4, ease: "signature" }, at);
+          // First reading rolls up from zeros; each later one rolls from the reading before it.
+          values.forEach((value, step) => {
+            const prev = step ? digitsOf(values[step - 1]) : strips.map(() => 0);
+            const next = digitsOf(value);
+            const rising = step === 0 || numberOf(value) >= numberOf(values[step - 1]);
+            const start = at + step * (p.duration + p.hold);
+            next.forEach((digit, i) => {
+              const [from, to] = rollSpan(prev[i], digit, rising);
+              const delay = (strips.length - 1 - i) * p.stagger;
+              if (from !== to) tl.fromTo(strips[i], { yPercent: y(from) }, { yPercent: y(to), duration: p.duration, ease: p.ease, immediateRender: step === 0 }, start + delay);
+            });
+            last = Math.max(last, start + p.duration + p.stagger * (strips.length - 1));
+          });
+        });
+        return last;
+      },
+      exit: (tl, at) => tl.to(figs, { autoAlpha: 0, y: -10, duration: 0.25, ease: EXIT, stagger: 0.05 }, at),
+    },
+    remove,
+  );
+});
+
 /* ---------- 14 Marquee ---------- */
 
 const MARQUEE_WORDS = ["Line mask", "Characters", "Word slide", "Scramble", "Speak-in", "Weight wave", "Letter wave", "Marquee"];
@@ -528,6 +590,7 @@ export const TIME_STAGES: Record<string, StageDef> = {
   "line-draw": lineDraw,
   "path-follow": pathFollow,
   "count-up": countUp,
+  odometer,
   marquee,
   "logo-cycle": logoCycle,
   curtain,

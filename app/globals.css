@@ -87,6 +87,11 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .figures { display: flex; flex-wrap: wrap; gap: 24px clamp(24px, 6vw, 96px); justify-content: center; }
 .ex .stage-art .fig { display: grid; gap: 8px; justify-items: start; }
 .ex .stage-art .fig .val { font-weight: 700; font-stretch: 75%; font-size: clamp(48px, 8vw, 132px); line-height: 0.9; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.ex .stage-art .odo .val { line-height: 1; }
+.ex .stage-art .odo-slot { display: inline-block; position: relative; clip-path: inset(0); }
+.ex .stage-art .odo-size { visibility: hidden; }
+.ex .stage-art .odo-strip { position: absolute; left: 0; top: 0; width: 100%; text-align: center; }
+.ex .stage-art .odo-strip > span { display: block; }
 .ex .stage-art .mq { width: 100%; overflow: hidden; }
 .ex .stage-art .mq-track { display: flex; width: max-content; }
 .ex .stage-art .mq-row { display: flex; flex: none; gap: 0.3em; padding-right: 0.3em; font-weight: 600; font-stretch: 82%; font-size: clamp(40px, 6vw, 96px); letter-spacing: -0.02em; white-space: nowrap; }
