@@ -865,7 +865,10 @@ export function swipeDismiss(item: HTMLElement, { threshold = 0.4, flick = 800, 
     // Release speed in px/s, from pointer samples over the last ~100ms of the drag.
     let samples: Array<[number, number]> = [];
     const speedOf = () => {
-      const [a, b] = [samples[0], samples[samples.length - 1]];
+      // A pointer that stopped before release has no speed: only samples from the last ~100ms count.
+      const now = performance.now();
+      const recent = samples.filter(([, time]) => now - time <= 100);
+      const [a, b] = [recent[0], recent[recent.length - 1]];
       if (!a || !b || b[1] === a[1]) return 0;
       return ((b[0] - a[0]) / (b[1] - a[1])) * 1000;
     };
