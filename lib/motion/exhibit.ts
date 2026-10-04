@@ -17,15 +17,14 @@ function parts(root: HTMLElement) {
     num: one("h1 .n"),
     name: one("h1 .t"),
     stage: one(".stage p"),
-    replay: all(".stage [data-replay]:not([hidden])"),
-    rest: all(".row > *, .specs > div"),
+    rest: all(".controls:not([hidden]), .row > *, .specs > div"),
   };
 }
 
 /** The intro's visible targets, for the controller's initial hide. */
 export const exhibitTargets = (root: HTMLElement) => {
   const p = parts(root);
-  return [...p.bar, p.num, p.name, p.stage, ...p.replay, ...p.rest];
+  return [...p.bar, p.num, p.name, p.stage, ...p.rest];
 };
 
 export type Run = { timeline: gsap.core.Timeline; finish: () => void };
@@ -68,7 +67,7 @@ export function stageOut(text: HTMLElement): Run {
 export function exhibitIntro(root: HTMLElement, shared: SharedState | null): Run {
   const p = parts(root);
   const tl = gsap.timeline({ paused: true, defaults: { overwrite: "auto" } });
-  const visible = [...p.bar, p.num, p.name, ...p.replay, ...p.rest];
+  const visible = [...p.bar, p.num, p.name, ...p.rest];
   let stage: Run | null = null;
   const finish = () => {
     stage?.finish();
@@ -91,8 +90,7 @@ export function exhibitIntro(root: HTMLElement, shared: SharedState | null): Run
       .fromTo(p.num, { autoAlpha: 0, yPercent: 40 }, { autoAlpha: 1, yPercent: 0, duration: 0.45, ease: ENTER }, 0.55);
     stage = stageIn(p.stage);
     tl.add(stage.timeline.play(), 0.6);
-    tl.fromTo(p.rest, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.4, ease: ENTER, stagger: 0.04 }, 0.8)
-      .fromTo(p.replay, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, ease: "power1.out" }, 1.2);
+    tl.fromTo(p.rest, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.4, ease: ENTER, stagger: 0.04 }, 0.8);
   } catch (error) {
     tl.kill();
     finish();
@@ -105,7 +103,7 @@ export function exhibitIntro(root: HTMLElement, shared: SharedState | null): Run
 export function exhibitOutro(root: HTMLElement): Run {
   const p = parts(root);
   const tl = gsap.timeline({ defaults: { overwrite: "auto" } });
-  const ui = [...p.bar, ...p.replay, ...p.rest];
+  const ui = [...p.bar, ...p.rest];
   if (prefersReducedMotion()) return { timeline: tl.set([...ui, p.h1, p.stage], { autoAlpha: 0 }), finish: () => {} };
   const stage = stageOut(p.stage);
   tl.to(ui, { autoAlpha: 0, y: -8, duration: 0.25, ease: EXIT, stagger: 0.012 }, 0)

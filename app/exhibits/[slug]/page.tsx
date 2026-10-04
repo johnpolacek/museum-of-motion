@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ExhibitMotion } from "@/components/ExhibitMotion";
+import { ExhibitStage } from "@/components/ExhibitStage";
 import { TransitionLink } from "@/components/motion/TransitionLink";
 import { notFound } from "next/navigation";
 import { EXHIBITS, SPECS, groupName, recipeUrl, two } from "@/lib/exhibits";
@@ -47,30 +48,31 @@ export default async function ExhibitPage({ params }: PageProps<"/exhibits/[slug
           {e.name}
         </span>
       </h1>
-      <div className="stage" data-intro>
-        <p>
-          Every way a page
-          <br />
-          can move.
-        </p>
-        {MOTION_EXHIBITS.has(e.slug) && (
-          <button type="button" className="lab replay" data-replay hidden>
-            Replay
-          </button>
-        )}
-      </div>
-      <div className="row" data-intro>
-        <p>{e.desc}</p>
-        {e.vars && (
-          <ul className="tabs" aria-label="Variations">
-            {[e.name, ...e.vars].map((v, i) => (
-              <li key={v} className={i === 0 ? "on" : undefined}>
-                {v}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      {MOTION_EXHIBITS.has(e.slug) ? (
+        <ExhibitStage desc={e.desc} labels={[e.name, ...(e.vars ?? [])]} />
+      ) : (
+        <>
+          <div className="stage" data-intro>
+            <p>
+              Every way a page
+              <br />
+              can move.
+            </p>
+          </div>
+          <div className="row" data-intro>
+            <p>{e.desc}</p>
+            {e.vars && (
+              <ul className="tabs" aria-label="Variations">
+                {[e.name, ...e.vars].map((v, i) => (
+                  <li key={v} className={i === 0 ? "on" : undefined}>
+                    {v}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </>
+      )}
       <dl className="specs" data-intro>
         {specs.map(([k, v]) => (
           <div key={k}>

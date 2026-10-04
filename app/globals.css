@@ -84,8 +84,29 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .scrub .rail::before { content: ''; position: absolute; inset: 0; background: #fff; }
 .ex .scrub .rail::after { content: ''; position: absolute; right: -9px; top: -8px; width: 18px; height: 18px; border-radius: 50%; background: #fff; }
 .ex .tabs { display: flex; gap: 6px; flex-wrap: wrap; list-style: none; margin: 0; padding: 0; }
-.ex .tabs li { border: 1px solid rgba(255,255,255,0.5); padding: 7px 14px; border-radius: 99px; font-size: 14px; }
-.ex .tabs li.on { background: #fff; color: var(--blue); border-color: #fff; }
+.ex .tabs li, .ex .tabs button { border: 1px solid rgba(255,255,255,0.5); padding: 7px 14px; border-radius: 99px; font-size: 14px; }
+.ex .tabs li.on, .ex .tabs button.on { background: #fff; color: var(--blue); border-color: #fff; }
+.ex .tabs button { font-family: inherit; color: inherit; background: none; cursor: pointer; }
+.ex .tabs button:disabled { cursor: default; }
+.ex .tabs button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+/* Stage controls: pause, a scrub rail, and the knobs that shape the loop. */
+.ex .controls { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px 24px; align-items: center; }
+.ex .controls[hidden] { display: none; }
+.ex .controls .ctl { font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; background: none; border: 1px solid rgba(255,255,255,0.5); border-radius: 99px; padding: 7px 14px; cursor: pointer; }
+.ex .controls .ctl:focus-visible, .ex .controls select:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.ex .controls .scrub { display: grid; grid-template-columns: 4.5ch 1fr auto; gap: 16px; align-items: center; }
+.ex .controls .knobs { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: end; }
+.ex .controls .knob { display: grid; gap: 6px; min-width: 150px; }
+.ex .controls select { font: inherit; letter-spacing: 0; text-transform: none; color: inherit; background: transparent; border: 1px solid rgba(255,255,255,0.5); border-radius: 6px; padding: 5px 8px; }
+.ex .controls select option { color: var(--ink); }
+/* Range inputs drawn as the poster's rail: a hairline track and a round white thumb. */
+.ex .controls input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 18px; background: transparent; margin: 0; cursor: pointer; }
+.ex .controls input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: rgba(255,255,255,0.35); }
+.ex .controls input[type="range"]::-moz-range-track { height: 2px; background: rgba(255,255,255,0.35); }
+.ex .controls input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -8px; border-radius: 50%; background: #fff; border: 0; }
+.ex .controls input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 0; }
+.ex .controls input[type="range"]:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
 .ex .specs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--gut); padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.35); }
 .ex .specs div { display: grid; gap: 6px; align-content: start; font-size: 14px; line-height: 1.4; }
 .ex .specs dt { opacity: 0.75; }
@@ -106,6 +127,7 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
   .hero .side, .hero .under ol { justify-content: flex-start; }
   .grp, .about { grid-template-columns: 1fr; }
   .ex .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ex .controls .knob { min-width: 0; flex: 1 1 40%; }
 }
 @media (max-width: 560px) {
   .mast nav { gap: 16px; }
