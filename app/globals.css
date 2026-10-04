@@ -290,6 +290,12 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win .w-tall { height: 300%; min-height: 900px; }
 .ex .win .w-sticky { position: sticky; top: 0; display: block; width: 100%; object-fit: cover; background: var(--ink); }
 .ex .win .w-bowl { position: relative; min-height: 80%; display: grid; place-items: center; background: var(--ink); color: #fff; padding: 40px var(--gut); }
+.ex .win .w-path { min-height: 120%; display: grid; place-items: center; padding: 0 var(--gut); }
+.ex .win .w-path svg { width: min(100%, 900px); overflow: visible; }
+.ex .win .w-path text { fill: currentColor; font-weight: 800; font-stretch: 75%; font-size: 56px; letter-spacing: -0.01em; }
+.ex .stage-art .path-badge { display: grid; justify-items: center; gap: 16px; }
+.ex .stage-art .path-badge svg { width: min(52vw, 340px); overflow: visible; }
+.ex .stage-art .path-badge text { fill: currentColor; font-weight: 700; font-size: 15.5px; letter-spacing: 0.2em; text-transform: uppercase; }
 .ex .win .w-edge { position: absolute; left: 0; bottom: 100%; width: 100%; height: 6vw; min-height: 40px; fill: var(--ink); }
 /* WebGL stages: the <img> is the page; a plane on the shared canvas draws it while WebGL can. */
 .ex .stage-art .gl-frame { margin: 0; height: min(calc(46svh - 110px), 420px); aspect-ratio: 4 / 3; max-width: 92%; }

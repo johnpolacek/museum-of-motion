@@ -18,7 +18,7 @@ import {
   velocitySkew,
 } from "../recipes/scroll-effects";
 import { frameSequence, scrubVideo } from "../recipes/media-effects";
-import { morphScrub } from "../recipes/svg-effects";
+import { morphScrub, pathLoop, pathScrub } from "../recipes/svg-effects";
 import { sectionPager } from "../recipes/section-pager";
 import { lenisScroll } from "../recipes/smooth/lenis-scroll";
 
@@ -270,6 +270,36 @@ const shape = play(["Shape scrub"], ["shape"], SCROLL_HINT, (text) =>
   ),
 );
 
+/* ---------- Text on path ---------- */
+
+const RING = "M100 20 a80 80 0 1 1 0 160 a80 80 0 1 1 0 -160 a80 80 0 1 1 0 160 a80 80 0 1 1 0 -160";
+
+const textOnPath = play(["Curve", "Badge"], ["curve", "badge"], SCROLL_HINT, (text, p) =>
+  p.variation === "badge"
+    ? live(
+        text,
+        `<div class="path-badge"><svg viewBox="0 0 200 200"><path id="tp-ring" d="${RING}" fill="none"/><text><textPath href="#tp-ring">Every way a page can move · Every way ·</textPath></text></svg><button type="button" class="ctl lab" aria-pressed="false">Pause</button></div>`,
+        (layer) => {
+          const loop = pathLoop(one<SVGTextPathElement>(layer, "textPath"), { duration: 16 });
+          const button = one<HTMLButtonElement>(layer, "button");
+          const toggle = () => {
+            const paused = button.getAttribute("aria-pressed") !== "true";
+            button.setAttribute("aria-pressed", String(paused));
+            button.textContent = paused ? "Play" : "Pause";
+            if (paused) loop.pause();
+            else loop.play();
+          };
+          button.addEventListener("click", toggle);
+          return [() => button.removeEventListener("click", toggle), loop.revert];
+        },
+      )
+    : windowed(
+        text,
+        `${CUE}<section class="w-path"><svg viewBox="0 0 600 220"><path id="tp-curve" d="M10 190 C170 10 430 10 590 190" fill="none"/><text><textPath href="#tp-curve" startOffset="0%">Every way a page can move.</textPath></text></svg></section>${END}`,
+        (win) => [pathScrub(one<SVGTextPathElement>(win, "textPath"), { trigger: one<HTMLElement>(win, ".w-path"), scroller: win })],
+      ),
+);
+
 export const SCROLL_STAGES: Record<string, StageDef> = {
   "scroll-reveal": reveal,
   "scrubbed-statement": statement,
@@ -286,4 +316,5 @@ export const SCROLL_STAGES: Record<string, StageDef> = {
   "scrubbed-video": video,
   "frame-sequence": frames,
   "shape-scrub": shape,
+  "text-on-path": textOnPath,
 };

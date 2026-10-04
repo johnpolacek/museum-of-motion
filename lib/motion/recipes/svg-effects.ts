@@ -206,3 +206,77 @@ export function followPath(
   });
   return { pause: () => tween?.pause(), play: () => tween?.play(), revert };
 }
+
+export type PathScrubOptions = {
+  /** `startOffset` in percent when the trigger enters, and when it leaves. */
+  from?: number;
+  to?: number;
+  /** The element whose pass drives the slide; defaults to the text's `svg`. */
+  trigger?: Element;
+  start?: string;
+  end?: string;
+  scrub?: number | boolean;
+  scroller?: Element | string;
+};
+
+/** Slides text along its path with scroll. Reduced motion places it at `to`. */
+export function pathScrub(
+  textPath: SVGTextPathElement,
+  { from = 100, to = 0, trigger, start = "top bottom", end = "center center", scrub = 0.6, scroller }: PathScrubOptions = {},
+): Teardown {
+  return own((_dispose, after) => {
+    after(snapshot([textPath], ["startOffset"], []));
+    if (prefersReducedMotion()) {
+      textPath.setAttribute("startOffset", `${to}%`);
+      return;
+    }
+    gsap.fromTo(
+      textPath,
+      { attr: { startOffset: `${from}%` } },
+      {
+        attr: { startOffset: `${to}%` },
+        ease: "none",
+        scrollTrigger: { trigger: trigger ?? textPath.ownerSVGElement ?? textPath, start, end, scrub, scroller },
+      },
+    );
+  });
+}
+
+export type PathLoopOptions = {
+  /** Seconds per lap. */
+  duration?: number;
+  /** 1 runs along the path's direction, -1 against it. */
+  direction?: 1 | -1;
+};
+
+/** Turns text around a closed path drawn as two laps. Ambient; pauses off screen. */
+export function pathLoop(textPath: SVGTextPathElement, { duration = 16, direction = 1 }: PathLoopOptions = {}): Follower {
+  if (prefersReducedMotion()) return { pause: () => {}, play: () => {}, revert: () => {} };
+  let tween: gsap.core.Tween | undefined;
+  let paused = false;
+  let visible = true;
+  const sync = () => (paused || !visible ? tween?.pause() : tween?.play());
+  const revert = own((dispose, after) => {
+    after(snapshot([textPath], ["startOffset"], []));
+    // Half the two-lap path is one lap, so 0% and 50% look the same.
+    const [a, b] = direction > 0 ? [0, 50] : [50, 0];
+    tween = gsap.fromTo(textPath, { attr: { startOffset: `${a}%` } }, { attr: { startOffset: `${b}%` }, duration, ease: "none", repeat: -1 });
+    const seen = new IntersectionObserver(([entry]) => {
+      visible = entry?.isIntersecting ?? true;
+      sync();
+    });
+    seen.observe(textPath.ownerSVGElement ?? textPath);
+    dispose(() => seen.disconnect());
+  });
+  return {
+    pause: () => {
+      paused = true;
+      sync();
+    },
+    play: () => {
+      paused = false;
+      sync();
+    },
+    revert,
+  };
+}

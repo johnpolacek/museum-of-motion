@@ -42,6 +42,7 @@ export const LIVE_STAGES = new Set([
   "scrubbed-video",
   "frame-sequence",
   "shape-scrub",
+  "text-on-path",
   "label-roll",
   "underline-sweep",
   "image-zoom",
