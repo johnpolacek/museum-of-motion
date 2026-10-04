@@ -425,6 +425,116 @@ export const paired = def(
 );
 
 
+/* ---------- Typewriter ---------- */
+
+// From the typewriter recipe: the text stays in place at opacity 0 for screen readers and layout, an
+// aria-hidden overlay types it behind a caret at a human rhythm. Beats are drawn once at build.
+const typeBeats = (text: string, speed: number) =>
+  [...text].map((_, i) => {
+    const before = text[i - 1] ?? "";
+    const base = (1 / speed) * rnd(0.6, 1.4);
+    if (/[.,!?;:\n]/.test(before)) return base + 4 / speed;
+    if (before === " ") return base + 0.6 / speed;
+    return base;
+  });
+/** Steps a counter one character per beat, writing each frame; reversible, so the loop scrubs. */
+function typeSteps(tl: gsap.core.Timeline, at: number, beats: number[], write: (n: number) => void, forward: boolean) {
+  const state = { n: forward ? 0 : beats.length };
+  let t = at;
+  beats.forEach((beat, i) => {
+    const target = forward ? i + 1 : beats.length - 1 - i;
+    const from = forward ? i : beats.length - i;
+    tl.fromTo(state, { n: from }, { n: target, duration: beat, ease: "steps(1)", immediateRender: false, onUpdate: () => write(Math.round(state.n)) }, t);
+    t += beat;
+  });
+  return t;
+}
+const RETYPE = ["move.", "turn.", "land.", "move."];
+
+export const typewriter = def(
+  ["Type", "Retype"],
+  ["type", "retype"],
+  ["duration", "hold"],
+  { duration: 22, stagger: 0, hold: 1.6, ease: "none" },
+  (text, p) => {
+    const speed = p.duration;
+    const caret = document.createElement("span");
+    caret.dataset.caret = "";
+    caret.setAttribute("aria-hidden", "true");
+    if (p.variation === "retype") {
+      // The last word cycles; the rest of the line stays put.
+      const nodes = Array.from(text.childNodes);
+      const tail = nodes[nodes.length - 1] as Text;
+      const lead = tail.data.slice(0, tail.data.lastIndexOf(" ") + 1);
+      const word = document.createElement("span");
+      word.textContent = RETYPE[0];
+      word.setAttribute("aria-hidden", "true");
+      tail.data = lead;
+      text.append(word, caret);
+      const write = (s: string) => (n: number) => (word.textContent = s.slice(0, n));
+      return assemble(
+        text,
+        p,
+        [],
+        {
+          enter: (tl) => {
+            tl.set(text, { autoAlpha: 1 }, 0).set(caret, { autoAlpha: 1 }, 0);
+            let t = p.hold * 0.5;
+            RETYPE.slice(1).forEach((next, i) => {
+              t = typeSteps(tl, t, typeBeats(RETYPE[i], speed * 2), write(RETYPE[i]), false);
+              t = typeSteps(tl, t, typeBeats(next, speed), write(next), true);
+              t += i < RETYPE.length - 2 ? p.hold : 0;
+            });
+            return t;
+          },
+        },
+        () => {
+          caret.remove();
+          word.remove();
+          tail.data = lead + RETYPE[0];
+        },
+      );
+    }
+    const source = document.createElement("span");
+    source.style.opacity = "0";
+    source.append(...Array.from(text.childNodes));
+    const layer = document.createElement("span");
+    layer.setAttribute("aria-hidden", "true");
+    Object.assign(layer.style, { position: "absolute", inset: "0", padding: "inherit", boxSizing: "border-box", whiteSpace: "pre-line", pointerEvents: "none" });
+    const typed = document.createTextNode("");
+    layer.append(typed, caret);
+    const position = text.style.position;
+    text.style.position = "relative";
+    text.append(source, layer);
+    const copy = Array.from(source.childNodes).map((n) => (n.nodeName === "BR" ? "\n" : (n.textContent ?? ""))).join("");
+    const write = (n: number) => (typed.data = copy.slice(0, n));
+    const ins = typeBeats(copy, speed);
+    const outs = typeBeats(copy, speed * 2.5);
+    return assemble(
+      text,
+      p,
+      [],
+      {
+        enter: (tl) => {
+          tl.set(text, { autoAlpha: 1 }, 0).set(caret, { autoAlpha: 1 }, 0);
+          return typeSteps(tl, 0.1, ins, write, true);
+        },
+        exit: (tl, at) => {
+          const done = typeSteps(tl, at, outs, write, false);
+          tl.set(caret, { autoAlpha: 0 }, done);
+        },
+      },
+      () => {
+        layer.remove();
+        source.replaceWith(...Array.from(source.childNodes));
+        text.style.position = position;
+      },
+    );
+  },
+  { retype: { hold: 1.2, duration: 16 } },
+  { duration: { label: "Speed", min: 6, max: 60, step: 1, unit: "/s" } },
+);
+
 /* ---------- Glitch ---------- */
 
 // From split-entrances' glitchIn and glitchOut, and the webgl skill's glitch. Jumps are stepped at twelve a
@@ -611,6 +721,7 @@ export const TEXT_STAGES: Record<string, StageDef> = {
   "word-slide": wordSlide,
   scramble,
   glitch,
+  typewriter,
   "speak-in": speakIn,
   "weight-wave": weightWave,
   "letter-wave": letterWave,

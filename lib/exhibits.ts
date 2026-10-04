@@ -92,6 +92,16 @@ const DATA: Exhibit[] = [
     ]
   },
   {
+    name: "Typewriter",
+    group: "time",
+    builders: "typeIn, typeOut, retype",
+    src: "typewriter",
+    desc: "Typed one character at a time behind a caret, at a person's uneven pace.",
+    vars: [
+      "Retype"
+    ]
+  },
+  {
     name: "Speak-in",
     group: "time",
     builders: "speakIn",

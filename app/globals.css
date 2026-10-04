@@ -93,6 +93,7 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .odo-strip { position: absolute; left: 0; top: 0; width: 100%; text-align: center; }
 .ex .stage-art .odo-strip > span { display: block; }
 .ex .stage-art .mq { width: 100%; overflow: hidden; }
+.ex .stage [data-caret] { display: inline-block; width: 0.06em; height: 0.82em; margin-left: 0.04em; vertical-align: -0.04em; background: currentColor; }
 .ex .stage-art .mq-track { display: flex; width: max-content; }
 .ex .stage-art .mq-row { display: flex; flex: none; gap: 0.3em; padding-right: 0.3em; font-weight: 600; font-stretch: 82%; font-size: clamp(40px, 6vw, 96px); letter-spacing: -0.02em; white-space: nowrap; }
 .ex .stage-art .mq-row .sep { font-weight: 300; opacity: 0.5; }
