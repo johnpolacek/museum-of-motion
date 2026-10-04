@@ -196,31 +196,73 @@ export const wordSlide = def(["Word slide"], ["slide"], ["duration", "stagger", 
 
 /* ---------- Scramble ---------- */
 
-const NOISE = "01{}/<>()=;";
+// From split-entrances' scramble: each character cycles within its kind, capitals as capitals,
+// lowercase as lowercase, digits as digits; punctuation stays blank until its turn. Noise is drawn
+// from the timeline's time, so every pass and every scrub position shows the same frame.
+const UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const LOWER = "abcdefghijklmnopqrstuvwxyz";
+const DIGITS = "0123456789";
+const SCRAMBLE_RATE = 20;
+const noiseIndex = (position: number, tick: number, size: number) => {
+  const x = Math.sin(position * 12.9898 + tick * 78.233) * 43758.5453;
+  return Math.floor((x - Math.floor(x)) * size);
+};
+const noiseFor = (char: string, position: number, tick: number) => {
+  if (/\s/.test(char)) return char;
+  if (/[0-9]/.test(char)) return DIGITS[noiseIndex(position, tick, 10)];
+  if (char.toLowerCase() !== char.toUpperCase()) return (char === char.toUpperCase() ? UPPER : LOWER)[noiseIndex(position, tick, 26)];
+  return " ";
+};
+const scrambleFrame = (text: string, shown: number, time: number) => {
+  const tick = Math.floor(time * SCRAMBLE_RATE);
+  return Array.from(text, (char, i) => (i < shown ? char : noiseFor(char, i, tick))).join("");
+};
+
 export const scramble = def(["Scramble"], ["scramble"], ["duration", "stagger", "hold"], { duration: 0.9, stagger: 0.15, hold: 2, ease: "none" }, (text, p) => {
   const splits: SplitText[] = [];
   // Scramble replaces text, so each line becomes its own plain-text element first.
   const lines = split(text, { type: "lines" }, splits).lines as HTMLElement[];
   const copy = lines.map((l) => l.textContent ?? "");
+  const hold = 0.15;
   return assemble(text, p, splits, {
     enter: (tl) => {
-      lines.forEach((line, i) =>
-        tl.fromTo(line, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.01 }, i * p.stagger).to(
-          line,
-          { duration: p.duration, ease: "none", scrambleText: { text: copy[i], chars: NOISE, speed: 0.6, revealDelay: 0.15 } },
+      lines.forEach((line, i) => {
+        const state = { p: 0 };
+        const length = Array.from(copy[i]).length;
+        tl.fromTo(line, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.01 }, i * p.stagger).fromTo(
+          state,
+          { p: 0 },
+          {
+            p: 1,
+            duration: p.duration,
+            ease: "none",
+            onUpdate: () => {
+              const shown = Math.floor(Math.max(0, (state.p - hold) / (1 - hold)) * length);
+              line.textContent = scrambleFrame(copy[i], shown, state.p * p.duration);
+            },
+          },
           i * p.stagger,
-        ),
-      );
+        );
+      });
       return end(lines.length, p);
     },
     exit: (tl, at) =>
-      lines.forEach((line, i) =>
-        tl.to(line, { duration: 0.45, ease: "none", scrambleText: { text: copy[i].replace(/\S/g, "0"), chars: NOISE, speed: 0.8 } }, at + i * 0.05).to(
-          line,
-          { autoAlpha: 0, duration: 0.14, ease: EXIT },
-          at + i * 0.05 + 0.45,
-        ),
-      ),
+      lines.forEach((line, i) => {
+        const state = { p: 0 };
+        const length = Array.from(copy[i]).length;
+        tl.fromTo(
+          state,
+          { p: 0 },
+          {
+            p: 1,
+            duration: 0.45,
+            ease: "none",
+            immediateRender: false,
+            onUpdate: () => (line.textContent = scrambleFrame(copy[i], length - Math.floor(state.p * length), state.p * 0.45)),
+          },
+          at + i * 0.05,
+        ).to(line, { autoAlpha: 0, duration: 0.14, ease: EXIT }, at + i * 0.05 + 0.45);
+      }),
   });
 });
 

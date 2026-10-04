@@ -155,7 +155,7 @@ Character effects are for display type. Keep reading text immediately readable; 
 | `linesMaskIn` / `Out` | lines, masked | `yPercent: 110 → 0`, 0.28s, `power3.out`, stagger 0.05 | Whole lines wiped up behind masks. |
 | `linesEllipseIn` / `Out` | lines, masked | mask `clip-path: ellipse(20% 0%)` swells to cover the line from its bottom edge while the line rises `yPercent 40 → 0`, 0.8s, `power3.out`, stagger 0.05 | A softer, rounder line reveal for display copy. |
 | `linesHighlightIn` / `Out` | lines, words | a `--line-highlight` bar sweeps `scaleX 0 → 1` over each line's words, the words appear, the bar retracts toward the line end; 0.12s between lines | A marker pass across a statement or pull quote. |
-| `scrambleIn` / `Out` | none | ScrambleText over `01{}/<>()=;` | Text resolving out of noise. Display only; needs ScrambleTextPlugin. |
+| `scrambleIn` / `Out` | none | each character cycles within its kind (capitals, lowercase, digits) at 20/s, then resolves left to right over 0.9s; punctuation stays blank until its turn | Text resolving out of noise while keeping its shape. Display only; plain text. |
 | `typeIn` / `typeOut` | an `aria-hidden` overlay; the text stays in place at `opacity 0` | one character at a time at ~22/s, uneven, slower after spaces and punctuation; the caret blinks twice at 1.06s and goes; out deletes at twice the speed | Text typed by a person. Plain text and `<br>` only. Code: [typewriter.md](recipes/typewriter.md). |
 | `glitchIn` / `Out` | clipped copies (`slice`, `blocks`, `scanline`, `ghost`), the element (`skew`), or chars (`weight`) | stepped jumps at 12/s, `±0.12em`, shrinking over 0.6s in, growing over 0.35s out | A signal dropping, then snapping clean. One per screen; no color split. |
 

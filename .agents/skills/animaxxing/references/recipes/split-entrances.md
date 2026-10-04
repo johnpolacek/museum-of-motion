@@ -2,7 +2,7 @@
 
 Lifecycle: the framework controller composes these timelines into intro and outro, and may kill or await them. Display type only. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
-Dependencies: `gsap`, `gsap/SplitText`; scramble also needs `gsap/ScrambleTextPlugin`. `charsWeightWave` needs a variable weight axis covering `WEIGHT` (example: 400–800); adapt those values and its 600 cutoff, or pick a transform-only runner.
+Dependencies: `gsap`, `gsap/SplitText`. `charsWeightWave` needs a variable weight axis covering `WEIGHT` (example: 400–800); adapt those values and its 600 cutoff, or pick a transform-only runner.
 
 Setup: apply [stable typography](../text-stability.md#stable-typography-for-character-animation) before splitting; check revert with the [cleanup checks](../verification.md#splittext-cleanup-stability). For confirmed clipped ink, pass `charMaskClass` with the [targeted mask CSS](../text-stability.md#apparent-weight-change-from-clipped-glyph-ink) and recheck both hidden endpoints.
 
@@ -459,12 +459,37 @@ The ellipse runners clip the line masks, so glyphs that overhang a line box need
 
 ## Scramble
 
-Copy this block whole; it registers `ScrambleTextPlugin`. Scramble replaces the element's text: plain display text only, no nested markup.
+Text resolves out of noise, left to right. Each character scrambles within its own kind: a capital cycles through capitals, a lowercase letter through lowercase, a digit through digits, so the word keeps its shape while it settles. Punctuation never scrambles: it stays blank until its turn, then appears. Spaces stay spaces. Scramble replaces the element's text: plain display text only, no nested markup. Frames are drawn from the timeline's time, so a scrubbed or replayed run shows the same noise.
 
 ```ts
-import { ScrambleTextPlugin } from "gsap/ScrambleTextPlugin";
+const UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const LOWER = "abcdefghijklmnopqrstuvwxyz";
+const DIGITS = "0123456789";
+/** Noise changes this many times a second. */
+const SCRAMBLE_RATE = 20;
 
-gsap.registerPlugin(ScrambleTextPlugin);
+/** A stable pseudo-random index for a character and a moment, so the same time always draws the same noise. */
+function noiseIndex(position: number, tick: number, size: number): number {
+  const x = Math.sin(position * 12.9898 + tick * 78.233) * 43758.5453;
+  return Math.floor((x - Math.floor(x)) * size);
+}
+
+/** The noise for one character: same kind for letters and digits, blank for punctuation, spaces kept. */
+function noiseFor(char: string, position: number, tick: number): string {
+  if (/\s/.test(char)) return char;
+  if (/[0-9]/.test(char)) return DIGITS[noiseIndex(position, tick, 10)]!;
+  if (char.toLowerCase() !== char.toUpperCase()) {
+    const pool = char === char.toUpperCase() ? UPPER : LOWER;
+    return pool[noiseIndex(position, tick, 26)]!;
+  }
+  return " ";
+}
+
+/** The text with its first `shown` characters real and the rest as noise at `time`. */
+function scrambleFrame(text: string, shown: number, time: number): string {
+  const tick = Math.floor(time * SCRAMBLE_RATE);
+  return Array.from(text, (char, i) => (i < shown ? char : noiseFor(char, i, tick))).join("");
+}
 
 /** Scrambles `element`, restoring its real words when the run completes, is killed, or is reverted. */
 function scramble(element: HTMLElement, tl: gsap.core.Timeline, options: MotionOptions, text: string): void {
@@ -478,6 +503,7 @@ function scramble(element: HTMLElement, tl: gsap.core.Timeline, options: MotionO
   tl.eventCallback("onInterrupt", release);
 }
 
+/** Noise first, then the real characters arrive left to right after `hold` of the run. */
 export const scrambleIn: SplitRunner = (element, options = {}) => {
   const tl = build(options);
   if (!element) return tl;
@@ -485,13 +511,21 @@ export const scrambleIn: SplitRunner = (element, options = {}) => {
   const text = element.textContent ?? "";
   if (prefersReducedMotion()) return tl.set(element, { autoAlpha: 1 });
   scramble(element, tl, options, text);
-  return tl.set(element, { autoAlpha: 1 }).to(element, {
+  const length = Array.from(text).length;
+  const state = { progress: 0 };
+  const hold = 0.15;
+  return tl.set(element, { autoAlpha: 1 }).to(state, {
+    progress: 1,
     duration: 0.9,
     ease: "none",
-    scrambleText: { text, chars: "01{}/<>()=;", speed: 0.6, revealDelay: 0.15 },
+    onUpdate: () => {
+      const shown = Math.floor(Math.max(0, (state.progress - hold) / (1 - hold)) * length);
+      element.textContent = scrambleFrame(text, shown, state.progress * 0.9);
+    },
   });
 };
 
+/** The real characters turn to noise from the end back, punctuation drops out, then the line fades. */
 export const scrambleOut: SplitRunner = (element, options = {}) => {
   const tl = build(options);
   if (!element) return tl;
@@ -499,11 +533,22 @@ export const scrambleOut: SplitRunner = (element, options = {}) => {
   if (prefersReducedMotion()) return tl.set(element, { autoAlpha: 0 });
   const text = element.textContent ?? "";
   scramble(element, tl, options, text);
+  const length = Array.from(text).length;
+  const state = { progress: 0 };
   return tl
-    .to(element, { duration: 0.5, ease: "none", scrambleText: { text: text.replace(/\S/g, "0"), chars: "01{}/<>()=;", speed: 0.8 } })
+    .to(state, {
+      progress: 1,
+      duration: 0.5,
+      ease: "none",
+      onUpdate: () => {
+        element.textContent = scrambleFrame(text, length - Math.floor(state.progress * length), state.progress * 0.5);
+      },
+    })
     .to(element, { autoAlpha: 0, duration: DURATION.micro, ease: EASE.exit });
 };
 ```
+
+Scrambling changes character widths in proportional type, so a line can jitter while it resolves. Use `font-variant-numeric: tabular-nums` for figures, and keep scramble to display lines with room around them.
 
 ## Glitch
 
