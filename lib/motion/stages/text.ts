@@ -1,7 +1,11 @@
 // Live stages for the text exhibits, 01 to 09. Recipes from the animaxxing skill's split entrances,
 // speak-in, wave, route letters, and the motion vocabulary's shelf.
 import { gsap, SplitText } from "../gsap";
-import { assemble, def, end, EXIT, pinWidths, rnd, split, type Act, type LoopParams, type StageDef } from "../stage-core";
+import { art, assemble, def, end, EXIT, pinWidths, rnd, split, type Act, type LoopParams, type StageDef } from "../stage-core";
+import { imagePlane } from "../recipes/webgl/image-planes";
+import { glitch as glitchImage } from "../recipes/webgl/uniform-effects";
+import { posterUrl } from "./webgl";
+import { EXHIBITS } from "../../exhibits";
 
 /* ---------- 01 Line mask ---------- */
 
@@ -421,11 +425,192 @@ export const paired = def(
 );
 
 
+/* ---------- Glitch ---------- */
+
+// From split-entrances' glitchIn and glitchOut, and the webgl skill's glitch. Jumps are stepped at twelve a
+// second. Random offsets are drawn once at build, so every pass and every scrub position is the same frame.
+const GLITCH_RATE = 12;
+type Cell = [number, number, number, number];
+const cellGrid = (rows: number, cols: number): Cell[] =>
+  Array.from({ length: rows * cols }, (_, k) => {
+    const r = Math.floor(k / cols);
+    const c = k % cols;
+    return [(r / rows) * 100, 100 - ((c + 1) / cols) * 100, 100 - ((r + 1) / rows) * 100, (c / cols) * 100];
+  });
+const GLITCH_CELLS: Record<string, Cell[]> = {
+  slice: cellGrid(6, 1),
+  blocks: cellGrid(3, 4),
+  scanline: cellGrid(10, 1),
+  ghost: [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+};
+
+/** The recipe's layers: the text kept for screen readers at opacity 0, clipped aria-hidden copies over it. */
+function glitchLayers(text: HTMLElement, cells: Cell[]) {
+  const position = text.style.position;
+  if (getComputedStyle(text).position === "static") text.style.position = "relative";
+  const source = document.createElement("span");
+  source.style.opacity = "0";
+  source.append(...Array.from(text.childNodes));
+  text.append(source);
+  const layers = cells.map(([t, r, b, l]) => {
+    const layer = document.createElement("span");
+    layer.setAttribute("aria-hidden", "true");
+    Object.assign(layer.style, { position: "absolute", inset: "0", padding: "inherit", boxSizing: "border-box", pointerEvents: "none", clipPath: `inset(calc(${t}% - 0.5px) calc(${r}% - 0.5px) calc(${b}% - 0.5px) calc(${l}% - 0.5px))` });
+    source.childNodes.forEach((node) => layer.append(node.cloneNode(true)));
+    text.append(layer);
+    return layer;
+  });
+  return {
+    layers,
+    restore: () => {
+      layers.forEach((layer) => layer.remove());
+      source.replaceWith(...Array.from(source.childNodes));
+      text.style.position = position;
+    },
+  };
+}
+
+export const glitch = def(
+  ["Slice", "Blocks", "Skew", "Ghost", "Weight", "Scanline", "Image"],
+  ["slice", "blocks", "skew", "ghost", "weight", "scanline", "image"],
+  ["duration", "hold"],
+  { duration: 0.6, stagger: 0, hold: 1.6, ease: "none" },
+  (text, p) => {
+    const kind = p.variation;
+    const steps = Math.max(2, Math.round(p.duration * GLITCH_RATE));
+    const outSteps = Math.max(2, Math.round(p.duration * 0.6 * GLITCH_RATE));
+    const shift = parseFloat(getComputedStyle(text).fontSize) * 0.18;
+    const at = (i: number) => i / GLITCH_RATE;
+    const jump = (scale = 1) => rnd(-shift, shift) * scale;
+    const fade = (i: number) => 1 - i / steps;
+    const grow = (i: number) => (i + 1) / outSteps;
+    const still = { x: 0, y: 0 };
+
+    if (kind === "image") {
+      const { layer, remove } = art(text, `<figure class="gl-frame"><img alt="A poster that glitches in and out" src="${posterUrl(EXHIBITS.find((e) => e.slug === "glitch")?.no ?? 0, 0)}"></figure>`);
+      const plane = imagePlane(layer.querySelector("img")!);
+      const g = glitchImage(plane, { hidden: true });
+      const { uGlitch, uProgress } = plane.uniforms;
+      return assemble(
+        text,
+        p,
+        [],
+        {
+          enter: (tl) => (tl.set(uProgress, { value: 1 }, 0).fromTo(uGlitch, { value: 1 }, { value: 0, duration: p.duration, ease: "power2.in" }, 0), p.duration),
+          exit: (tl, at0) =>
+            tl.fromTo(uGlitch, { value: 0 }, { value: 1, duration: p.duration * 0.6, ease: "power2.out", immediateRender: false }, at0)
+              .set(uProgress, { value: 0 }, at0 + p.duration * 0.6)
+              .set(uGlitch, { value: 0 }, at0 + p.duration * 0.6),
+        },
+        () => {
+          g.revert();
+          plane.revert();
+          remove();
+        },
+      );
+    }
+
+    if (kind === "weight") {
+      const splits: SplitText[] = [];
+      const chars = split(text, { type: "words,chars" }, splits).chars as HTMLElement[];
+      const rest = Number(getComputedStyle(text).fontWeight) || 400;
+      pinWidths(chars, 900);
+      const weights = (n: number) => Array.from({ length: n }, () => chars.map(() => ({ fontWeight: rnd(100, 900, 100), y: jump(0.3) })));
+      const ins = weights(steps);
+      const outs = weights(outSteps);
+      return assemble(text, p, splits, {
+        enter: (tl) => {
+          tl.set(chars, { autoAlpha: 1 }, 0);
+          ins.forEach((frame, i) => chars.forEach((c, k) => tl.set(c, { fontWeight: frame[k].fontWeight, y: frame[k].y * fade(i) }, at(i))));
+          tl.set(chars, { fontWeight: rest, y: 0 }, at(steps));
+          return at(steps);
+        },
+        exit: (tl, at0) => {
+          outs.forEach((frame, i) => chars.forEach((c, k) => tl.set(c, { fontWeight: frame[k].fontWeight, y: frame[k].y * grow(i) }, at0 + at(i))));
+          tl.set(chars, { autoAlpha: 0 }, at0 + at(outSteps));
+        },
+      });
+    }
+
+    if (kind === "skew") {
+      const ins = Array.from({ length: steps }, (_, i) => ({ x: jump(fade(i)), skewX: rnd(-24, 24) * fade(i) }));
+      const outs = Array.from({ length: outSteps }, (_, i) => ({ x: jump(grow(i)), skewX: rnd(-24, 24) * grow(i) }));
+      return assemble(text, p, [], {
+        enter: (tl) => {
+          ins.forEach((v, i) => tl.set(text, v, at(i)));
+          tl.set(text, { x: 0, skewX: 0 }, at(steps));
+          return at(steps);
+        },
+        exit: (tl, at0) => {
+          outs.forEach((v, i) => tl.set(text, v, at0 + at(i)));
+          tl.set(text, { x: 0, skewX: 0, autoAlpha: 0 }, at0 + at(outSteps));
+        },
+      });
+    }
+
+    const { layers, restore } = glitchLayers(text, GLITCH_CELLS[kind]);
+    const frames = (n: number, scale: (i: number) => number, vertical: number) =>
+      Array.from({ length: n }, (_, i) => layers.map(() => (Math.random() < 0.34 ? { x: jump(scale(i)), y: jump(scale(i) * vertical) } : still)));
+    const vertical = kind === "blocks" ? 0.4 : 0;
+    const ins = frames(steps, fade, vertical);
+    const outs = frames(outSteps, grow, vertical);
+    const ghostIn = Array.from({ length: steps }, (_, i) => Math.abs(jump(fade(i))) * 1.5);
+    const ghostOut = Array.from({ length: outSteps }, (_, i) => Math.abs(jump(grow(i))) * 1.5);
+    const lineJumps = layers.map(() => jump());
+    return assemble(
+      text,
+      p,
+      [],
+      {
+        enter: (tl) => {
+          tl.set(text, { autoAlpha: 1 }, 0);
+          if (kind === "ghost") {
+            const [main, ...ghosts] = layers;
+            tl.set(main, { autoAlpha: 0 }, 0).set(main, { autoAlpha: 1 }, at(1)).set(ghosts, { autoAlpha: 0.45 }, 0);
+            ghostIn.forEach((d, i) => ghosts.forEach((g, k) => tl.set(g, { x: (k ? 1 : -1) * d }, at(i))));
+            tl.set(ghosts, { ...still, autoAlpha: 0 }, at(steps));
+          } else if (kind === "scanline") {
+            const each = steps / layers.length;
+            layers.forEach((layer, k) => {
+              const turn = Math.floor(k * each);
+              tl.set(layer, { autoAlpha: 0, x: 0 }, 0).set(layer, { autoAlpha: 1, x: lineJumps[k] }, at(turn)).set(layer, still, at(turn + 1));
+            });
+          } else {
+            tl.set(layers, { autoAlpha: 1 }, 0);
+            ins.forEach((frame, i) => layers.forEach((layer, k) => tl.set(layer, frame[k], at(i))));
+            tl.set(layers, still, at(steps));
+          }
+          return at(steps);
+        },
+        exit: (tl, at0) => {
+          if (kind === "ghost") {
+            const ghosts = layers.slice(1);
+            tl.set(ghosts, { autoAlpha: 0.45 }, at0);
+            ghostOut.forEach((d, i) => ghosts.forEach((g, k) => tl.set(g, { x: (k ? 1 : -1) * d }, at0 + at(i))));
+            tl.set(layers, { autoAlpha: 0 }, at0 + at(outSteps));
+          } else if (kind === "scanline") {
+            const each = outSteps / layers.length;
+            layers.forEach((layer, k) => {
+              const turn = Math.floor(k * each);
+              tl.set(layer, { x: lineJumps[layers.length - 1 - k] }, at0 + at(turn)).set(layer, { autoAlpha: 0 }, at0 + at(turn + 1));
+            });
+          } else {
+            outs.forEach((frame, i) => layers.forEach((layer, k) => tl.set(layer, frame[k], at0 + at(i))));
+            tl.set(layers, { autoAlpha: 0 }, at0 + at(outSteps));
+          }
+        },
+      },
+      restore,
+    );
+  },
+);
+
 export const TEXT_STAGES: Record<string, StageDef> = {
   "line-mask": lineMask,
   characters,
   "word-slide": wordSlide,
   scramble,
+  glitch,
   "speak-in": speakIn,
   "weight-wave": weightWave,
   "letter-wave": letterWave,

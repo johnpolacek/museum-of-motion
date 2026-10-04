@@ -170,3 +170,52 @@ export function wipe(plane: ImagePlane, { duration = 1.2, ease = "power2.inOut",
     },
   };
 }
+
+export type GlitchOptions = {
+  /** Seconds of glitching per run. */
+  duration?: number;
+  /** Starts with the plane hidden, ready for `enter`. False starts it shown. */
+  hidden?: boolean;
+};
+
+export type Glitch = {
+  /** Shows the image breaking up, then settling clean. */
+  enter(): gsap.core.Timeline;
+  /** Breaks the image up more and more, then hides it. */
+  exit(): gsap.core.Timeline;
+  /** One burst on a shown image, settling clean. */
+  burst(): gsap.core.Timeline;
+  revert: Teardown;
+};
+
+/**
+ * Bands and blocks jump sideways on `uGlitch`, in steps from the shader's clock. Nothing blinks:
+ * the plane shows once on `enter` and hides once on `exit`. Without WebGL, timelines finish at once.
+ */
+export function glitch(plane: ImagePlane, { duration = 0.6, hidden = true }: GlitchOptions = {}): Glitch {
+  const { uGlitch, uProgress } = plane.uniforms;
+  const start = [uGlitch.value, uProgress.value] as const;
+  let running: gsap.core.Timeline | undefined;
+  if (plane.webgl) uProgress.value = hidden ? 0 : 1;
+  const run = (build: (tl: gsap.core.Timeline) => void) => {
+    running?.kill();
+    running = gsap.timeline();
+    if (plane.webgl) build(running);
+    else running.to({}, { duration: 0 });
+    return running;
+  };
+  return {
+    enter: () =>
+      run((tl) => tl.set(uProgress, { value: 1 }, 0).fromTo(uGlitch, { value: 1 }, { value: 0, duration, ease: "power2.in" }, 0)),
+    exit: () =>
+      run((tl) =>
+        tl.fromTo(uGlitch, { value: 0 }, { value: 1, duration: duration * 0.6, ease: "power2.out" }).set(uProgress, { value: 0 }).set(uGlitch, { value: 0 }),
+      ),
+    burst: () => run((tl) => tl.fromTo(uGlitch, { value: 1 }, { value: 0, duration, ease: "power2.in" })),
+    revert() {
+      running?.kill();
+      gsap.killTweensOf([uGlitch, uProgress]);
+      [uGlitch.value, uProgress.value] = start;
+    },
+  };
+}

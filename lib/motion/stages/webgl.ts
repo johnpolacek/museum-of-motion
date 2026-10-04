@@ -18,7 +18,7 @@ const two = (n: number) => String(n).padStart(2, "0");
  * A poster as a data URI, so WebGL can read it without CORS. Explicit width and height make the
  * browser rasterize the SVG at full size for the texture. Images cannot reach the page font.
  */
-function posterUrl(n: number, i: number) {
+export function posterUrl(n: number, i: number) {
   const [bg, fg] = TONES[i % TONES.length];
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 400 300"><rect width="400" height="300" fill="${bg}"/><g fill="none" stroke="${fg}" stroke-width="2" opacity="0.5"><circle cx="300" cy="140" r="90"/><circle cx="300" cy="140" r="56"/><circle cx="300" cy="140" r="22"/></g><g stroke="${fg}" stroke-width="1" opacity="0.25">${Array.from({ length: 14 }, (_, k) => `<line x1="0" y1="${k * 22}" x2="400" y2="${k * 22}"/>`).join("")}</g><text x="24" y="270" fill="${fg}" font-family="Arial Narrow, Arial, sans-serif" font-weight="700" font-size="190" letter-spacing="-8">${two(n)}</text></svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;

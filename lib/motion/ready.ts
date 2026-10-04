@@ -5,6 +5,7 @@ export const LIVE_STAGES = new Set([
   "characters",
   "word-slide",
   "scramble",
+  "glitch",
   "speak-in",
   "weight-wave",
   "letter-wave",

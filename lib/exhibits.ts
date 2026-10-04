@@ -77,6 +77,21 @@ const DATA: Exhibit[] = [
     desc: "Text resolves out of noise."
   },
   {
+    name: "Glitch",
+    group: "time",
+    builders: "glitchIn, glitchOut, glitch",
+    src: "split-entrances",
+    desc: "The signal drops: bands, blocks, and letters jump, then snap clean.",
+    vars: [
+      "Blocks",
+      "Skew",
+      "Ghost",
+      "Weight",
+      "Scanline",
+      "Image"
+    ]
+  },
+  {
     name: "Speak-in",
     group: "time",
     builders: "speakIn",
