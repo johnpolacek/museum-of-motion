@@ -1,16 +1,15 @@
 "use client";
 
-// The exhibit stage, live: the sample text performs on a loop once the page settles, with
-// pause, a scrub rail, the recipe's variations, and the knobs that shape it.
+// The exhibit stage, live: the sample text performs its exhibit on a loop, cued by the page intro,
+// with pause, a scrub rail, the recipe's variations, and the knobs that apply to it.
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { prefersReducedMotion } from "@/lib/motion/gsap";
-import { createLoop, DEFAULTS, type Loop, type LoopParams, type Variation } from "@/lib/motion/stage";
+import { createLoop, STAGES, type Knob, type Loop, type LoopParams } from "@/lib/motion/stage";
 import { useExhibitPhase } from "./ExhibitMotion";
 
-const VARIATIONS: Variation[] = ["mask", "ellipse", "highlight"];
 const EASES = ["signature", "power3.out", "expo.out", "back.out(1.8)", "elastic.out(1, 0.5)", "none"];
 
-type Props = { desc: string; labels: string[] };
+type Props = { slug: string; desc: string };
 
 const secs = (n: number) => n.toFixed(2);
 
@@ -20,14 +19,15 @@ function subscribeReduced(onChange: () => void) {
   return () => query.removeEventListener("change", onChange);
 }
 
-export function ExhibitStage({ desc, labels }: Props) {
-  const { settled, registerStop } = useExhibitPhase();
+export function ExhibitStage({ slug, desc }: Props) {
+  const def = STAGES[slug];
+  const { cued, registerStop } = useExhibitPhase();
   const text = useRef<HTMLParagraphElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const rail = useRef<HTMLInputElement>(null);
   const now = useRef<HTMLSpanElement>(null);
   const loop = useRef<Loop | null>(null);
-  const [params, setParams] = useState<LoopParams>(DEFAULTS);
+  const [params, setParams] = useState<LoopParams>(() => def.defaults(def.variations[0]));
   const [playing, setPlaying] = useState(true);
   const [live, setLive] = useState(false);
   // Under reduced motion there is no loop, so no controls. Follows the setting live.
@@ -36,7 +36,6 @@ export function ExhibitStage({ desc, labels }: Props) {
   const playingRef = useRef(true);
   const scrubbing = useRef(false);
   const offscreen = useRef(false);
-  const first = useRef(true);
 
   const sync = () => {
     const l = loop.current;
@@ -45,10 +44,10 @@ export function ExhibitStage({ desc, labels }: Props) {
     else l.timeline.pause();
   };
 
-  // Build the loop once the page intro has settled, and rebuild it whenever a knob changes.
+  // Build the loop when the page intro cues the stage, and rebuild it whenever a knob changes.
   useEffect(() => {
-    if (!settled || !text.current || reduced) return;
-    const l = createLoop(text.current, params);
+    if (!cued || !text.current || reduced) return;
+    const l = createLoop(slug, text.current, params);
     if (!l) return;
     loop.current = l;
     setLive(true);
@@ -58,9 +57,6 @@ export function ExhibitStage({ desc, labels }: Props) {
       if (now.current) now.current.textContent = secs(t);
       if (rail.current && !scrubbing.current) rail.current.value = String(t / l.cycle);
     });
-    // The page intro already played the first entrance: the first loop picks up at rest.
-    l.timeline.time(first.current ? l.restAt : 0);
-    first.current = false;
     sync();
     const stop = () => {
       l.destroy();
@@ -71,7 +67,7 @@ export function ExhibitStage({ desc, labels }: Props) {
       unregister();
       stop();
     };
-  }, [settled, params, registerStop, reduced]);
+  }, [cued, params, registerStop, reduced, slug]);
 
   // Off screen, the loop holds still. Width changes re-measure the lines by rebuilding.
   useEffect(() => {
@@ -117,6 +113,7 @@ export function ExhibitStage({ desc, labels }: Props) {
   };
 
   const set = <K extends keyof LoopParams>(key: K, value: LoopParams[K]) => setParams((p) => ({ ...p, [key]: value }));
+  const has = (knob: Knob) => def.knobs.includes(knob);
 
   return (
     <>
@@ -151,44 +148,52 @@ export function ExhibitStage({ desc, labels }: Props) {
           <span className="num">{secs(total)} s</span>
         </label>
         <div className="knobs">
-          <Knob label="Duration" value={params.duration} min={0.2} max={2} step={0.05} unit="s" onChange={(v) => set("duration", v)} />
-          <Knob label="Stagger" value={params.stagger} min={0} max={0.4} step={0.01} unit="s" onChange={(v) => set("stagger", v)} />
-          <Knob label="Hold" value={params.hold} min={0} max={5} step={0.1} unit="s" onChange={(v) => set("hold", v)} />
-          <label className="knob">
-            <span>Ease</span>
-            <select value={params.ease} onChange={(e) => set("ease", e.currentTarget.value)}>
-              {EASES.map((ease) => (
-                <option key={ease} value={ease}>
-                  {ease}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button type="button" className="ctl" onClick={() => setParams((p) => ({ ...DEFAULTS, variation: p.variation }))}>
+          {has("duration") && (
+            <Knob label="Duration" value={params.duration} min={0.1} max={2} step={0.05} unit="s" onChange={(v) => set("duration", v)} />
+          )}
+          {has("stagger") && (
+            <Knob label="Stagger" value={params.stagger} min={0} max={0.4} step={0.01} unit="s" onChange={(v) => set("stagger", v)} />
+          )}
+          {has("hold") && <Knob label="Hold" value={params.hold} min={0} max={5} step={0.1} unit="s" onChange={(v) => set("hold", v)} />}
+          {has("ease") && (
+            <label className="knob">
+              <span>Ease</span>
+              <select value={params.ease} onChange={(e) => set("ease", e.currentTarget.value)}>
+                {[...new Set([params.ease, ...EASES])].map((ease) => (
+                  <option key={ease} value={ease}>
+                    {ease}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <button type="button" className="ctl" onClick={() => setParams((p) => def.defaults(p.variation))}>
             Reset
           </button>
         </div>
       </div>
       <div className="row" data-intro>
         <p>{desc}</p>
-        <div className="tabs" role="group" aria-label="Variations">
-          {labels.map((label, i) => {
-            const variation = VARIATIONS[i];
-            const on = params.variation === variation;
-            return (
-              <button
-                key={label}
-                type="button"
-                className={on ? "on" : undefined}
-                aria-pressed={on}
-                disabled={!live}
-                onClick={() => set("variation", variation)}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
+        {def.labels.length > 1 && (
+          <div className="tabs" role="group" aria-label="Variations">
+            {def.labels.map((label, i) => {
+              const variation = def.variations[i];
+              const on = params.variation === variation;
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  className={on ? "on" : undefined}
+                  aria-pressed={on}
+                  disabled={!live}
+                  onClick={() => setParams(def.defaults(variation))}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </>
   );

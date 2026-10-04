@@ -4,7 +4,7 @@ import { ExhibitStage } from "@/components/ExhibitStage";
 import { TransitionLink } from "@/components/motion/TransitionLink";
 import { notFound } from "next/navigation";
 import { EXHIBITS, SPECS, groupName, recipeUrl, two } from "@/lib/exhibits";
-import { MOTION_EXHIBITS } from "@/lib/motion/ready";
+import { LIVE_STAGES } from "@/lib/motion/ready";
 
 export const dynamicParams = false;
 
@@ -48,8 +48,8 @@ export default async function ExhibitPage({ params }: PageProps<"/exhibits/[slug
           {e.name}
         </span>
       </h1>
-      {MOTION_EXHIBITS.has(e.slug) ? (
-        <ExhibitStage desc={e.desc} labels={[e.name, ...(e.vars ?? [])]} />
+      {LIVE_STAGES.has(e.slug) ? (
+        <ExhibitStage slug={e.slug} desc={e.desc} />
       ) : (
         <>
           <div className="stage" data-intro>

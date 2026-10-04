@@ -1,20 +1,20 @@
 "use client";
 
 // Exhibit page controller: initial state → intro (with the title handoff) → settled → outro → end state.
-// Only exhibits in MOTION_EXHIBITS animate; the rest render the same markup, static.
+// Every exhibit gets the page transition. Exhibits in LIVE_STAGES also perform on their stage.
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { finished, fontsReady, gsap, prefersReducedMotion, useGSAP } from "@/lib/motion/gsap";
 import { armRecovery, claimVisit, disarm, handOff } from "@/lib/motion/boot";
 import { exhibitIntro, exhibitOutro, exhibitTargets, type Run } from "@/lib/motion/exhibit";
-import { MOTION_EXHIBITS } from "@/lib/motion/ready";
+import { LIVE_STAGES } from "@/lib/motion/ready";
 import { useTransitionController } from "./motion/TransitionProvider";
 
 const OWNER = "ex";
 
-/** What the stage needs from the page: when the intro has settled, and a way to be stopped before the outro. */
-type Phase = { settled: boolean; registerStop: (stop: () => void) => () => void };
-const PhaseContext = createContext<Phase>({ settled: false, registerStop: () => () => {} });
+/** What the stage needs from the page: when to start performing, and a way to be stopped before the outro. */
+type Phase = { cued: boolean; registerStop: (stop: () => void) => () => void };
+const PhaseContext = createContext<Phase>({ cued: false, registerStop: () => () => {} });
 export const useExhibitPhase = () => useContext(PhaseContext);
 
 export function ExhibitMotion({ slug, children }: { slug: string; children: React.ReactNode }) {
@@ -22,8 +22,8 @@ export function ExhibitMotion({ slug, children }: { slug: string; children: Reac
   const visit = useRef<"animate" | "settle">(null);
   const pathname = usePathname();
   const { registerOutro, peekShared, clearShared } = useTransitionController();
-  const enabled = MOTION_EXHIBITS.has(slug);
-  const [settledState, setSettledState] = useState(false);
+  const live = LIVE_STAGES.has(slug);
+  const [cued, setCued] = useState(false);
   const stops = useRef(new Set<() => void>());
   const registerStop = useCallback((stop: () => void) => {
     stops.current.add(stop);
@@ -31,11 +31,10 @@ export function ExhibitMotion({ slug, children }: { slug: string; children: Reac
       stops.current.delete(stop);
     };
   }, []);
-  const phase = useMemo(() => ({ settled: settledState, registerStop }), [settledState, registerStop]);
+  const phase = useMemo(() => ({ cued, registerStop }), [cued, registerStop]);
 
   useGSAP(
     (_, contextSafe) => {
-      if (!enabled) return;
       const el = root.current!;
       visit.current ??= claimVisit(OWNER);
       const animate = visit.current === "animate" && !prefersReducedMotion();
@@ -46,7 +45,7 @@ export function ExhibitMotion({ slug, children }: { slug: string; children: Reac
         intro?.finish();
         el.dataset.phase = "settled";
         clearShared();
-        setSettledState(true);
+        setCued(true);
       });
 
       const outro = contextSafe!(() => {
@@ -91,7 +90,7 @@ export function ExhibitMotion({ slug, children }: { slug: string; children: Reac
       const build = contextSafe!(() => {
         if (!alive) return;
         try {
-          intro = exhibitIntro(el, peekShared(pathname));
+          intro = exhibitIntro(el, peekShared(pathname), live ? () => setCued(true) : null);
         } catch (error) {
           console.error(error);
           settled();
@@ -115,7 +114,8 @@ export function ExhibitMotion({ slug, children }: { slug: string; children: Reac
       ref={root}
       className="ex wrap blue"
       aria-labelledby="ex-h"
-      {...(enabled ? { "data-motion-owner": OWNER, "data-phase": "initial" } : {})}
+      data-motion-owner={OWNER}
+      data-phase="initial"
     >
       <PhaseContext.Provider value={phase}>{children}</PhaseContext.Provider>
     </main>

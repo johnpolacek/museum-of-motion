@@ -29,24 +29,7 @@ export const exhibitTargets = (root: HTMLElement) => {
 
 export type Run = { timeline: gsap.core.Timeline; finish: () => void };
 
-/* ---------- Stage: 01 Line mask ---------- */
-
-/** Whole lines rise from behind masks. Stage-sized display type, so the signature curve and 0.06 s a line. */
-export function stageIn(text: HTMLElement): Run {
-  const tl = gsap.timeline({ paused: true, defaults: { overwrite: "auto" } });
-  if (prefersReducedMotion()) return { timeline: tl.set(text, { autoAlpha: 1 }), finish: () => {} };
-  const split = SplitText.create(text, { type: "lines", mask: "lines", aria: "auto" });
-  const finish = () => {
-    split.revert();
-    gsap.set(text, { clearProps: "opacity,visibility" });
-  };
-  tl.set(text, { autoAlpha: 1 }, 0).from(
-    split.lines,
-    { yPercent: 110, duration: 0.8, ease: ENTER, stagger: 0.06, immediateRender: true },
-    0,
-  );
-  return { timeline: tl, finish };
-}
+/* ---------- Stage exit, shared by every exhibit ---------- */
 
 /** And down behind them again, quickly. */
 export function stageOut(text: HTMLElement): Run {
@@ -64,14 +47,11 @@ export function stageOut(text: HTMLElement): Run {
  * The page intro, paused, start values applied. With a handoff the title flies in from the
  * collection name; without one (first load, back and forward) it widens into place.
  */
-export function exhibitIntro(root: HTMLElement, shared: SharedState | null): Run {
+export function exhibitIntro(root: HTMLElement, shared: SharedState | null, cueStage: (() => void) | null): Run {
   const p = parts(root);
   const tl = gsap.timeline({ paused: true, defaults: { overwrite: "auto" } });
   const visible = [...p.bar, p.num, p.name, ...p.rest];
-  let stage: Run | null = null;
   const finish = () => {
-    stage?.finish();
-    stage = null;
     gsap.set([...visible, p.stage], { clearProps: CLEAR });
   };
   if (prefersReducedMotion()) {
@@ -88,8 +68,9 @@ export function exhibitIntro(root: HTMLElement, shared: SharedState | null): Run
     else tl.from(p.name, { fontStretch: "62%", autoAlpha: 0, duration: 0.9, ease: ENTER, immediateRender: true }, 0);
     tl.fromTo(p.bar, { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.4, ease: ENTER, stagger: 0.04 }, 0.15)
       .fromTo(p.num, { autoAlpha: 0, yPercent: 40 }, { autoAlpha: 1, yPercent: 0, duration: 0.45, ease: ENTER }, 0.55);
-    stage = stageIn(p.stage);
-    tl.add(stage.timeline.play(), 0.6);
+    // A live stage performs its own exhibit from here; a static one simply rises.
+    if (cueStage) tl.call(cueStage, undefined, 0.6);
+    else tl.fromTo(p.stage, { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.6, ease: ENTER }, 0.6);
     tl.fromTo(p.rest, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.4, ease: ENTER, stagger: 0.04 }, 0.8);
   } catch (error) {
     tl.kill();
