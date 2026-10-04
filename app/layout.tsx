@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Archivo } from "next/font/google";
-import Link from "next/link";
+import { Masthead } from "@/components/Masthead";
+import { TransitionProvider } from "@/components/motion/TransitionProvider";
+import { BOOT_SCRIPT } from "@/lib/motion/boot";
 import "./globals.css";
 
 const archivo = Archivo({
@@ -17,18 +19,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={archivo.variable}>
+    <html lang="en" className={archivo.variable} suppressHydrationWarning>
       <body>
-        <header className="mast wrap blue">
-          <Link className="word" href="/">
-            Museum of Motion
-          </Link>
-          <nav className="lab" aria-label="Main">
-            <Link href="/#collection">Collection</Link>
-            <Link href="/about">About</Link>
-          </nav>
-        </header>
-        {children}
+        {/* Sets the motion marker before content paints. The marker itself is never in server HTML. */}
+        <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
+        <TransitionProvider>
+          <Masthead />
+          {children}
+        </TransitionProvider>
         <footer className="foot wrap blue">
           <div className="big">Museum of Motion</div>
           <nav className="lab" aria-label="Credits">

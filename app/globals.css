@@ -20,19 +20,24 @@ a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 
 /* Hero */
 .hero { min-height: calc(100svh - 64px); display: grid; grid-template-rows: 1fr auto; padding-bottom: 28px; }
-.hero h1 { margin: 0; align-self: center; font-weight: 700; font-stretch: 100%; font-size: clamp(64px, 12.4vw, 228px); line-height: 0.92; letter-spacing: -0.035em; }
+.hero h1 { margin: 0; align-self: center; font-weight: 700; font-stretch: 100%; font-size: clamp(64px, 12.4vw, 228px); line-height: 0.92; letter-spacing: -0.035em; font-kerning: none; text-rendering: optimizeSpeed; }
 .w { display: inline-block; position: relative; white-space: nowrap; }
+.w .t { display: inline-block; }
 .w sup { position: absolute; top: 0.12em; right: -0.12em; transform: translateX(100%); font-size: max(11px, 0.075em); font-weight: 600; letter-spacing: 0.02em; font-stretch: 100%; }
-.mk { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.06em; }
-.mk > span { display: inline-block; }
-.ch { display: inline-block; }
-.pw span { display: inline-block; text-align: center; }
-.sk { display: inline-block; transform: skewX(-14deg); }
-/* Underline sweep, caught on its way in from the start. */
-.us i { position: absolute; left: 0; bottom: 0.02em; width: 58%; height: 0.07em; background: currentColor; }
-.hero .under { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--gut); align-items: end; border-top: 1px solid rgba(255,255,255,0.35); padding-top: 16px; }
+/* Mask for the line rise. Padding gives the overshoot and the wave room; negative margins keep the footprint. */
+.mk { display: inline-block; overflow: hidden; vertical-align: top; padding: 0.1em 0 0.06em; margin-top: -0.1em; }
+/* Underline sweep. At rest it has swept away; the intro draws it. */
+.us i { position: absolute; left: 0; bottom: 0.02em; width: 100%; height: 0.07em; background: currentColor; transform: scaleX(0); }
+.hero .under { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--gut); align-items: end; padding-top: 16px; }
+.hero .under .rule { position: absolute; top: 0; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.35); }
 .hero .under p { margin: 0; max-width: 40ch; font-size: 18px; }
+.hero .side { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: baseline; gap: 6px 22px; }
 .hero .under ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 22px; justify-content: flex-end; }
+.wave-toggle { font-family: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid currentColor; border-radius: 0; padding: 0; cursor: pointer; }
+.wave-toggle:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+
+/* Motion first paint: entering targets stay hidden only while the boot marker is pending and their owner is initial. */
+html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data-intro] { visibility: hidden; }
 
 /* Collection: names set as one block of type per group. */
 .coll { padding-top: clamp(64px, 8vw, 128px); padding-bottom: clamp(64px, 8vw, 128px); }
@@ -79,7 +84,7 @@ a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 
 @media (max-width: 900px) {
   .hero .under { grid-template-columns: 1fr; }
-  .hero .under ol { justify-content: flex-start; }
+  .hero .side, .hero .under ol { justify-content: flex-start; }
   .grp, .about { grid-template-columns: 1fr; }
   .ex .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
