@@ -6,6 +6,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ScrollTrigger } from "@/lib/motion/gsap";
+import type { SharedState } from "@/lib/motion/shared";
 
 /** Where the navigation came from: the destination, and the link element clicked, if any. */
 export type OutroContext = { href: string; source: Element | null };
@@ -19,6 +20,10 @@ type NavigateOptions = { replace?: boolean; scroll?: boolean; source?: Element |
 type Controller = {
   registerOutro: (outro: Outro) => () => void;
   navigate: (e: NavigateEvent, href: string, options: NavigateOptions) => void;
+  /** Shared-element handoff, keyed by destination pathname. Reading never consumes it. */
+  setShared: (pathname: string, state: SharedState) => void;
+  peekShared: (pathname: string) => SharedState | null;
+  clearShared: () => void;
 };
 
 const TransitionContext = createContext<Controller | null>(null);
@@ -36,12 +41,15 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
   const token = useRef(0);
   const locked = useRef(false);
   const lockTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const shared = useRef<{ pathname: string; state: SharedState } | null>(null);
 
   // A new route is showing: release the lock and invalidate any pending push (back or forward mid-outro).
   useEffect(() => {
     token.current++;
     locked.current = false;
     clearTimeout(lockTimer.current);
+    // A handoff only survives into the page it was made for. A history move elsewhere drops it.
+    if (shared.current && shared.current.pathname !== pathname) shared.current = null;
     // Persistent owners such as the footer keep their triggers across pages: remeasure for the new page.
     const frame = requestAnimationFrame(() => ScrollTrigger.refresh());
     return () => cancelAnimationFrame(frame);
@@ -66,6 +74,8 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
       if (url.origin !== window.location.origin) return;
       if (url.pathname === window.location.pathname && url.search === window.location.search) return;
 
+      // A new navigation replaces any earlier handoff.
+      shared.current = null;
       const runs = [...outros.current].map((fn) => fn({ href, source })).filter((run) => run !== null);
       if (!runs.length) return;
       const run = Promise.all(runs);
@@ -87,9 +97,25 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
     [router],
   );
 
-  const value = useMemo(() => ({ registerOutro, navigate }), [registerOutro, navigate]);
+  const setShared = useCallback((path: string, state: SharedState) => {
+    shared.current = { pathname: normalize(path), state };
+  }, []);
+  const peekShared = useCallback(
+    (path: string) => (shared.current?.pathname === normalize(path) ? shared.current.state : null),
+    [],
+  );
+  const clearShared = useCallback(() => {
+    shared.current = null;
+  }, []);
+
+  const value = useMemo(
+    () => ({ registerOutro, navigate, setShared, peekShared, clearShared }),
+    [registerOutro, navigate, setShared, peekShared, clearShared],
+  );
   return <TransitionContext.Provider value={value}>{children}</TransitionContext.Provider>;
 }
+
+const normalize = (path: string) => new URL(path, "http://x").pathname.replace(/\/+$/, "") || "/";
 
 export function useTransitionController(): Controller {
   const value = useContext(TransitionContext);

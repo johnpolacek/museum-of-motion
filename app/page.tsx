@@ -33,7 +33,7 @@ export default function Home() {
                       </span>
                     )}
                     <TransitionLink href={`/exhibits/${e.slug}`}>
-                      {e.name}
+                      <span data-flip-id={e.slug}>{e.name}</span>
                       <sup className="num">{two(e.no)}</sup>
                     </TransitionLink>
                   </span>

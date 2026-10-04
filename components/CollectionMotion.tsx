@@ -6,6 +6,7 @@ import { useRef } from "react";
 import { finished, fontsReady, prefersReducedMotion, ScrollTrigger, useGSAP } from "@/lib/motion/gsap";
 import { armRecovery, claimVisit, disarm, handOff } from "@/lib/motion/boot";
 import { collectionOutro, groupReveal, headerReveal, nameWiden, type Reveal } from "@/lib/motion/collection";
+import { captureShared } from "@/lib/motion/shared";
 import { useTransitionController } from "./motion/TransitionProvider";
 
 const OWNER = "coll";
@@ -15,7 +16,7 @@ const START = "top 85%";
 export function CollectionMotion({ children }: { children: React.ReactNode }) {
   const root = useRef<HTMLElement>(null);
   const visit = useRef<"animate" | "settle">(null);
-  const { registerOutro } = useTransitionController();
+  const { registerOutro, setShared } = useTransitionController();
 
   useGSAP(
     (_, contextSafe) => {
@@ -31,13 +32,16 @@ export function CollectionMotion({ children }: { children: React.ReactNode }) {
         for (const link of scope.querySelectorAll<HTMLElement>(".names a")) hovers.push(nameWiden(link, () => leaving));
       };
 
-      const outro = contextSafe!(({ source }: { source: Element | null }) => {
+      const outro = contextSafe!(({ href, source }: { href: string; source: Element | null }) => {
         const tl = collectionOutro(el, source);
         if (!tl) return null;
         leaving = true;
         // Finish any reveal still running so the outro starts from settled names.
         for (const r of reveals) if (r.timeline.isActive()) r.timeline.progress(1);
+        const name = source && el.contains(source) ? source.querySelector<HTMLElement>("[data-flip-id]") : null;
         return finished(tl).then(() => {
+          // End state: the held name is where the next page's title will fly from.
+          if (name) setShared(href, captureShared(name));
           el.inert = true;
         });
       });

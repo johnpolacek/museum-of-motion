@@ -7,7 +7,7 @@ export const BOOT_DEADLINE = 1500;
 export const BOOT_SCRIPT = `(function(){try{
 var d=document.documentElement;
 if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-var b=window.__motionBoot={owners:{},claimed:{},done:{},expired:false};
+var b=window.__motionBoot={owners:{},claimed:{},done:{},expired:false,path:location.pathname};
 setTimeout(function(){
 b.expired=true;var hit=false;
 for(var k in b.owners){hit=true;try{b.owners[k]()}catch(e){}}
@@ -18,6 +18,8 @@ d.setAttribute('data-motion-boot','pending');
 }catch(e){}})();`;
 
 type Boot = {
+  /** The pathname the document loaded on. Owners first seen on any other path came by client navigation. */
+  path: string;
   owners: Record<string, () => void>;
   claimed: Record<string, true>;
   done: Record<string, true>;
@@ -27,13 +29,13 @@ type Boot = {
 const boot = (): Boot | undefined => (window as unknown as { __motionBoot?: Boot }).__motionBoot;
 
 /**
- * Decides one visit for an owner. The first claim in a document is the boot visit:
- * after the deadline it settles without motion. Later claims are client navigations.
- * Call once per visit (keep the answer in a ref) so repeated setup does not re-decide.
+ * Decides one visit for an owner. Its first claim on the document's first page is the boot visit:
+ * after the deadline it settles without motion. Later claims, and any claim on a page reached by
+ * client navigation, animate. Call once per visit (keep the answer in a ref) so repeated setup does not re-decide.
  */
 export function claimVisit(owner: string): "animate" | "settle" {
   const b = boot();
-  if (!b || b.claimed[owner]) return "animate";
+  if (!b || b.claimed[owner] || window.location.pathname !== b.path) return "animate";
   b.claimed[owner] = true;
   return b.expired ? "settle" : "animate";
 }

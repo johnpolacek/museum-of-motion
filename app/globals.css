@@ -72,8 +72,13 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .bar nav { display: flex; gap: 22px; }
 .ex h1 { margin: 0; font-weight: 800; font-stretch: 75%; text-transform: uppercase; font-size: clamp(56px, 10vw, 184px); line-height: 0.86; letter-spacing: -0.02em; }
 .ex h1 .n { font-weight: 300; margin-right: 0.12em; }
-.ex .stage { border-top: 1px solid rgba(255,255,255,0.35); border-bottom: 1px solid rgba(255,255,255,0.35); min-height: 46svh; display: grid; align-content: center; padding: 48px 0; }
+/* Boxes so the number can rise and the name can fly in from the collection. */
+.ex h1 .n, .ex h1 .t { display: inline-block; }
+.ex h1 .t { max-width: 100%; }
+.ex .stage { position: relative; border-top: 1px solid rgba(255,255,255,0.35); border-bottom: 1px solid rgba(255,255,255,0.35); min-height: 46svh; display: grid; align-content: center; padding: 48px 0; }
 .ex .stage p { margin: 0; font-weight: 400; font-size: clamp(40px, 6.4vw, 116px); line-height: 1.0; letter-spacing: -0.03em; }
+.ex .stage .replay { position: absolute; right: 0; bottom: 16px; font-family: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid currentColor; border-radius: 0; padding: 0; cursor: pointer; }
+.ex .stage .replay:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .ex .scrub { display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; }
 .ex .scrub .rail { position: relative; height: 2px; background: rgba(255,255,255,0.3); }
 .ex .scrub .rail::before { content: ''; position: absolute; inset: 0; background: #fff; }

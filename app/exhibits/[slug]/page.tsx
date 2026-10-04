@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { ExhibitMotion } from "@/components/ExhibitMotion";
+import { TransitionLink } from "@/components/motion/TransitionLink";
 import { notFound } from "next/navigation";
 import { EXHIBITS, SPECS, groupName, recipeUrl, two } from "@/lib/exhibits";
+import { MOTION_EXHIBITS } from "@/lib/motion/ready";
 
 export const dynamicParams = false;
 
@@ -29,28 +31,35 @@ export default async function ExhibitPage({ params }: PageProps<"/exhibits/[slug
   ];
 
   return (
-    <main className="ex wrap blue" aria-labelledby="ex-h">
-      <div className="bar lab">
+    <ExhibitMotion slug={e.slug}>
+      <div className="bar lab" data-intro>
         <span>
           {groupName(e.group)} · {two(e.no)} of {total}
         </span>
         <nav aria-label="Exhibits">
-          <Link href={`/exhibits/${prev.slug}`}>← {prev.name}</Link>
-          <Link href={`/exhibits/${next.slug}`}>{next.name} →</Link>
+          <TransitionLink href={`/exhibits/${prev.slug}`}>← {prev.name}</TransitionLink>
+          <TransitionLink href={`/exhibits/${next.slug}`}>{next.name} →</TransitionLink>
         </nav>
       </div>
-      <h1 id="ex-h">
+      <h1 id="ex-h" data-intro>
         <span className="n num">{two(e.no)}</span>
-        {e.name}
+        <span className="t" data-flip-id={e.slug}>
+          {e.name}
+        </span>
       </h1>
-      <div className="stage">
+      <div className="stage" data-intro>
         <p>
           Every way a page
           <br />
           can move.
         </p>
+        {MOTION_EXHIBITS.has(e.slug) && (
+          <button type="button" className="lab replay" data-replay hidden>
+            Replay
+          </button>
+        )}
       </div>
-      <div className="row">
+      <div className="row" data-intro>
         <p>{e.desc}</p>
         {e.vars && (
           <ul className="tabs" aria-label="Variations">
@@ -62,7 +71,7 @@ export default async function ExhibitPage({ params }: PageProps<"/exhibits/[slug
           </ul>
         )}
       </div>
-      <dl className="specs">
+      <dl className="specs" data-intro>
         {specs.map(([k, v]) => (
           <div key={k}>
             <dt className="lab">{k}</dt>
@@ -70,12 +79,12 @@ export default async function ExhibitPage({ params }: PageProps<"/exhibits/[slug
           </div>
         ))}
       </dl>
-      <div className="row">
+      <div className="row" data-intro>
         <span></span>
         <a className="src lab" href={recipeUrl(e)}>
           View the recipe ↗
         </a>
       </div>
-    </main>
+    </ExhibitMotion>
   );
 }

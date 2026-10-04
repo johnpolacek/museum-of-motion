@@ -3,15 +3,16 @@ import gsap from "gsap";
 import { SplitText } from "gsap/SplitText";
 import { CustomEase } from "gsap/CustomEase";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Flip } from "gsap/Flip";
 import { useGSAP } from "@gsap/react";
 
-gsap.registerPlugin(useGSAP, SplitText, CustomEase, ScrollTrigger);
+gsap.registerPlugin(useGSAP, SplitText, CustomEase, ScrollTrigger, Flip);
 
 // MOTION.md: one entrance curve, one exit curve.
 CustomEase.create("signature", "M0,0 C0.2,1.5 0.35,1 1,1");
 CustomEase.create("signature-exit", "M0,0 C0.55,0 0.85,0.3 1,1");
 
-export { gsap, ScrollTrigger, SplitText, useGSAP };
+export { Flip, gsap, ScrollTrigger, SplitText, useGSAP };
 
 export function prefersReducedMotion(): boolean {
   if (typeof window === "undefined") return true;
