@@ -207,7 +207,7 @@ const hideOnScroll = play(["Hide on scroll"], ["hide"], "Scroll down to hide the
 
 /* ---------- Smooth scroll ---------- */
 
-const NAMES = ["Line mask", "Characters", "Word slide", "Scramble", "Speak-in", "Weight wave", "Letter wave", "Route letters", "Entrances and exits", "Image reveal", "Line draw", "Path follow", "Count-up", "Marquee"];
+const NAMES = ["Line mask", "Characters", "Word slide", "Scramble", "Speak-in", "Weight wave", "Letter wave", "Route letters", "Entrances and exits", "Reveal", "Line draw", "Path follow", "Count-up", "Marquee"];
 
 const smooth = play(["Lenis", "Native"], ["lenis", "native"], "Wheel inside the window. Switch tabs to feel the difference.", (text, p) =>
   windowed(text, `<div class="w-content">${NAMES.map((n, i) => `<p class="w-name"><span class="num">${two(i + 1)}</span> ${n}</p>`).join("")}</div>`, (win) => {

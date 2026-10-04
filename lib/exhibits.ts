@@ -151,11 +151,11 @@ const DATA: Exhibit[] = [
     ]
   },
   {
-    name: "Image reveal",
+    name: "Reveal",
     group: "time",
     builders: "imageReveal",
     src: "media-effects",
-    desc: "A wipe opens the frame while the image settles from a slight zoom."
+    desc: "A wipe opens a frame while what is inside settles from a slight zoom: an image, a video, any block."
   },
   {
     name: "Line draw",
@@ -193,11 +193,11 @@ const DATA: Exhibit[] = [
     desc: "A row scrolls sideways forever and slows on hover."
   },
   {
-    name: "Logo cycle",
+    name: "Cycle",
     group: "time",
     builders: "logoCycle",
     src: "counters-and-marquees",
-    desc: "One cell at a time swaps to the next logo."
+    desc: "One cell at a time swaps to the next item in the pool: logos, names, figures, anything."
   },
   {
     name: "Curtain",

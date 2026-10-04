@@ -8,7 +8,7 @@ import { EXHIBITS } from "../../exhibits";
 
 const OPEN = "inset(0% 0% 0% 0%)";
 
-/* ---------- Image reveal ---------- */
+/* ---------- Reveal ---------- */
 
 const CLOSED: Record<string, string> = {
   up: "inset(100% 0% 0% 0%)",
@@ -31,8 +31,8 @@ const POSTER = `
   <g fill="none" stroke="#fff" stroke-width="3" opacity="0.5">
     <circle cx="1180" cy="430" r="320"/><circle cx="1180" cy="430" r="230"/><circle cx="1180" cy="430" r="140"/>
   </g>
-  <text x="80" y="760" fill="#2130ff" font-family="var(--font-archivo), sans-serif" font-weight="800" font-size="640" font-stretch="75%" letter-spacing="-20">10</text>
-  <text x="90" y="140" fill="#fff" font-family="var(--font-archivo), sans-serif" font-weight="700" font-size="54" letter-spacing="6">IMAGE REVEAL</text>
+  <text x="80" y="760" fill="#2130ff" font-family="var(--font-archivo), sans-serif" font-weight="800" font-size="640" font-stretch="75%" letter-spacing="-20">${String(EXHIBITS.find((e) => e.slug === "reveal")?.no ?? 0).padStart(2, "0")}</text>
+  <text x="90" y="140" fill="#fff" font-family="var(--font-archivo), sans-serif" font-weight="700" font-size="54" letter-spacing="6">REVEAL</text>
 </svg>`;
 
 const imageReveal = def(
@@ -289,13 +289,13 @@ const marquee = def(
   { duration: { label: "Speed", min: 30, max: 400, step: 10, unit: "px/s" } },
 );
 
-/* ---------- Logo cycle ---------- */
+/* ---------- Cycle ---------- */
 
 const MARKS = ["ACME", "Bolt", "CRANE", "dune", "Echo", "FERN", "gale", "HALO"];
 /** Cell i alternates between marks i and i + 4. Swapping cells in this order returns every cell home in eight swaps. */
 const SWAP_ORDER = [0, 2, 1, 3];
 
-const logoCycle = def(["Logo cycle"], ["cycle"], ["duration", "hold", "ease"], { duration: 0.6, stagger: 0, hold: 1.4, ease: "power3.inOut" }, (text, p) => {
+const logoCycle = def(["Cycle"], ["cycle"], ["duration", "hold", "ease"], { duration: 0.6, stagger: 0, hold: 1.4, ease: "power3.inOut" }, (text, p) => {
   const cells = [0, 1, 2, 3]
     .map((i) => `<div class="cell"><span class="mark m${i}">${MARKS[i]}</span><span class="mark m${i + 4}">${MARKS[i + 4]}</span></div>`)
     .join("");
@@ -587,13 +587,13 @@ const soundCues = def(["Sound cues"], ["sound"], ["duration", "stagger", "hold",
 });
 
 export const TIME_STAGES: Record<string, StageDef> = {
-  "image-reveal": imageReveal,
+  reveal: imageReveal,
   "line-draw": lineDraw,
   "path-follow": pathFollow,
   "count-up": countUp,
   odometer,
   marquee,
-  "logo-cycle": logoCycle,
+  cycle: logoCycle,
   curtain,
   "curve-cover": curveCover,
   preloader,
