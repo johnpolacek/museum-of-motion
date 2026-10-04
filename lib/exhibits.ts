@@ -404,11 +404,11 @@ const DATA: Exhibit[] = [
     desc: "A line sweeps in from the start and out toward the end."
   },
   {
-    name: "Image zoom",
+    name: "Zoom",
     group: "pointer",
     builders: "imageZoom",
     src: "hover-effects",
-    desc: "The image scales up slightly while its card is hot."
+    desc: "What sits in a card's frame scales up slightly while the card is hot."
   },
   {
     name: "Directional fill",
@@ -502,11 +502,11 @@ const DATA: Exhibit[] = [
     desc: "A full-screen panel wipes in, then its links stagger in."
   },
   {
-    name: "Enter and exit",
+    name: "Interruptible",
     group: "pointer",
     builders: "enterExit",
     src: "component-motion",
-    desc: "One timeline holds a different entrance and exit, and survives interruption."
+    desc: "Open and close with different moves, and change your mind halfway: it turns back from where it is."
   },
   {
     name: "Dialog",

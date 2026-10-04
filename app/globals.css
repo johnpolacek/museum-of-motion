@@ -110,7 +110,8 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .m5 { font-weight: 200; font-stretch: 125%; letter-spacing: 0.2em; }
 .ex .stage-art .m6 { font-weight: 800; letter-spacing: -0.05em; font-size: clamp(22px, 3.4vw, 44px); }
 .ex .stage-art .m7 { font-weight: 600; font-stretch: 100%; letter-spacing: 0.3em; }
-.ex .stage-art .mini { position: relative; width: min(72%, 760px); aspect-ratio: 16 / 9; overflow: hidden; background: #fff; color: var(--ink); }
+.ex .stage-art:has(.mini) { container-type: size; }
+.ex .stage-art .mini { position: relative; width: min(92cqw, 150cqh, 760px); aspect-ratio: 16 / 9; overflow: hidden; background: #fff; color: var(--ink); }
 .ex .stage-art .pg { position: absolute; inset: 0; padding: 6%; display: grid; align-content: start; gap: 10px; }
 .ex .stage-art .pg b { font-weight: 800; font-stretch: 75%; text-transform: uppercase; font-size: clamp(24px, 4.4vw, 64px); line-height: 0.9; }
 .ex .stage-art .pg i { display: block; height: 10px; background: var(--line); width: 70%; }
@@ -118,7 +119,7 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .pg-b { background: var(--blue); color: #fff; }
 .ex .stage-art .pg-b i { background: rgba(255,255,255,0.35); }
 .ex .stage-art .panels { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(5, 1fr); }
-.ex .stage-art .panels i { background: var(--ink); transform: translateY(100%); }
+.ex .stage-art .panels i { background: var(--ink); margin: 0 -0.5px; }
 .ex .stage-art .cover-title { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-weight: 800; font-stretch: 75%; text-transform: uppercase; font-size: clamp(24px, 4vw, 56px); opacity: 0; }
 .ex .stage-art .curve { position: absolute; inset: 0; width: 100%; height: 100%; }
 .ex .stage-art .loader { position: absolute; inset: 0; background: var(--ink); color: #fff; display: grid; align-content: end; padding: 6%; gap: 12px; }

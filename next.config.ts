@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
       { source: "/exhibits/paired-entrances", destination: "/exhibits/entrances-and-exits", permanent: true },
       { source: "/exhibits/image-reveal", destination: "/exhibits/reveal", permanent: true },
       { source: "/exhibits/logo-cycle", destination: "/exhibits/cycle", permanent: true },
+      { source: "/exhibits/image-zoom", destination: "/exhibits/zoom", permanent: true },
+      { source: "/exhibits/enter-and-exit", destination: "/exhibits/interruptible", permanent: true },
     ];
   },
 };

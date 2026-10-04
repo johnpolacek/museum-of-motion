@@ -61,7 +61,7 @@ const underline = play(["Underline sweep"], ["sweep"], "Hover or tab to a link."
   ),
 );
 
-const zoom = play(["Image zoom"], ["zoom"], "Hover or tab to a card.", (text) =>
+const zoom = play(["Zoom"], ["zoom"], "Hover or tab to a card.", (text) =>
   live(
     text,
     `<div class="cards">${[1, 10, 40]
@@ -289,7 +289,7 @@ const menu = play(
     ),
 );
 
-const enterAndExit = play(["Enter and exit"], ["enter-exit"], "Open, then close. Change your mind halfway.", (text) =>
+const enterAndExit = play(["Interruptible"], ["enter-exit"], "Open, then close. Change your mind halfway.", (text) =>
   live(
     text,
     `<button type="button" class="pill big ee-toggle" aria-expanded="false">Open</button><div class="ee-panel">${NAMES.slice(0, 5).map((n) => `<span class="ee-item">${n}</span>`).join("")}</div>`,
@@ -696,7 +696,7 @@ const deck = play(["Card stack"], ["deck"], "Drag or flick the front card, or us
 export const POINTER_STAGES: Record<string, StageDef> = {
   "label-roll": labelRoll,
   "underline-sweep": underline,
-  "image-zoom": zoom,
+  zoom,
   "directional-fill": fillTiles,
   "press-feedback": press,
   shake: shakeForm,
@@ -710,7 +710,7 @@ export const POINTER_STAGES: Record<string, StageDef> = {
   "image-trail": trail,
   "icon-morph": iconMorph,
   "menu-overlay": menu,
-  "enter-and-exit": enterAndExit,
+  interruptible: enterAndExit,
   dialog,
   disclosure: accordion,
   "tab-indicator": tabs,

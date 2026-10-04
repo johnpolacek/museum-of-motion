@@ -343,10 +343,13 @@ const curtain = def(
   ["Panels", "Tilt", "Title"],
   ["panels", "tilt", "title"],
   ["duration", "stagger", "hold", "ease"],
-  { duration: 0.6, stagger: 0.06, hold: 1.2, ease: "power3.inOut" },
+  { duration: 0.7, stagger: 0.04, hold: 1.2, ease: "power4.inOut" },
   (text, p) => {
     const { layer, remove } = art(text, MINI(`<div class="panels">${"<i></i>".repeat(5)}</div><div class="cover-title">Line mask</div>`));
     const panels = Array.from(layer.querySelectorAll<HTMLElement>(".panels i"));
+    // Parked below the page by GSAP, never by a CSS transform: GSAP would read that as an extra offset,
+    // and every panel would land a full height short of covering.
+    gsap.set(panels, { yPercent: 100 });
     const [a, b] = Array.from(layer.querySelectorAll<HTMLElement>(".pg"));
     const title = layer.querySelector<HTMLElement>(".cover-title")!;
     const tilt = p.variation === "tilt" ? 8 : 0;
@@ -361,7 +364,8 @@ const curtain = def(
           covered + 0.45,
         );
       }
-      const lift = covered + (p.variation === "title" ? 0.6 : 0.1);
+      // Hold the cover a beat, so the swap reads as a page change rather than a flicker.
+      const lift = covered + (p.variation === "title" ? 0.6 : 0.25);
       tl.to(panels, { yPercent: -100, rotation: -tilt, duration: p.duration, ease: p.ease, stagger: p.stagger }, lift);
       return lift + p.duration + p.stagger * (panels.length - 1);
     };
