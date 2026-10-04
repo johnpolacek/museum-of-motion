@@ -11,7 +11,7 @@ export const LIVE_STAGES = new Set([
   "weight-wave",
   "letter-wave",
   "route-letters",
-  "paired-entrances",
+  "entrances-and-exits",
   "image-reveal",
   "line-draw",
   "path-follow",

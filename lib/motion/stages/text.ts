@@ -487,7 +487,7 @@ export const routeLetters = def(
   },
 );
 
-/* ---------- Paired entrances ---------- */
+/* ---------- Entrances and exits ---------- */
 
 type Pair = { from: gsap.TweenVars; to: gsap.TweenVars; out: gsap.TweenVars };
 const PAIRS: Record<string, Pair> = {
@@ -829,5 +829,5 @@ export const TEXT_STAGES: Record<string, StageDef> = {
   "weight-wave": weightWave,
   "letter-wave": letterWave,
   "route-letters": routeLetters,
-  "paired-entrances": paired,
+  "entrances-and-exits": paired,
 };

@@ -131,11 +131,11 @@ const DATA: Exhibit[] = [
     desc: "A whole page arrives and leaves at once: the headline by letter, the rest as blocks."
   },
   {
-    name: "Paired entrances",
+    name: "Entrances and exits",
     group: "time",
     builders: "fadeIn, riseIn, dropIn, slideIn, scaleIn, popIn, wipeUp, wipeAcross, flipIn, focusIn, weightIn",
     src: "motion-vocabulary",
-    desc: "Eleven matched in and out pairs, from the plainest fade to a weight shift.",
+    desc: "Eleven ways to arrive and leave, from a plain fade to a weight shift.",
     vars: [
       "Fade",
       "Rise",
