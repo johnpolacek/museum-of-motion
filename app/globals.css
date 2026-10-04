@@ -125,6 +125,107 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .sample .ln > span { display: block; }
 .ex .stage-art .sound { position: absolute; top: 16px; right: 0; }
 .ex .stage-art .sound[aria-pressed="true"] { background: #fff; color: var(--blue); border-color: #fff; }
+/* Interactive stages: real controls on the stage, styled like the site's pills and type. */
+.ex .controls .hint { grid-column: 1 / -1; margin: 0; }
+.ex .stage-art.live { padding: 0 var(--gut); }
+.ex .stage-art .btns { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+.ex .stage-art .pill { font: 600 14px/1 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: inherit; background: none; border: 1px solid rgba(255,255,255,0.6); border-radius: 99px; padding: 12px 20px; cursor: pointer; }
+.ex .stage-art .pill.big { font-size: clamp(14px, 1.6vw, 20px); padding: 18px 30px; }
+.ex .stage-art .pill[aria-pressed="true"] { background: #fff; color: var(--blue); border-color: #fff; }
+.ex .stage-art button:focus-visible, .ex .stage-art [tabindex]:focus-visible, .ex .stage-art a:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+.ex .stage-art .sweeps { display: flex; flex-wrap: wrap; gap: 12px 40px; justify-content: center; --underline-thickness: 3px; }
+.ex .stage-art .sweep { font: 700 clamp(28px, 4vw, 56px)/1.1 var(--sans); font-stretch: 82%; letter-spacing: -0.02em; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.ex .stage-art .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 220px)); gap: clamp(12px, 2vw, 28px); justify-content: center; }
+.ex .stage-art .card { margin: 0; color: inherit; }
+.ex .stage-art .card-hit { display: grid; gap: 10px; width: 100%; padding: 0; color: inherit; background: none; border: 0; text-align: left; cursor: pointer; font: inherit; }
+.ex .stage-art .card .frame { display: block; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; background: var(--ink); }
+.ex .stage-art .card .frame svg, .ex .stage-art [data-zoom-image] { display: block; width: 100%; height: 100%; }
+.ex .stage-art .card-title { font-weight: 600; font-size: 15px; }
+.ex .stage-art .tilt-card { display: grid; gap: 10px; padding: 12px; border: 1px solid rgba(255,255,255,0.35); background-image: radial-gradient(circle at var(--pointer-x, 50%) var(--pointer-y, 50%), rgb(255 255 255 / 0.16), transparent 45%); }
+.ex .stage-art .works { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; justify-items: start; width: min(100%, 720px); }
+.ex .stage-art .works button { font: 600 clamp(24px, 3vw, 44px)/1.05 var(--sans); font-stretch: 82%; letter-spacing: -0.02em; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.ex .stage-art .preview { position: fixed; left: 0; top: 0; z-index: 40; width: 240px; aspect-ratio: 4 / 3; overflow: hidden; pointer-events: none; visibility: hidden; }
+.ex .stage-art .preview img { width: 100%; height: 100%; object-fit: cover; }
+.ex .stage-art .cursor { position: fixed; left: 0; top: 0; z-index: 50; width: 12px; height: 12px; border-radius: 50%; background: #fff; pointer-events: none; visibility: hidden; }
+.ex .stage-art .cursor-label { position: fixed; left: 0; top: 0; z-index: 50; width: 9em; overflow: hidden; white-space: nowrap; padding: 0.4em 0; border-radius: 999px; background: #fff; pointer-events: none; visibility: hidden; font: 600 12px/1 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; }
+.ex .stage-art .cursor-label [data-cursor-label-track] { display: inline-flex; color: var(--blue); }
+.ex .stage-art .stickers { display: flex; flex-wrap: wrap; gap: clamp(16px, 3vw, 40px); justify-content: center; }
+.ex .stage-art .sticker { display: grid; place-items: center; width: clamp(64px, 9vw, 110px); aspect-ratio: 1; border-radius: 22%; background: #fff; color: var(--blue); font-size: clamp(30px, 4vw, 52px); }
+.ex .stage-art .sticker.s1, .ex .stage-art .sticker.s4 { background: var(--ink); color: #fff; }
+.ex .stage-art .dock { display: flex; gap: 10px; align-items: end; padding: 12px 16px; border: 1px solid rgba(255,255,255,0.35); border-radius: 22px; }
+.ex .stage-art .dock button { padding: 0; border: 0; background: none; cursor: pointer; }
+.ex .stage-art .dock .tile { display: grid; place-items: center; width: clamp(34px, 5vw, 54px); aspect-ratio: 1; border-radius: 12px; background: #fff; color: var(--blue); font: 800 clamp(13px, 1.6vw, 18px)/1 var(--sans); font-stretch: 75%; transform-origin: 50% 100%; }
+.ex .stage-art.trail { place-items: center; overflow: hidden; }
+.ex .stage-art .trail-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.ex .stage-art .trail-layer img { position: absolute; left: 0; top: 0; width: 180px; }
+.ex .stage-art .trail-cue { opacity: 0.6; }
+.ex .stage-art .icon-btn { display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.6); background: none; color: #fff; cursor: pointer; }
+.ex .stage-art .icon-btn svg { width: 36px; height: 36px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ex .stage-art .menu-panel { position: absolute; inset: 0; z-index: 5; visibility: hidden; background: var(--ink); color: #fff; display: grid; align-content: center; justify-items: start; gap: 18px; padding: 24px var(--gut); }
+.ex .stage-art .menu-panel nav { display: grid; gap: 4px; }
+.ex .stage-art .menu-panel a { font: 700 clamp(28px, 4vw, 56px)/1.05 var(--sans); font-stretch: 82%; }
+.ex .stage-art .menu-close { position: absolute; top: 20px; right: var(--gut); }
+.ex .stage-art .ee-panel { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 24px; max-width: 720px; }
+.ex .stage-art .ee-item { background: #fff; color: var(--blue); padding: 10px 16px; border-radius: 99px; font-weight: 600; }
+.ex .stage-art.live:has(.ee-panel) { align-content: center; }
+.ex .stage-dialog { max-width: 420px; border: 0; padding: 28px; background: #fff; color: var(--ink); }
+.ex .stage-dialog h2 { margin: 0 0 8px; font-weight: 800; font-stretch: 75%; text-transform: uppercase; font-size: 32px; }
+.ex .stage-dialog .pill { border-color: var(--ink); }
+.ex .stage-dialog::backdrop { background: rgb(11 11 11 / 0.55); opacity: var(--dialog-backdrop, 1); }
+.ex .stage-dialog.drawer { margin: 0; max-width: none; max-height: none; }
+.ex .stage-dialog.drawer-left, .ex .stage-dialog.drawer-right { height: 100%; width: min(420px, 90vw); }
+.ex .stage-dialog.drawer-right { margin-left: auto; }
+.ex .stage-dialog.drawer-top, .ex .stage-dialog.drawer-bottom { width: 100%; }
+.ex .stage-dialog.drawer-bottom { margin-top: auto; }
+.ex .stage-art .acc { width: min(100%, 640px); border-top: 1px solid rgba(255,255,255,0.35); }
+.ex .stage-art .acc-item { border-bottom: 1px solid rgba(255,255,255,0.35); }
+.ex .stage-art .acc-btn { display: flex; justify-content: space-between; width: 100%; padding: 16px 0; font: 600 clamp(18px, 2vw, 24px)/1.2 var(--sans); color: inherit; background: none; border: 0; cursor: pointer; text-align: left; }
+.ex .stage-art .acc-panel p { margin: 0; padding: 0 0 16px; max-width: 48ch; opacity: 0.85; }
+.ex .stage-art .tabbed { display: grid; gap: 20px; width: min(100%, 640px); }
+.ex .stage-art .tablist { position: relative; display: flex; gap: 28px; border-bottom: 1px solid rgba(255,255,255,0.35); }
+.ex .stage-art .tablist button { padding: 0 0 12px; font: 600 clamp(16px, 2vw, 22px)/1 var(--sans); color: inherit; background: none; border: 0; cursor: pointer; }
+.ex .stage-art .tab-indicator { position: absolute; inset-inline-start: 0; bottom: -1px; width: 40px; height: 3px; background: #fff; }
+.ex .stage-art .tab-panel { margin: 0; font-size: 20px; }
+.ex .stage-art .filters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 20px; }
+.ex .stage-art.live:has(.tiles) { align-content: center; }
+.ex .stage-art .tiles { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 760px; }
+.ex .stage-art .tile-card { padding: 18px 20px; background: #fff; color: var(--blue); font-weight: 700; font-stretch: 82%; font-size: clamp(16px, 2vw, 22px); }
+.ex .stage-art .thumbs { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 150px)); gap: 14px; }
+.ex .stage-art .thumb { display: block; width: 100%; aspect-ratio: 4 / 3; padding: 0; border: 0; cursor: pointer; background: var(--ink); }
+.ex .stage-art .thumb svg, .ex .stage-art .detail-art svg { display: block; width: 100%; height: 100%; }
+.ex .stage-art .detail { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; gap: 16px; background: var(--blue); }
+.ex .stage-art .detail[hidden] { display: none; }
+.ex .stage-art .detail-art { width: min(80%, 640px); aspect-ratio: 4 / 3; }
+.ex .stage-art .detail-close { position: absolute; top: 16px; right: var(--gut); }
+.ex .stage-art .particle-btn { position: relative; isolation: isolate; }
+.ex .stage-art .particle-btn canvas { pointer-events: none; position: absolute; z-index: 10; color: #fff; }
+.ex .stage-art .particle-btn button { position: relative; z-index: 20; }
+.physics-layer { position: fixed; inset: 0; z-index: 60; overflow: hidden; pointer-events: none; }
+.physics-layer > * { position: absolute; left: 0; top: 0; }
+.physics-layer .confetto { display: block; width: 10px; height: 14px; }
+.ex .stage-art .mini-hero { display: grid; gap: 14px; justify-items: start; width: min(100%, 760px); }
+.ex .stage-art .mh-title { margin: 0; font-weight: 800; font-stretch: 75%; text-transform: uppercase; font-size: clamp(32px, 5vw, 72px); line-height: 0.9; }
+.ex .stage-art .mh-sub { margin: 0; font-size: 18px; }
+.ex .stage-art .mh-btns { display: flex; gap: 12px; }
+.ex .stage-art .drag-viewport, .ex .stage-art .loop-viewport { width: 100%; overflow-x: auto; }
+.ex .stage-art .drag-track, .ex .stage-art .loop-track { display: flex; gap: 16px; width: max-content; }
+.ex .stage-art .loop-track { gap: 0; }
+.ex .stage-art .loop-track > * { margin-right: 16px; }
+.ex .stage-art .drag-card { flex: none; width: clamp(180px, 22vw, 280px); aspect-ratio: 4 / 3; background: var(--ink); }
+.ex .stage-art .drag-card svg { display: block; width: 100%; height: 100%; pointer-events: none; }
+.ex .stage-art .grid-viewport { position: absolute; inset: 0; overflow: auto; }
+.ex .stage-art .grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, 200px); gap: 16px; }
+.ex .stage-art .grid-tile { width: 200px; aspect-ratio: 4 / 3; background: var(--ink); }
+.ex .stage-art .grid-tile svg { display: block; width: 100%; height: 100%; pointer-events: none; }
+[data-drag-grid] { position: relative; height: 100%; margin: 0; padding: 0; }
+[data-drag-grid] > * { position: absolute; left: 0; top: 0; margin: 0; }
+.ex .stage-art .flick { display: grid; gap: 18px; justify-items: center; width: min(100%, 420px); }
+.ex .stage-art .flick-stack { list-style: none; margin: 0; padding: 0; display: flex; gap: 16px; overflow-x: auto; width: 100%; }
+.ex .stage-art [data-flick] .flick-stack, .ex .stage-art .flick[data-flick] .flick-stack { display: grid; overflow: visible; }
+.ex .stage-art [data-flick] .flick-stack > * { grid-area: 1 / 1; }
+.ex .stage-art .flick-card { width: min(320px, 70vw); aspect-ratio: 4 / 3; background: var(--ink); justify-self: center; }
+.ex .stage-art .flick-card svg { display: block; width: 100%; height: 100%; pointer-events: none; }
+.ex .stage-art .flick-btns { display: flex; gap: 10px; }
 .ex .stage .replay { position: absolute; right: 0; bottom: 16px; font-family: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid currentColor; border-radius: 0; padding: 0; cursor: pointer; }
 .ex .stage .replay:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .ex .scrub { display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; }
@@ -177,6 +278,8 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
   .ex .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ex .controls .knob { min-width: 0; flex: 1 1 40%; }
   .ex .stage-art .frame, .ex .stage-art .mini { width: 92%; }
+  .ex .stage-art .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ex .stage-art .thumbs { grid-template-columns: repeat(2, minmax(0, 140px)); }
 }
 @media (max-width: 560px) {
   .mast nav { gap: 16px; }

@@ -26,7 +26,12 @@ export type Loop = {
 
 export type KnobSpec = { label: string; min: number; max: number; step: number; unit: string };
 
+/** An interactive stage: it waits for the visitor instead of looping. Only teardown. */
+export type Play = { destroy: () => void };
+
 export type StageDef = {
+  /** Interactive stages have no loop, so no pause or scrub. They show a hint instead. */
+  hint?: string;
   /** Tab labels, one per variation, in order. */
   labels: string[];
   /** Variation keys, matching labels. */
@@ -37,7 +42,7 @@ export type StageDef = {
   specs?: Partial<Record<Exclude<Knob, "ease">, Partial<KnobSpec>>>;
   /** Starting settings for a variation. Reset returns here. */
   defaults: (variation: string) => LoopParams;
-  build: (text: HTMLElement, p: LoopParams) => Loop;
+  build: (text: HTMLElement, p: LoopParams) => Loop | Play;
 };
 
 /** A beat of empty stage between the exit and the next entrance. */
@@ -116,15 +121,60 @@ export const def = (
   build,
 });
 
+/** An interactive stage: art with live controls, a recipe wired to them, one teardown. */
+export const play = (
+  labels: string[],
+  variations: string[],
+  hint: string,
+  build: (text: HTMLElement, p: LoopParams) => Play,
+  knobs: Knob[] = [],
+  base: Partial<LoopParams> = {},
+): StageDef => ({
+  labels,
+  variations,
+  knobs,
+  hint,
+  defaults: (variation) => ({ duration: 0.3, stagger: 0, hold: 0, ease: "power3.out", ...base, variation }),
+  build: (text, p) => {
+    gsap.set(text, { clearProps: "opacity,visibility" });
+    return build(text, p);
+  },
+});
+
+/** Mounts interactive art, then wires recipes to it. Each wiring returns its teardown; all run in reverse. */
+export function live(text: HTMLElement, html: string, wire: (layer: HTMLElement) => Array<() => void>, className = ""): Play {
+  const { layer, remove } = art(text, html, `live ${className}`.trim(), true);
+  let teardowns: Array<() => void> = [];
+  try {
+    teardowns = wire(layer);
+  } catch (error) {
+    remove();
+    throw error;
+  }
+  return {
+    destroy: () => {
+      for (const t of teardowns.reverse()) {
+        try {
+          t();
+        } catch (error) {
+          console.error(error);
+        }
+      }
+      remove();
+    },
+  };
+}
+
 /**
  * Art for a stage that shows something other than the sample text: a layer filling the stage,
  * aria-hidden since the page already describes the exhibit. Returns the layer and its removal.
  */
-export function art(text: HTMLElement, html: string, className = ""): { layer: HTMLElement; remove: () => void } {
+export function art(text: HTMLElement, html: string, className = "", interactive = false): { layer: HTMLElement; remove: () => void } {
   const stage = text.closest<HTMLElement>(".stage") ?? text.parentElement!;
   const layer = document.createElement("div");
   layer.className = `stage-art ${className}`.trim();
-  layer.setAttribute("aria-hidden", "true");
+  // Decorative art is hidden from assistive tech; an interactive stage holds real controls, so it is not.
+  if (!interactive) layer.setAttribute("aria-hidden", "true");
   layer.innerHTML = html;
   stage.appendChild(layer);
   // The sample text stays in place, hidden by CSS, so it keeps the stage's height and its accessible text.

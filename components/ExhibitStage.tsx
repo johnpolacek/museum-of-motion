@@ -4,7 +4,7 @@
 // with pause, a scrub rail, the recipe's variations, and the knobs that apply to it.
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { prefersReducedMotion } from "@/lib/motion/gsap";
-import { createLoop, STAGES, type Knob, type KnobSpec, type Loop, type LoopParams } from "@/lib/motion/stage";
+import { createLoop, isLoop, STAGES, type Knob, type KnobSpec, type Loop, type LoopParams } from "@/lib/motion/stage";
 import { useExhibitPhase } from "./ExhibitMotion";
 
 const EASES = ["signature", "power3.out", "expo.out", "back.out(1.8)", "elastic.out(1, 0.5)", "none"];
@@ -27,6 +27,8 @@ function subscribeReduced(onChange: () => void) {
 
 export function ExhibitStage({ slug, desc }: Props) {
   const def = STAGES[slug];
+  // Interactive stages wait for the visitor: no loop, so no pause or scrub, and they work under reduced motion.
+  const interactive = !!def.hint;
   const { cued, registerStop } = useExhibitPhase();
   const text = useRef<HTMLParagraphElement>(null);
   const stage = useRef<HTMLDivElement>(null);
@@ -52,9 +54,18 @@ export function ExhibitStage({ slug, desc }: Props) {
 
   // Build the loop when the page intro cues the stage, and rebuild it whenever a knob changes.
   useEffect(() => {
-    if (!cued || !text.current || reduced) return;
-    const l = createLoop(slug, text.current, params);
-    if (!l) return;
+    if (!cued || !text.current || (reduced && !interactive)) return;
+    const built = createLoop(slug, text.current, params);
+    if (!built) return;
+    if (!isLoop(built)) {
+      setLive(true);
+      const unregister = registerStop(built.destroy);
+      return () => {
+        unregister();
+        built.destroy();
+      };
+    }
+    const l = built;
     loop.current = l;
     setLive(true);
     setTotal(l.cycle);
@@ -73,7 +84,7 @@ export function ExhibitStage({ slug, desc }: Props) {
       unregister();
       stop();
     };
-  }, [cued, params, registerStop, reduced, slug]);
+  }, [cued, params, registerStop, reduced, slug, interactive]);
 
   // Off screen, the loop holds still. Width changes re-measure the lines by rebuilding.
   useEffect(() => {
@@ -131,7 +142,11 @@ export function ExhibitStage({ slug, desc }: Props) {
           can move.
         </p>
       </div>
-      <div className="controls lab" data-intro hidden={reduced}>
+      <div className="controls lab" data-intro hidden={reduced && !interactive}>
+        {interactive ? (
+          <p className="hint">{def.hint}</p>
+        ) : (
+          <>
         <button type="button" className="ctl" onClick={toggle} aria-pressed={!playing}>
           {playing ? "Pause" : "Play"}
         </button>
@@ -154,6 +169,8 @@ export function ExhibitStage({ slug, desc }: Props) {
           />
           <span className="num">{secs(total)} s</span>
         </label>
+          </>
+        )}
         <div className="knobs">
           {(["duration", "stagger", "hold"] as const).map(
             (key) =>
@@ -171,9 +188,11 @@ export function ExhibitStage({ slug, desc }: Props) {
               </select>
             </label>
           )}
-          <button type="button" className="ctl" onClick={() => setParams((p) => def.defaults(p.variation))}>
-            Reset
-          </button>
+          {def.knobs.length > 0 && (
+            <button type="button" className="ctl" onClick={() => setParams((p) => def.defaults(p.variation))}>
+              Reset
+            </button>
+          )}
         </div>
       </div>
       <div className="row" data-intro>
