@@ -49,6 +49,8 @@ export const LIVE_STAGES = new Set([
   "underline-sweep",
   "image-zoom",
   "directional-fill",
+  "press-feedback",
+  "shake",
   "hover-preview",
   "magnetic",
   "tilt",

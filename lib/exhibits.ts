@@ -417,6 +417,20 @@ const DATA: Exhibit[] = [
     desc: "A fill slides in from the side the mouse came from and out the side it leaves."
   },
   {
+    name: "Press feedback",
+    group: "pointer",
+    builders: "pressFeedback",
+    src: "press-feedback",
+    desc: "A button squashes under the press, springs back, and ripples from the spot pressed."
+  },
+  {
+    name: "Shake",
+    group: "pointer",
+    builders: "shake",
+    src: "motion-vocabulary",
+    desc: "A wrong answer shakes its head, with the error spelled out beside it."
+  },
+  {
     name: "Hover preview",
     group: "pointer",
     builders: "hoverPreview",

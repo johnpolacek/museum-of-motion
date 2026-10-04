@@ -7,6 +7,8 @@ import { directionalFill, imageZoom, textRoll, underlineSweep } from "../recipes
 import { hoverPreview } from "../recipes/media-effects";
 import { cursorFollower, dragTrack, imageTrail, magnetic, momentumHover, proximity, spotlight, tilt } from "../recipes/pointer-effects";
 import { morphToggle } from "../recipes/svg-effects";
+import { pressFeedback } from "../recipes/press-feedback";
+import { shake } from "../recipes/accents";
 import { dialogMotion, disclosure, enterExit, menuOverlay, tabIndicator } from "../recipes/component-motion";
 import { captureLayout, captureShared, playShared } from "../recipes/layout-flip";
 import { burstFrom } from "../recipes/physics-effects";
@@ -84,6 +86,40 @@ const spot = play(["Spotlight"], ["spot"], "Move the mouse over the poster. Pres
     text,
     `<div class="spot" tabindex="0" aria-label="Poster with a hidden layer"><div class="spot-base"><b>Every way<br>a page<br>can move.</b></div><div class="spot-reveal"><b>Every way<br>a page<br>can move.</b></div></div>`,
     (layer) => [spotlight(one(layer, ".spot"), one(layer, ".spot-reveal"), { radius: 110 })],
+  ),
+);
+
+/* ---------- Press feedback ---------- */
+
+const press = play(["Press feedback"], ["press"], "Press a button with the mouse, a finger, or Enter and Space.", (text) =>
+  live(
+    text,
+    `<div class="btns">${["Send", "Add to cart", "Play"].map((l) => `<button type="button" class="pill big press">${l}</button>`).join("")}</div>`,
+    (layer) => all(layer, ".press").map((b) => pressFeedback(b, { ink: 0.45 })),
+  ),
+);
+
+/* ---------- Shake ---------- */
+
+const shakeForm = play(["Shake"], ["shake"], "Sign in with any password. Only “motion” works.", (text) =>
+  live(
+    text,
+    `<form class="signin" novalidate><label class="lab" for="shake-pass">Password</label><div class="signin-row"><input id="shake-pass" type="password" autocomplete="off" aria-describedby="shake-error"><button type="submit" class="pill">Sign in</button></div><div id="shake-error" class="lab signin-error" aria-live="polite"></div></form>`,
+    (layer) => {
+      const form = one<HTMLFormElement>(layer, "form");
+      const input = one<HTMLInputElement>(layer, "input");
+      const error = one(layer, ".signin-error");
+      const submit = (event: SubmitEvent) => {
+        event.preventDefault();
+        const right = input.value.trim().toLowerCase() === "motion";
+        // The message and the state arrive with the shake: it never speaks alone.
+        input.setAttribute("aria-invalid", String(!right));
+        error.textContent = right ? "Signed in." : "That password is wrong.";
+        if (!right) shake(one(layer, ".signin-row"));
+      };
+      form.addEventListener("submit", submit);
+      return [() => form.removeEventListener("submit", submit), () => gsap.killTweensOf(one(layer, ".signin-row"))];
+    },
   ),
 );
 
@@ -581,6 +617,8 @@ export const POINTER_STAGES: Record<string, StageDef> = {
   "underline-sweep": underline,
   "image-zoom": zoom,
   "directional-fill": fillTiles,
+  "press-feedback": press,
+  shake: shakeForm,
   "hover-preview": preview,
   magnetic: magnet,
   tilt: tiltCards,

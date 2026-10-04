@@ -142,6 +142,11 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .spot-base { height: 100%; }
 .ex .stage-art .spot-reveal { position: absolute; inset: 0; background: #fff; color: var(--blue); clip-path: circle(0px at 50% 50%); }
 .ex .stage-art .spot-reveal b { font-weight: 900; font-stretch: 125%; }
+.ex .stage-art .signin { display: grid; gap: 10px; width: min(92%, 520px); }
+.ex .stage-art .signin-row { display: flex; gap: 12px; }
+.ex .stage-art .signin input { flex: 1; min-width: 0; font: 600 18px/1 var(--sans); color: inherit; background: none; border: 0; border-bottom: 2px solid #fff; padding: 10px 0; }
+.ex .stage-art .signin input:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+.ex .stage-art .signin-error { min-height: 1.2em; margin: 0; }
 .ex .stage-art .btns { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
 .ex .stage-art .pill { font: 600 14px/1 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: inherit; background: none; border: 1px solid rgba(255,255,255,0.6); border-radius: 99px; padding: 12px 20px; cursor: pointer; }
 .ex .stage-art .pill.big { font-size: clamp(14px, 1.6vw, 20px); padding: 18px 30px; }
