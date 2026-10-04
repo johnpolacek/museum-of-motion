@@ -156,6 +156,13 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .swipe-note:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 .ex .stage-art .swipe-x { width: 32px; height: 32px; font-size: 22px; line-height: 1; color: var(--ink); background: none; border: 0; cursor: pointer; }
 .ex .stage-art .swipe-reset { margin-top: 16px; }
+.ex .stage-art .mini-page { width: min(92%, 760px); display: grid; gap: 14px; justify-items: start; padding: 22px 26px; background: #fff; color: var(--ink); }
+.ex .stage-art .mini-page .lab { color: var(--blue); }
+.ex .stage-art .mp-title { margin: 0; font-weight: 800; font-stretch: 75%; font-size: clamp(40px, 6vw, 84px); line-height: 0.9; letter-spacing: -0.02em; }
+.ex .stage-art .mp-body { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: center; width: 100%; }
+.ex .stage-art .mp-body p { margin: 0; font-size: clamp(15px, 1.6vw, 19px); line-height: 1.35; }
+.ex .stage-art .mp-pic { margin: 0; aspect-ratio: 16 / 9; background: var(--blue); }
+.ex .stage-art .mini-page .pill { color: var(--ink); border-color: var(--ink); }
 .ex .stage-art .btns { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
 .ex .stage-art .pill { font: 600 14px/1 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: inherit; background: none; border: 1px solid rgba(255,255,255,0.6); border-radius: 99px; padding: 12px 20px; cursor: pointer; }
 .ex .stage-art .pill.big { font-size: clamp(14px, 1.6vw, 20px); padding: 18px 30px; }

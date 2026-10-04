@@ -128,7 +128,7 @@ const DATA: Exhibit[] = [
     group: "time",
     builders: "buildPageIntro, buildPageOutro",
     src: "route-letters",
-    desc: "Page items enter and leave with each route, headlines by letter."
+    desc: "A whole page arrives and leaves at once: the headline by letter, the rest as blocks."
   },
   {
     name: "Paired entrances",
