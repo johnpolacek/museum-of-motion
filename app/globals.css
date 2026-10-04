@@ -62,6 +62,7 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .names { margin: 0; font-weight: 600; font-stretch: 82%; font-size: clamp(30px, 3.9vw, 66px); line-height: 1.04; letter-spacing: -0.02em; }
 .names a { display: inline-block; white-space: nowrap; }
 .names a sup { font-size: 0.28em; font-weight: 600; letter-spacing: 0; vertical-align: 1.9em; margin-left: 0.12em; font-stretch: 100%; }
+.names .item { white-space: nowrap; }
 .names .sep { color: var(--blue); font-weight: 300; padding: 0 0.12em; }
 .names a.on { color: var(--blue); }
 @media (hover: hover) { .names a:hover { color: var(--blue); } }
