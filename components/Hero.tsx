@@ -6,7 +6,7 @@ import { finished, fontsReady, gsap, prefersReducedMotion, useGSAP } from "@/lib
 import { armRecovery, claimVisit, disarm, handOff } from "@/lib/motion/boot";
 import { heroIntro, heroLeaves, heroOutro, type HeroIntro } from "@/lib/motion/hero";
 import { startWave, type WaveStop } from "@/lib/motion/wave";
-import { announceHeroSettled } from "@/lib/motion/events";
+import { cueWordmark } from "@/lib/motion/events";
 import { useTransitionController } from "./motion/TransitionProvider";
 
 const OWNER = "hero";
@@ -64,9 +64,12 @@ export function Hero() {
         intro?.finish();
         gsap.set(targets, { clearProps: "opacity,visibility" });
         el.dataset.phase = "settled";
-        announceHeroSettled();
+        cueWordmark();
         if (!animate) return;
-        runWave();
+        // The wave's split waits until the wordmark tour is done, so the two never share a frame's work.
+        gsap.delayedCall(2.4, () => {
+          if (alive && el.dataset.phase === "settled") runWave();
+        });
         io = new IntersectionObserver(([entry]) => {
           offscreen.current = !entry.isIntersecting;
           applyPause();
@@ -146,6 +149,8 @@ export function Hero() {
             return;
           }
           intro.timeline.eventCallback("onComplete", settled);
+          // The wordmark tour starts as the last superscript lands, overlapping the hero's quiet tail.
+          intro.timeline.call(cueWordmark, undefined, 1.75);
           handOff(OWNER);
           intro.timeline.play();
         }),

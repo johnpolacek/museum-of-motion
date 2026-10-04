@@ -4,23 +4,31 @@ import { gsap, SplitText, prefersReducedMotion } from "./gsap";
 
 const ENTER = "signature";
 
-/** One move per letter, in reading order. Each is the start state; every letter lands on its CSS rest. */
+/**
+ * One move per letter, in reading order. Each is the start state; every letter lands on its CSS rest.
+ * Transform-only: weight and width tweens jitter at 18px, and blur costs a repaint per frame.
+ * Rotations stay at or under 180° so the fast start of the curve never strobes.
+ */
 const MOVES: gsap.TweenVars[] = [
-  { yPercent: -400 }, // M: drops in from above the page
-  { rotationX: -270, transformOrigin: "50% 0%", transformPerspective: 200 }, // U: tumbles over its top edge
-  { rotation: -540, scale: 0 }, // S: spins up from nothing
-  { fontWeight: 100, scaleY: 2.2, transformOrigin: "50% 100%" }, // E: hairline and tall, gains weight as it settles
-  { fontStretch: "125%", scaleX: 2.2 }, // U: tightens from very wide
-  { x: -120, skewX: -60 }, // M: leans in at speed
-  { scale: 6 }, // O: lands from huge
-  { yPercent: 300 }, // F: rises from below
-  { rotationY: 540, transformPerspective: 200 }, // M: turns round and round to face forward
-  { filter: "blur(10px)", scale: 3 }, // O: comes into focus
-  { yPercent: -260, rotation: 180 }, // T: falls head first and rights itself
+  { y: -40 }, // M: drops in
+  { rotationX: -90, transformOrigin: "50% 0%", transformPerspective: 400 }, // U: tips down over its top edge
+  { rotation: -180, scale: 0 }, // S: spins up from a point
+  { scaleX: 0, transformOrigin: "0% 50%" }, // E: unfolds sideways
+  { y: 36 }, // U: rises from below
+  { x: -36, skewX: -30 }, // M: leans in at speed
+  { scale: 2.2 }, // O: settles down from big
+  { rotation: 90, transformOrigin: "0% 100%" }, // F: swings up like a gate
+  { rotationY: 180, transformPerspective: 400 }, // M: turns to face forward
+  { scale: 0 }, // O: pops from a point
+  { y: -30, rotation: 90 }, // T: falls and rights itself
   { scaleY: 0, transformOrigin: "50% 100%" }, // I: grows from the baseline
-  { x: 160 }, // O: slides in from the right
-  { fontStretch: "62%", fontWeight: 100, scale: 1.8, transformOrigin: "0% 100%" }, // N: widens and gains weight
+  { x: 36 }, // O: slides in from the right
+  { rotationX: 90, transformOrigin: "50% 100%", transformPerspective: 400 }, // N: tips up from its baseline
 ];
+
+/** Seconds between letters, and each letter's move. */
+const STAGGER = 0.07;
+const DURATION = 0.8;
 
 export type WordmarkTour = { timeline: gsap.core.Timeline; finish: () => void };
 
@@ -40,15 +48,13 @@ export function wordmarkTour(leaf: HTMLElement): WordmarkTour {
   try {
     split = SplitText.create(leaf, { type: "chars", aria: "auto" });
     const chars = split.chars as HTMLElement[];
-    // Axis moves change a letter's advance. Pin each to its resting width so the wordmark never reflows.
-    for (const c of chars) {
-      c.style.width = `${parseFloat(getComputedStyle(c).width)}px`;
-      c.style.textAlign = "center";
-    }
     tl.set(leaf, { autoAlpha: 1 }, 0);
     chars.forEach((c, i) => {
-      const move = MOVES[i % MOVES.length];
-      tl.from(c, { ...move, autoAlpha: 0, duration: 0.9, ease: ENTER, immediateRender: true }, i * 0.1);
+      const at = i * STAGGER;
+      // 2D-capable moves stay off the GPU layer so 18px text repaints crisp every frame, with no snap at the end.
+      tl.from(c, { ...MOVES[i % MOVES.length], force3D: false, duration: DURATION, ease: ENTER, immediateRender: true }, at);
+      // Opacity on its own gentle curve: the signature's fast start would pop each letter in at full strength.
+      tl.from(c, { autoAlpha: 0, duration: 0.35, ease: "power1.out", immediateRender: true }, at);
     });
   } catch (error) {
     tl.kill();

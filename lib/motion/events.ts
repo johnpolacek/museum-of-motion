@@ -1,21 +1,25 @@
-// Cross-owner cues. The hero announces when it settles so the masthead can perform last.
-export const HERO_SETTLED = "motion:hero-settled";
+// Cross-owner cues. The hero tells the masthead when its wordmark may perform.
+const WORDMARK_CUE = "motion:wordmark-cue";
 
-export function announceHeroSettled(): void {
-  (window as unknown as { __heroSettled?: boolean }).__heroSettled = true;
-  document.dispatchEvent(new Event(HERO_SETTLED));
+type CueWindow = { __wordmarkCued?: boolean };
+
+export function cueWordmark(): void {
+  const w = window as unknown as CueWindow;
+  if (w.__wordmarkCued) return;
+  w.__wordmarkCued = true;
+  document.dispatchEvent(new Event(WORDMARK_CUE));
 }
 
-/** Resolves when the hero has settled, or after `ms` if it never does. */
-export function heroSettled(ms: number): Promise<void> {
-  if ((window as unknown as { __heroSettled?: boolean }).__heroSettled) return Promise.resolve();
+/** Resolves on the cue, or after `ms` if it never comes. */
+export function wordmarkCue(ms: number): Promise<void> {
+  if ((window as unknown as CueWindow).__wordmarkCued) return Promise.resolve();
   return new Promise((resolve) => {
     const done = () => {
-      document.removeEventListener(HERO_SETTLED, done);
+      document.removeEventListener(WORDMARK_CUE, done);
       clearTimeout(timer);
       resolve();
     };
     const timer = setTimeout(done, ms);
-    document.addEventListener(HERO_SETTLED, done);
+    document.addEventListener(WORDMARK_CUE, done);
   });
 }

@@ -4,7 +4,7 @@
 // Its wordmark performs last, a letter-by-letter tour of the collection.
 import { useRef } from "react";
 import { fontsReady, gsap, prefersReducedMotion, useGSAP } from "@/lib/motion/gsap";
-import { heroSettled } from "@/lib/motion/events";
+import { wordmarkCue } from "@/lib/motion/events";
 import { wordmarkTour, type WordmarkTour } from "@/lib/motion/wordmark";
 import { armRecovery, claimVisit, disarm, handOff } from "@/lib/motion/boot";
 import { TransitionLink } from "./motion/TransitionLink";
@@ -49,8 +49,8 @@ export function Masthead() {
       el.dataset.phase = "intro";
       handOff(OWNER);
 
-      // On the home page, after the hero lands. Elsewhere, a beat after the page appears.
-      const cue = window.location.pathname === "/" ? heroSettled(5000) : new Promise((r) => setTimeout(r, 400));
+      // On the home page, once the headline has landed. Elsewhere, a beat after the page appears.
+      const cue = window.location.pathname === "/" ? wordmarkCue(4000) : new Promise((r) => setTimeout(r, 400));
       Promise.all([cue, fontsReady(600)]).then(
         contextSafe!(() => {
           if (!alive) return;
