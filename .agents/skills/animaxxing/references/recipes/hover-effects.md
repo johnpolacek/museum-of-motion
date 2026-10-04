@@ -1,6 +1,6 @@
 # Recipe: hover effects
 
-Hover treatments for controls: a label that rolls over to a copy of itself, an underline that sweeps in, a fill that enters from the edge the mouse crossed, and a card image that zooms inside its frame. Mouse hover (`pointerType === "mouse"`) and `:focus-visible` share one hot state; touch, pen, and click- or tap-derived focus never enter it, so nothing sticks after a tap. The check runs per event, so a hybrid device gains the effects when a mouse arrives. None changes the control's box, accessible name, colors, or font.
+Hover treatments for controls: a label that rolls over to a copy of itself, an underline that sweeps in, a fill that enters from the edge the mouse crossed, a word that gains weight or width without moving its neighbors, and a card image that zooms inside its frame. Mouse hover (`pointerType === "mouse"`) and `:focus-visible` share one hot state; touch, pen, and click- or tap-derived focus never enter it, so nothing sticks after a tap. The check runs per event, so a hybrid device gains the effects when a mouse arrives. None changes the control's box, accessible name, colors, or font.
 
 Lifecycle: build per the [contract](#controller-contract); the framework controller calls the idempotent teardown on unmount, which removes injected markup and restores inline styles. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -351,6 +351,84 @@ export function directionalFill(target: HTMLElement, fill: HTMLElement, { durati
 
 Keep the label's color readable on both the plain tile and the fill, since the fill reveals under it without changing it. A very fast diagonal entry reads its edge from the first event inside the tile, which may be a step past the edge it crossed.
 
+## fontAxisHover
+
+A word in a line of words gains weight or widens while hot, and nothing around it moves. Its box is held at the resting width while the type grows inside it, centered, and released once the type is back at rest. It follows the [running text rules](../text-stability.md#weight-and-width-moves-in-running-text): the word is `inline-block` at rest, so hover never changes where lines break, and the held width is exact, never rounded. Needs a variable font with the axis you move.
+
+```html
+<p class="names"><span class="item"><a href="/a">Line mask</a> /</span> <span class="item"><a href="/b">Characters</a></span></p>
+```
+
+```css
+/* At rest, so hovering never changes how lines break. The builder sets it too if missing. */
+.names a { display: inline-block; white-space: nowrap; }
+/* A word and its trailing separator break together; the space between items stays outside. */
+.names .item { white-space: nowrap; }
+```
+
+```ts
+export type FontAxisHoverOptions = {
+  /** Weight while hot. Omit to leave weight alone. */
+  weight?: number;
+  /** `font-stretch` while hot, in percent. Omit to leave width alone. */
+  stretch?: number;
+  duration?: number;
+};
+
+export function fontAxisHover(word: HTMLElement, { weight, stretch, duration = 0.25 }: FontAxisHoverOptions = {}): Teardown {
+  const reduced = prefersReducedMotion();
+  return own((dispose, after) => {
+    // The style attribute comes back exactly, including none at all.
+    const saved = word.getAttribute("style");
+    after(() => {
+      gsap.set(word, { clearProps: "fontWeight,fontStretch" });
+      // Read first: Chrome can write a just-cleared inline style back as style="" after a removal.
+      void word.getAttribute("style");
+      if (saved === null) word.removeAttribute("style");
+      else word.setAttribute("style", saved);
+    });
+    dispose(() => gsap.killTweensOf(word));
+    // Once, at build, never on hover: switching to inline-block changes where lines may break.
+    if (getComputedStyle(word).display === "inline") word.style.display = "inline-block";
+    const style = getComputedStyle(word);
+    const rest = { fontWeight: style.fontWeight, fontStretch: style.fontStretch };
+    const hot: gsap.TweenVars = {};
+    if (weight !== undefined) hot.fontWeight = weight;
+    if (stretch !== undefined) hot.fontStretch = `${stretch}%`;
+    let held = false;
+    // The exact resting width, written directly: GSAP would round it, and a fraction of a pixel can rewrap a full line.
+    const hold = () => {
+      if (held) return;
+      held = true;
+      word.style.width = `${word.getBoundingClientRect().width}px`;
+      word.style.textAlign = "center";
+    };
+    const release = () => {
+      held = false;
+      word.style.removeProperty("width");
+      word.style.removeProperty("text-align");
+    };
+    hotState(dispose, word, {
+      on: () => {
+        hold();
+        gsap.to(word, { ...hot, duration: reduced ? 0 : duration, ease: "power3.out", overwrite: "auto" });
+      },
+      off: () =>
+        gsap.to(word, {
+          ...rest,
+          duration: reduced ? 0 : duration * 1.4,
+          ease: "power3.out",
+          overwrite: "auto",
+          // Release only at rest, so the box never holds a different width than its type.
+          onComplete: release,
+        }),
+    });
+  });
+}
+```
+
+The grown type overflows its held box evenly on both sides; leave room in the gaps or separators, or keep the change small. Under reduced motion the change is instant and still holds the box, so it stays an affordance without movement.
+
 ## imageZoom
 
 The card's image scales up slightly while the card or its link is hot. Its parent frame clips it; the builder adds inline `overflow: clip` only when the frame is unclipped, and restores it. Give the image its own frame: clipping the card would clip focus rings inside it.
@@ -418,6 +496,7 @@ for (const card of page.querySelectorAll<HTMLElement>("[data-hover='zoom']")) st
 | `textRoll` | Settled, once the label's font is ready | teardown | No-op; markup untouched (an instant swap would show nothing) |
 | `underlineSweep` | Settled | teardown | Line appears and clears at once, without moving: an affordance, kept |
 | `directionalFill` | Settled | teardown | Fills and clears at once from the same edges; taps and focus still fill |
+| `fontAxisHover` | Settled, once fonts are ready | teardown | Weight or width changes at once; the box still holds |
 | `imageZoom` | Settled, once the frame's layout is final | teardown | No-op |
 
 - Do not combine these with `magnetic`, `tilt`, or a particle hot state on one target. A card may zoom its image while its link rolls a label: different boxes.

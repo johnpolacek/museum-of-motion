@@ -1,11 +1,12 @@
 "use client";
 
 // Collection controller. Each group reveals once as it scrolls in, names widen on hover and
-// keyboard focus, and on navigation the chosen name holds while the rest leave.
+// keyboard focus through the skill's fontAxisHover, and on navigation the chosen name holds while the rest leave.
 import { useRef } from "react";
-import { finished, fontsReady, prefersReducedMotion, ScrollTrigger, useGSAP } from "@/lib/motion/gsap";
+import { finished, fontsReady, gsap, prefersReducedMotion, ScrollTrigger, useGSAP } from "@/lib/motion/gsap";
 import { armRecovery, claimVisit, disarm, handOff } from "@/lib/motion/boot";
-import { collectionOutro, groupReveal, headerReveal, nameWiden, type Reveal } from "@/lib/motion/collection";
+import { collectionOutro, groupReveal, headerReveal, type Reveal } from "@/lib/motion/collection";
+import { fontAxisHover } from "@/lib/motion/recipes/hover-effects";
 import { captureShared } from "@/lib/motion/shared";
 import { useTransitionController } from "./motion/TransitionProvider";
 
@@ -23,19 +24,24 @@ export function CollectionMotion({ children }: { children: React.ReactNode }) {
       const el = root.current!;
       visit.current ??= claimVisit(OWNER);
       const animate = visit.current === "animate" && !prefersReducedMotion();
-      let leaving = false;
       const reveals: Reveal[] = [];
       const hovers: Array<() => void> = [];
       const listeners: Array<() => void> = [];
 
+      // The skill's fontAxisHover: each name widens in place, its box held at the exact resting width.
       const widen = (scope: ParentNode) => {
-        for (const link of scope.querySelectorAll<HTMLElement>(".names a")) hovers.push(nameWiden(link, () => leaving));
+        for (const link of scope.querySelectorAll<HTMLElement>(".names a")) hovers.push(fontAxisHover(link, { stretch: 88 }));
       };
 
       const outro = contextSafe!(({ href, source }: { href: string; source: Element | null }) => {
+        // Hovers stop before the outro moves the names, as the recipe asks. The chosen name keeps the
+        // width and box it has now, so it carries on widening from there instead of snapping back.
+        const chosen = source && el.contains(source) ? source.closest<HTMLElement>("a") : null;
+        const hold = chosen && { stretch: getComputedStyle(chosen).fontStretch, width: chosen.getBoundingClientRect().width };
+        hovers.splice(0).forEach((off) => off());
+        if (chosen && hold) gsap.set(chosen, { fontStretch: hold.stretch, display: "inline-block", width: `${hold.width}px`, textAlign: "center", autoRound: false });
         const tl = collectionOutro(el, source);
         if (!tl) return null;
-        leaving = true;
         // Finish any reveal still running so the outro starts from settled names.
         for (const r of reveals) if (r.timeline.isActive()) r.timeline.progress(1);
         const name = source && el.contains(source) ? source.querySelector<HTMLElement>("[data-flip-id]") : null;

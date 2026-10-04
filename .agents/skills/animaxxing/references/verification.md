@@ -131,6 +131,7 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 
 ## Media, components, and hover
 
+- Font axis hover: passes the [running text](#running-text) checks; touch never grows a word; teardown restores the style attribute exactly.
 - Directional fill: the fill opens from the edge the mouse entered and collapses onto the edge it left; keyboard focus fills from `focusFrom`; a tap fills and clears on lift; teardown restores the fill's `clip-path`.
 - State button: the button keeps its size; `loading` sets `aria-busy` and spins; `success` finishes the lap forward, draws the check, announces, and returns to the label; `error` shakes and announces; reduced motion swaps only; revert removes icons and status and restores the label's `style` attribute exactly, none included.
 - Press feedback: a press squashes and a release springs back to scale 1; the ripple centers on the press point, or the center for Enter and Space; a cancelled touch springs back; teardown removes ripples in flight and restores `position`, `overflow`, and transform.
@@ -179,6 +180,16 @@ Apply [stable typography](text-stability.md#stable-typography-for-character-anim
 5. With expanded masks, inspect both hidden reveal endpoints and the exit endpoint for ink leakage. Keep timing fixed; adjust travel only when leakage appears.
 
 Record viewport, browser, font readiness, maximum position deltas, height, wrapping, and visual observations, without rounding to whole pixels. A repeatable multi-pixel snap fails even with stable height; invisible subpixel rounding does not.
+
+## Running text
+
+For any hover or focus that changes a word's weight or width inside a line of other words, [held in place](text-stability.md#weight-and-width-moves-in-running-text):
+
+1. Record every word's box (`getBoundingClientRect`, plus `scrollY`) at rest.
+2. Hover each word in turn, wait for the move to settle, and record every other word's box again. Any change past half a pixel fails: a neighbor moved or a line rewrapped.
+3. Move away, wait for the release, and confirm the hovered word's box is back to its resting width and its inline styles are gone.
+4. Repeat at several widths, including one where a line is nearly full, since rounding errors only show near a break.
+5. Confirm no separator starts a line.
 
 ## Report
 

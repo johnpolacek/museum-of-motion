@@ -66,3 +66,21 @@ Apply the class to each new split (inside `onSplit` with auto re-splitting). [Sp
 Expanded masks can leak ink at the hidden endpoint. Check forward and backward reveals in both travel directions; if a frame leaks, increase only the hidden travel distance, keeping timing.
 
 Measure with the [cleanup checks](verification.md#splittext-cleanup-stability).
+
+## Weight and width moves in running text
+
+A link or label that gains weight or widens on hover, inside a line of other text, such as a list of names separated by slashes. Its type grows, so its box would grow and push the rest of the line, or push a word onto the next line. The fix is to hold the box at its resting width while the type moves inside it. Holding the box has two traps of its own:
+
+- **Changing the box type moves lines.** Switching an inline element to `inline-block` on hover changes where the browser may break the line, so a neighbor can jump a whole line. Make the element `inline-block` in its base CSS, at rest, so hover only fixes its width.
+- **Rounding moves lines.** GSAP rounds pixel widths by default (`autoRound`), so a 276.6px word is held at 277px. On a tightly packed line, that fraction is enough to break one word earlier. Set the exact measured width: write `element.style.width` from `getBoundingClientRect().width`, or pass `autoRound: false`.
+
+```css
+/* At rest, so the hover never changes how lines break. */
+.names a { display: inline-block; white-space: nowrap; }
+```
+
+- Center the type in its held box, so it grows evenly both ways, and leave room in the separators or gaps for the overflow.
+- Keep a separator with the word before it: put the word and its trailing separator in one `white-space: nowrap` group, and the space between groups outside it, so a separator ends a line and never starts one. A non-breaking space alone is not enough beside an `inline-block` box.
+- Release the held width only after the type is back at rest.
+
+[`fontAxisHover`](recipes/hover-effects.md#fontaxishover) applies all of this. Check it with the [running text checks](verification.md#running-text): hover every word and confirm nothing else moved.

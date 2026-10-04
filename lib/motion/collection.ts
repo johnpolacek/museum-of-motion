@@ -5,7 +5,6 @@ import { gsap, prefersReducedMotion } from "./gsap";
 const ENTER = "signature";
 const EXIT = "signature-exit";
 /** Hover widens a name from its resting 82% (globals.css). Centered, 88% stays inside the gap to each separator. */
-const WIDE = "88%";
 
 const all = (root: ParentNode, sel: string) => Array.from(root.querySelectorAll<HTMLElement>(sel));
 
@@ -70,68 +69,6 @@ export function groupReveal(group: HTMLElement): Reveal {
   return { timeline: tl, finish };
 }
 
-/**
- * Hover and keyboard focus widen a name. Mouse hover and :focus-visible share one hot state;
- * touch and click-derived focus never enter it, so nothing sticks. Returns a teardown.
- */
-export function nameWiden(link: HTMLElement, isLocked: () => boolean): () => void {
-  if (prefersReducedMotion()) return () => {};
-  let hot = 0;
-  const on = () => {
-    if (isLocked()) return;
-    hot++;
-    if (hot > 1) return;
-    gsap.killTweensOf(link, "fontStretch");
-    if (link.style.display !== "inline-block") pin([link], "center");
-    gsap.to(link, { fontStretch: WIDE, duration: 0.25, ease: ENTER, overwrite: "auto" });
-  };
-  const off = () => {
-    if (isLocked() || hot === 0) return;
-    hot = Math.max(0, hot - 1);
-    if (hot > 0) return;
-    gsap.to(link, {
-      fontStretch: "82%",
-      duration: 0.35,
-      ease: "power3.out",
-      overwrite: "auto",
-      onComplete: () => gsap.set(link, { clearProps: `fontStretch,${UNPIN}` }),
-    });
-  };
-  let mouse = false;
-  const enter = (e: PointerEvent) => {
-    if (e.pointerType !== "mouse") return;
-    mouse = true;
-    on();
-  };
-  const leave = (e: PointerEvent) => {
-    if (!mouse || e.pointerType !== "mouse") return;
-    mouse = false;
-    off();
-  };
-  let keyed = false;
-  const focus = () => {
-    if (!link.matches(":focus-visible")) return;
-    keyed = true;
-    on();
-  };
-  const blur = () => {
-    if (!keyed) return;
-    keyed = false;
-    off();
-  };
-  link.addEventListener("pointerenter", enter);
-  link.addEventListener("pointerleave", leave);
-  link.addEventListener("focus", focus);
-  link.addEventListener("blur", blur);
-  return () => {
-    link.removeEventListener("pointerenter", enter);
-    link.removeEventListener("pointerleave", leave);
-    link.removeEventListener("focus", focus);
-    link.removeEventListener("blur", blur);
-    gsap.killTweensOf(link, "fontStretch");
-    gsap.set(link, { clearProps: `fontStretch,${UNPIN}` });
-  };
-}
 
 const onScreen = (el: Element) => {
   const r = el.getBoundingClientRect();

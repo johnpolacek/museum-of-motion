@@ -276,6 +276,7 @@ A curtain or curve cover and a shared-element morph never share a navigation: th
 | `underlineSweep` | `scaleX 0 → 1` from the inline start, `1 → 0` toward the inline end, 0.3s, `power2.out` | An injected hairline under a link; `--underline-*` custom properties restyle it. Instant under reduced motion. |
 | `directionalFill` | overlay `clip-path` opens from the entry edge, 0.3s `power3.out`; collapses onto the exit edge, 0.24s `power2.in` | Tiles, rows, and buttons that answer where the mouse came from. Focus fills from `focusFrom`; a tap clears on lift. |
 | `pressFeedback` | `scale → 0.94`, 0.12s `power2.out` on press; `→ 1`, 0.5s `elastic.out(1, 0.45)` on release; ink circle `scale 0 → 1`, `opacity 0.3 → 0`, 0.6s from the press point | Buttons and cards answering a press from mouse, touch, pen, or Enter and Space. Code: [press-feedback.md](recipes/press-feedback.md). |
+| `fontAxisHover` | `fontWeight` or `font-stretch` to the hot value, 0.25s `power3.out`, back in 0.35s; the box holds its exact resting width, centered, until the type is at rest | A word in a line of words answering hover or focus. Neighbors never move. See [running text](text-stability.md#weight-and-width-moves-in-running-text). |
 | `imageZoom` | `scale 1 → 1.05`, 0.6s, `power2.out`, inside a clipped frame | A card's image answering the card or its link; never clip the card itself. |
 
 Code: [media-effects.md](recipes/media-effects.md), [component-motion.md](recipes/component-motion.md), [hover-effects.md](recipes/hover-effects.md).

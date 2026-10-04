@@ -291,6 +291,65 @@ export function directionalFill(target: HTMLElement, fill: HTMLElement, { durati
   });
 }
 
+export type FontAxisHoverOptions = {
+  /** Weight while hot. Omit to leave weight alone. */
+  weight?: number;
+  /** `font-stretch` while hot, in percent. Omit to leave width alone. */
+  stretch?: number;
+  duration?: number;
+};
+
+export function fontAxisHover(word: HTMLElement, { weight, stretch, duration = 0.25 }: FontAxisHoverOptions = {}): Teardown {
+  const reduced = prefersReducedMotion();
+  return own((dispose, after) => {
+    // The style attribute comes back exactly, including none at all.
+    const saved = word.getAttribute("style");
+    after(() => {
+      gsap.set(word, { clearProps: "fontWeight,fontStretch" });
+      // Read first: Chrome can write a just-cleared inline style back as style="" after a removal.
+      void word.getAttribute("style");
+      if (saved === null) word.removeAttribute("style");
+      else word.setAttribute("style", saved);
+    });
+    dispose(() => gsap.killTweensOf(word));
+    // Once, at build, never on hover: switching to inline-block changes where lines may break.
+    if (getComputedStyle(word).display === "inline") word.style.display = "inline-block";
+    const style = getComputedStyle(word);
+    const rest = { fontWeight: style.fontWeight, fontStretch: style.fontStretch };
+    const hot: gsap.TweenVars = {};
+    if (weight !== undefined) hot.fontWeight = weight;
+    if (stretch !== undefined) hot.fontStretch = `${stretch}%`;
+    let held = false;
+    // The exact resting width, written directly: GSAP would round it, and a fraction of a pixel can rewrap a full line.
+    const hold = () => {
+      if (held) return;
+      held = true;
+      word.style.width = `${word.getBoundingClientRect().width}px`;
+      word.style.textAlign = "center";
+    };
+    const release = () => {
+      held = false;
+      word.style.removeProperty("width");
+      word.style.removeProperty("text-align");
+    };
+    hotState(dispose, word, {
+      on: () => {
+        hold();
+        gsap.to(word, { ...hot, duration: reduced ? 0 : duration, ease: "power3.out", overwrite: "auto" });
+      },
+      off: () =>
+        gsap.to(word, {
+          ...rest,
+          duration: reduced ? 0 : duration * 1.4,
+          ease: "power3.out",
+          overwrite: "auto",
+          // Release only at rest, so the box never holds a different width than its type.
+          onComplete: release,
+        }),
+    });
+  });
+}
+
 export type ImageZoomOptions = {
   /** Defaults to `[data-zoom-image]` inside the card, else its first `img` or `video`. */
   image?: HTMLElement | null;

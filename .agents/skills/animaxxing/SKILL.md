@@ -1,6 +1,6 @@
 ---
 name: animaxxing
-description: "Build GSAP motion without restyling, as single effects or the full treatment: for \"we're animaxxing\", every element enters from a blank page, rests, and leaves. Text: split, scramble, glitch, typewriter, and speak-in entrances, scattering headlines, letter waves, text on a path, count-ups, odometers. Scroll: reveals, scrubbing, parallax, pinned scenes, stacking cards, zoom-through, horizontal runs, waypoints, smooth scroll, paging. Pointer: magnetic, tilt, spotlights, directional fills, press ripples, shakes, cursor followers, image trails, proximity, label rolls, underlines. Drag: throw tracks, endless loops, card stacks, sortable lists, swipe to dismiss. Also page covers, Flip and shared-element morphs, menus, dialogs, tabs, state buttons, media and SVG effects, marquees, CustomEase, sound, confetti, particles, and hover stuck on touch. Pair with the matching GSAP framework skill. Not for branding, redesign, routing, or GSAP API questions."
+description: "Build GSAP motion without restyling, as single effects or the full treatment: for \"we're animaxxing\", every element enters from a blank page, rests, and leaves. Text: split, scramble, glitch, typewriter, and speak-in entrances, scattering headlines, letter waves, text on a path, count-ups, odometers. Scroll: reveals, scrubbing, parallax, pinned scenes, stacking cards, zoom-through, horizontal runs, waypoints, smooth scroll, paging. Pointer: magnetic, tilt, spotlights, directional fills, press ripples, shakes, cursor followers, image trails, proximity, label rolls, underlines, weight hovers. Drag: throw tracks, endless loops, card stacks, sortable lists, swipe to dismiss. Also page covers, Flip and shared-element morphs, menus, dialogs, tabs, state buttons, media and SVG effects, marquees, CustomEase, sound, confetti, particles, and hover stuck on touch. Pair with the matching GSAP framework skill. Not for branding, redesign, routing, or GSAP API questions."
 license: MIT
 metadata:
   short-description: Reusable GSAP text, scroll, pointer, layout, SVG, and particle motion for any brand
@@ -36,7 +36,7 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 | Choose in/out effects, configure defaults, coordinate with the controller | [Motion vocabulary](references/motion-vocabulary.md) |
 | A brand's signature curve for every `ease` option | [Signature curves](references/motion-vocabulary.md#signature-curves) |
 | Loading flashes, auth-dependent content, or layout shifts | Matching installed framework skill's `references/initialization.md`, **Data readiness and layout stability** |
-| Character animation: font readiness, kerning, masks, stable split/revert | [Text stability](references/text-stability.md) |
+| Character animation: font readiness, kerning, masks, stable split/revert; weight or width moves inside a line of text | [Text stability](references/text-stability.md) |
 | Character, word, line, scramble, or glitch entrances/exits, ellipse line reveals, highlighter line sweeps | [Split entrances](references/recipes/split-entrances.md) |
 | Page items, including scattering headlines | [Route letters](references/recipes/route-letters.md) |
 | Short display copy arriving at speaking pace | [Speak-in](references/recipes/speak-in.md) |
@@ -54,7 +54,7 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 | Curtain page transitions, tilted, titled, clip-path wipe, or drifting covers, curved SVG swipe covers, first-visit preloaders | [Page covers](references/recipes/page-covers.md) |
 | Filter, reorder, and expand layouts; shared-element morphs across pages | [Layout Flip](references/recipes/layout-flip.md) |
 | Image wipe reveals, hover image previews, scroll-scrubbed video, canvas frame sequences | [Media effects](references/recipes/media-effects.md) |
-| Label rolls, underline sweeps, direction-aware fills, image zoom on hover and focus |
+| Label rolls, underline sweeps, direction-aware fills, weight or width hovers in running text, image zoom on hover and focus |
 | A control that squashes and ripples when pressed, by any input | [Press feedback](references/recipes/press-feedback.md) |
 | A shake for an error or refused action | [Accents](references/motion-vocabulary.md#accents) | [Hover effects](references/recipes/hover-effects.md) |
 | Menu overlays, interruptible enter/exit with reverse easing, dialog enter and exit, accordion height, sliding tab indicators, buttons that show loading, success, and failure | [Component motion](references/recipes/component-motion.md) |
