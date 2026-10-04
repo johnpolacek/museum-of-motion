@@ -608,6 +608,120 @@ export function imageTrail(
   });
 }
 
+export type SwipeDismissOptions = {
+  /** Share of the item's width past which a release dismisses. */
+  threshold?: number;
+  /** Release speed in px/s that dismisses, whatever the distance. */
+  flick?: number;
+  /** Called once the item has gone and the gap has closed. Remove it from the app's state here. */
+  onDismiss?: (item: HTMLElement) => void;
+};
+export type SwipeDismiss = {
+  /** Dismisses toward a side: 1 right, -1 left. */
+  dismiss: (direction?: 1 | -1) => void;
+  revert: Teardown;
+};
+
+export function swipeDismiss(item: HTMLElement, { threshold = 0.4, flick = 800, onDismiss }: SwipeDismissOptions = {}): SwipeDismiss {
+  const reduced = prefersReducedMotion();
+  let gone = false;
+  let dismiss: (direction?: 1 | -1) => void = () => {};
+  const revert = own((dispose, after) => {
+    // The item's style attribute comes back exactly, including the display a dismiss sets.
+    const itemStyle = item.getAttribute("style");
+    after(() => {
+      gsap.set(item, { clearProps: "transform,translate,opacity,visibility" });
+      // Read first: Chrome can write a just-cleared inline style back as style="" after a removal.
+      void item.getAttribute("style");
+      if (itemStyle === null) item.removeAttribute("style");
+      else item.setAttribute("style", itemStyle);
+    });
+    const followers = () => {
+      const list: HTMLElement[] = [];
+      for (let next = item.nextElementSibling; next; next = next.nextElementSibling) if (next instanceof HTMLElement) list.push(next);
+      return list;
+    };
+    /** Each follower the gap slid, with its style attribute from before. */
+    const moved = new Map<HTMLElement, string | null>();
+    after(() =>
+      moved.forEach((value, element) => {
+        gsap.set(element, { clearProps: "transform,translate" });
+        void element.getAttribute("style");
+        if (value === null) element.removeAttribute("style");
+        else element.setAttribute("style", value);
+      }),
+    );
+    dispose(() => gsap.killTweensOf([item, ...moved.keys()]));
+
+    dismiss = (direction = 1) => {
+      if (gone) return;
+      gone = true;
+      const width = item.getBoundingClientRect().width;
+      gsap.to(item, {
+        x: direction * (width + 40),
+        autoAlpha: 0,
+        duration: reduced ? 0 : 0.25,
+        ease: "power2.in",
+        overwrite: "auto",
+        onComplete: () => {
+          // Close the gap: take the item out of the flow, then slide each follower up from where it was.
+          const after = followers();
+          const tops = after.map((element) => element.getBoundingClientRect().top);
+          item.style.display = "none";
+          after.forEach((element, i) => {
+            const shift = tops[i]! - element.getBoundingClientRect().top;
+            if (!moved.has(element)) moved.set(element, element.getAttribute("style"));
+            gsap.fromTo(element, { y: shift }, { y: 0, duration: reduced ? 0 : 0.3, ease: "power3.out", overwrite: "auto" });
+          });
+          onDismiss?.(item);
+        },
+      });
+    };
+
+    const [drag] = Draggable.create(item, {
+      type: "x",
+      inertia: false,
+      zIndexBoost: false,
+      dragClickables: false,
+      onDrag(this: Draggable) {
+        gsap.set(item, { opacity: gsap.utils.clamp(0.35, 1, 1 - Math.abs(this.x) / (item.offsetWidth || 1)) });
+      },
+      onRelease(this: Draggable) {
+        const width = item.offsetWidth || 1;
+        const speed = speedOf();
+        const far = Math.abs(this.x) > width * threshold;
+        const fast = Math.abs(speed) > flick && Math.sign(speed) === Math.sign(this.x);
+        if (this.x && (far || fast)) dismiss(this.x > 0 ? 1 : -1);
+        else gsap.to(item, { x: 0, opacity: 1, duration: reduced ? 0 : 0.5, ease: "elastic.out(1, 0.6)", overwrite: "auto" });
+      },
+    });
+    if (!drag) return;
+    dispose(() => drag.kill());
+    // Release speed in px/s, from pointer samples over the last ~100ms of the drag.
+    let samples: Array<[number, number]> = [];
+    const speedOf = () => {
+      const [a, b] = [samples[0], samples[samples.length - 1]];
+      if (!a || !b || b[1] === a[1]) return 0;
+      return ((b[0] - a[0]) / (b[1] - a[1])) * 1000;
+    };
+    listen(dispose, item, "pointerdown", () => (samples = []));
+    listen(dispose, item, "pointermove", (event) => {
+      samples.push([event.clientX, event.timeStamp]);
+      // Only the last ~100ms count toward a flick.
+      while (samples.length > 2 && event.timeStamp - samples[0]![1] > 100) samples.shift();
+    });
+    const button = item.querySelector<HTMLElement>("[data-swipe-dismiss]");
+    if (button) listen(dispose, button, "click", () => dismiss(1));
+    listen(dispose, item, "keydown", (event) => {
+      if (event.key === "Delete" || (event.key === "Backspace" && event.target === item)) {
+        event.preventDefault();
+        dismiss(1);
+      }
+    });
+  });
+  return { dismiss: (direction) => dismiss(direction), revert };
+}
+
 export type DragTrackOptions = { snap?: boolean };
 export type DragTrack = { revert: Teardown; draggable: Draggable | undefined };
 

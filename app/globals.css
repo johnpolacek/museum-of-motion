@@ -147,6 +147,14 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .signin input { flex: 1; min-width: 0; font: 600 18px/1 var(--sans); color: inherit; background: none; border: 0; border-bottom: 2px solid #fff; padding: 10px 0; }
 .ex .stage-art .signin input:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
 .ex .stage-art .signin-error { min-height: 1.2em; margin: 0; }
+.ex .stage-art .sorts { list-style: none; margin: 0; padding: 0; width: min(92%, 520px); display: grid; gap: 8px; }
+.ex .stage-art .sorts li { position: relative; display: flex; align-items: center; gap: 14px; padding: 10px 14px; background: #fff; color: var(--ink); font-weight: 700; font-stretch: 85%; font-size: clamp(16px, 2vw, 21px); }
+.ex .stage-art .sort-handle { touch-action: none; cursor: grab; display: grid; place-items: center; width: 32px; height: 32px; font-size: 20px; color: var(--blue); background: none; border: 0; }
+.ex .stage-art .swipes { list-style: none; margin: 0; padding: 0; width: min(92%, 520px); min-height: 264px; display: grid; gap: 8px; align-content: start; }
+.ex .stage-art .swipe-note { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; background: #fff; color: var(--ink); font-weight: 600; font-size: clamp(15px, 1.8vw, 19px); cursor: grab; user-select: none; }
+.ex .stage-art .swipe-note:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.ex .stage-art .swipe-x { width: 32px; height: 32px; font-size: 22px; line-height: 1; color: var(--ink); background: none; border: 0; cursor: pointer; }
+.ex .stage-art .swipe-reset { margin-top: 16px; }
 .ex .stage-art .btns { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
 .ex .stage-art .pill { font: 600 14px/1 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: inherit; background: none; border: 1px solid rgba(255,255,255,0.6); border-radius: 99px; padding: 12px 20px; cursor: pointer; }
 .ex .stage-art .pill.big { font-size: clamp(14px, 1.6vw, 20px); padding: 18px 30px; }

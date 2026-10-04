@@ -75,4 +75,6 @@ export const LIVE_STAGES = new Set([
   "endless-loop",
   "wrapping-grid",
   "card-stack",
+  "sortable",
+  "swipe-to-dismiss",
 ]);

@@ -615,6 +615,20 @@ const DATA: Exhibit[] = [
     builders: "flickCards",
     src: "endless-drag",
     desc: "A drag or flick deals the next card to the front."
+  },
+  {
+    name: "Sortable",
+    group: "drag",
+    builders: "sortable",
+    src: "sortable",
+    desc: "Drag a handle to reorder a list; neighbors slide aside to make room."
+  },
+  {
+    name: "Swipe to dismiss",
+    group: "drag",
+    builders: "swipeDismiss",
+    src: "pointer-effects",
+    desc: "Throw an item sideways and the list closes up behind it."
   }
 ];
 

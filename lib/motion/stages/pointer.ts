@@ -5,7 +5,8 @@ import { gsap, SplitText } from "../gsap";
 import { live, play, type StageDef } from "../stage-core";
 import { directionalFill, imageZoom, textRoll, underlineSweep } from "../recipes/hover-effects";
 import { hoverPreview } from "../recipes/media-effects";
-import { cursorFollower, dragTrack, imageTrail, magnetic, momentumHover, proximity, spotlight, tilt } from "../recipes/pointer-effects";
+import { cursorFollower, dragTrack, imageTrail, magnetic, momentumHover, proximity, spotlight, swipeDismiss, tilt } from "../recipes/pointer-effects";
+import { sortable } from "../recipes/sortable";
 import { morphToggle } from "../recipes/svg-effects";
 import { pressFeedback } from "../recipes/press-feedback";
 import { shake } from "../recipes/accents";
@@ -593,6 +594,59 @@ const blast = play(["Blast-off"], ["blast"], "Press a button. Reset brings the h
   ),
 );
 
+/* ---------- Sortable ---------- */
+
+const sortList = play(["Sortable"], ["sort"], "Drag a handle to reorder. Or Tab to a handle: Space, arrows, Space.", (text) =>
+  live(
+    text,
+    `<p id="sort-help" hidden>Press Space to pick up, arrow keys to move, Space to drop, Escape to cancel.</p><ol class="sorts" aria-label="Exhibits to see first">${NAMES.slice(0, 5)
+      .map((n) => `<li data-sortable-item><button type="button" class="sort-handle" data-sortable-handle aria-describedby="sort-help" aria-label="Move ${n}"><span aria-hidden="true">⠿</span></button><span data-sortable-name>${n}</span></li>`)
+      .join("")}</ol>`,
+    (layer) => [sortable(one(layer, ".sorts")).revert],
+  ),
+);
+
+/* ---------- Swipe to dismiss ---------- */
+
+const NOTES = ["Line mask is back on view", "Two new exhibits this week", "Your tour starts at noon", "The gift shop is open late"];
+
+const swipe = play(["Swipe to dismiss"], ["swipe"], "Drag a note sideways, or flick it. Tab to one and press Delete.", (text) =>
+  live(
+    text,
+    `<ul class="swipes" aria-label="Notes">${NOTES.map((n) => `<li class="swipe-note" tabindex="0" data-swipe><span>${n}</span><button type="button" class="swipe-x" data-swipe-dismiss aria-label="Dismiss ${n}">×</button></li>`).join("")}</ul><button type="button" class="pill swipe-reset" hidden>Bring them back</button>`,
+    (layer) => {
+      const reset = one<HTMLButtonElement>(layer, ".swipe-reset");
+      let swipes: ReturnType<typeof swipeDismiss>[] = [];
+      let left = NOTES.length;
+      const build = () => {
+        left = NOTES.length;
+        swipes = all(layer, ".swipe-note").map((note) =>
+          swipeDismiss(note, {
+            onDismiss: () => {
+              left -= 1;
+              // Focus moves on to the next note, or to the reset when none are left.
+              const next = all(layer, ".swipe-note").find((n) => getComputedStyle(n).display !== "none");
+              if (left === 0) {
+                reset.hidden = false;
+                reset.focus();
+              } else if (document.activeElement === document.body) next?.focus();
+            },
+          }),
+        );
+      };
+      const again = () => {
+        swipes.forEach((s) => s.revert());
+        reset.hidden = true;
+        build();
+        all(layer, ".swipe-note")[0]?.focus();
+      };
+      build();
+      reset.addEventListener("click", again);
+      return [() => reset.removeEventListener("click", again), () => swipes.forEach((s) => s.revert())];
+    },
+  ),
+);
+
 /* ---------- 60 to 63 Drag ---------- */
 
 const cardsHtml = (from: number, n: number, cls = "drag-card") =>
@@ -669,4 +723,6 @@ export const POINTER_STAGES: Record<string, StageDef> = {
   "endless-loop": loop,
   "wrapping-grid": grid,
   "card-stack": deck,
+  sortable: sortList,
+  "swipe-to-dismiss": swipe,
 };
