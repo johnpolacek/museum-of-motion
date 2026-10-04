@@ -529,6 +529,16 @@ const DATA: Exhibit[] = [
     desc: "An underline slides onto the selected tab."
   },
   {
+    name: "State button",
+    group: "pointer",
+    builders: "stateButton",
+    src: "component-motion",
+    desc: "A button spins while it waits, then draws a check, or shakes and tries again.",
+    vars: [
+      "Error"
+    ]
+  },
+  {
     name: "Layout Flip",
     group: "pointer",
     builders: "captureLayout",

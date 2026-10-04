@@ -65,6 +65,7 @@ export const LIVE_STAGES = new Set([
   "dialog",
   "disclosure",
   "tab-indicator",
+  "state-button",
   "layout-flip",
   "shared-element",
   "particles",

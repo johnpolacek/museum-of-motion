@@ -9,7 +9,7 @@ import { cursorFollower, dragTrack, imageTrail, magnetic, momentumHover, proximi
 import { morphToggle } from "../recipes/svg-effects";
 import { pressFeedback } from "../recipes/press-feedback";
 import { shake } from "../recipes/accents";
-import { dialogMotion, disclosure, enterExit, menuOverlay, tabIndicator } from "../recipes/component-motion";
+import { dialogMotion, disclosure, enterExit, menuOverlay, stateButton, tabIndicator } from "../recipes/component-motion";
 import { captureLayout, captureShared, playShared } from "../recipes/layout-flip";
 import { burstFrom } from "../recipes/physics-effects";
 import { blastOff } from "../recipes/blast-off";
@@ -119,6 +119,32 @@ const shakeForm = play(["Shake"], ["shake"], "Sign in with any password. Only â€
       };
       form.addEventListener("submit", submit);
       return [() => form.removeEventListener("submit", submit), () => gsap.killTweensOf(one(layer, ".signin-row"))];
+    },
+  ),
+);
+
+/* ---------- State button ---------- */
+
+const stateBtn = play(["Success", "Error"], ["success", "error"], "Press Send. The request takes a moment.", (text, p) =>
+  live(
+    text,
+    `<div class="btns"><button type="button" class="pill big state"><span data-state-label>Send</span></button></div>`,
+    (layer) => {
+      const button = one(layer, ".state");
+      const sb = stateButton(button);
+      let timer = 0;
+      let busy = false;
+      const send = () => {
+        if (busy) return;
+        busy = true;
+        sb.loading();
+        timer = window.setTimeout(() => {
+          const done = p.variation === "error" ? sb.error("Not sent. Try again.") : sb.success("Sent");
+          done.eventCallback("onComplete", () => (busy = false));
+        }, 1400);
+      };
+      button.addEventListener("click", send);
+      return [() => button.removeEventListener("click", send), () => clearTimeout(timer), sb.revert];
     },
   ),
 );
@@ -633,6 +659,7 @@ export const POINTER_STAGES: Record<string, StageDef> = {
   dialog,
   disclosure: accordion,
   "tab-indicator": tabs,
+  "state-button": stateBtn,
   "layout-flip": layoutFlip,
   "shared-element": shared,
   particles,
