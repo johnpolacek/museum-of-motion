@@ -226,6 +226,65 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .flick-card { width: min(320px, 70vw); aspect-ratio: 4 / 3; background: var(--ink); justify-self: center; }
 .ex .stage-art .flick-card svg { display: block; width: 100%; height: 100%; pointer-events: none; }
 .ex .stage-art .flick-btns { display: flex; gap: 10px; }
+/* Scroll stages: a small page that scrolls inside the stage. */
+.ex .stage-art.scroll { padding: 0; }
+.ex .stage-art .win { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.ex .stage-art .win:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
+.ex .win .w-pad { height: 100%; min-height: 260px; display: grid; place-items: center; }
+.ex .win .w-pad.dark { background: var(--ink); }
+.ex .win .w-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; padding: 0 var(--gut); }
+.ex .win .w-card, .ex .win .w-skew, .ex .win .w-media, .ex .win .w-traveller, .ex .win .w-runcard { aspect-ratio: 4 / 3; overflow: hidden; background: var(--ink); }
+.ex .win svg { display: block; width: 100%; height: 100%; }
+.ex .win .w-statement { min-height: 100%; display: grid; place-items: center; padding: 0 var(--gut); }
+.ex .win .w-statement p { margin: 0; max-width: 18ch; font-size: clamp(32px, 4.6vw, 72px); line-height: 1.05; letter-spacing: -0.03em; font-weight: 600; font-stretch: 82%; }
+.ex .win .w-sec { min-height: 100%; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: center; gap: var(--gut); padding: 40px var(--gut); }
+.ex .win h3 { margin: 0; font-weight: 800; font-stretch: 75%; text-transform: uppercase; font-size: clamp(28px, 4vw, 60px); line-height: 0.9; }
+.ex .win .w-scene { position: relative; height: 100%; min-height: 260px; }
+.ex .win .w-step { position: absolute; inset: 0; display: grid; place-content: center; gap: 8px; text-align: center; }
+.ex .win .w-step b { font-weight: 800; font-stretch: 75%; text-transform: uppercase; font-size: clamp(48px, 8vw, 120px); line-height: 0.9; }
+.ex .win .w-run { height: 100%; min-height: 260px; display: grid; align-items: center; overflow: hidden; padding: 0 var(--gut); }
+.ex .win .w-track { display: flex; gap: 16px; width: max-content; }
+.ex .win .w-runcard { width: clamp(200px, 26vw, 320px); }
+.ex .win .w-runcard > div { width: 120%; height: 100%; margin-left: -10%; }
+.ex .win .w-way { min-height: 100%; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: var(--gut); padding: 40px var(--gut); }
+.ex .win .w-traveller { width: 100%; }
+.ex .win .w-dock { aspect-ratio: 4 / 3; border: 1px dashed rgba(255,255,255,0.4); }
+.ex .win .w-dock.left { grid-column: 1; grid-row: 1; }
+.ex .win .w-dock.right { grid-column: 2; grid-row: 1; }
+.ex .win .w-way:has(.right) h3 { grid-column: 1; grid-row: 1; }
+.ex .win .w-way:has(.left) h3 { grid-column: 2; grid-row: 1; }
+.ex .win .w-bar { position: sticky; top: 0; z-index: 2; height: 4px; background: rgba(255,255,255,0.2); }
+.ex .win .w-bar i { display: block; height: 100%; background: #fff; transform-origin: 0 50%; }
+.ex .win .w-article { max-width: 54ch; padding: 32px var(--gut); }
+.ex .win .w-article p { margin: 0 0 1.2em; font-size: 20px; line-height: 1.45; }
+.ex .win .w-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 var(--gut); }
+.ex .win .w-head { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center; padding: 16px var(--gut); color: var(--ink); background: rgba(255,255,255,0.92); transition: color 0.3s, background-color 0.3s, transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.ex .win .w-head b { font-weight: 800; font-stretch: 75%; text-transform: uppercase; }
+.ex .win .w-head[data-nav-theme="dark"] { color: #fff; background: rgba(11,11,11,0.92); }
+.ex .win.hiding[data-scroll-direction="down"][data-scroll-started="true"] .w-head:not(:focus-within) { transform: translateY(-100%); }
+@media (prefers-reduced-motion: reduce) { .ex .win .w-head { transition: none; } }
+.ex .win .w-band { min-height: 70%; display: grid; place-items: center; padding: 40px var(--gut); }
+.ex .win .w-band.light { background: #fff; color: var(--ink); }
+.ex .win .w-band.dark { background: var(--ink); color: #fff; }
+.ex .win .w-content { padding: 24px var(--gut); }
+.ex .win .w-name { margin: 0; font-weight: 600; font-stretch: 82%; font-size: clamp(32px, 5vw, 76px); line-height: 1.05; letter-spacing: -0.02em; }
+.ex .win .w-name .num { font-size: 0.35em; vertical-align: 1.4em; font-weight: 600; }
+.ex .stage-art .w-pagerbox { display: grid; gap: 14px; justify-items: center; width: min(92%, 680px); }
+.ex .stage-art .w-pager { position: relative; width: 100%; aspect-ratio: 21 / 9; overflow: clip; }
+.ex .stage-art .w-pager:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+.ex .stage-art [data-pager] { height: auto; touch-action: pinch-zoom; }
+.ex .stage-art [data-pager] > * { position: absolute; inset: 0; }
+.ex .stage-art .w-chapter { display: grid; place-content: center; gap: 8px; text-align: center; }
+.ex .stage-art .w-chapter b { font-weight: 800; font-stretch: 75%; text-transform: uppercase; font-size: clamp(48px, 8vw, 120px); line-height: 0.9; }
+.ex .stage-art .w-chapter.c0 { background: #fff; color: var(--ink); }
+.ex .stage-art .w-chapter.c1 { background: var(--ink); color: #fff; }
+.ex .stage-art .w-chapter.c2 { background: #1a27d9; color: #fff; }
+.ex .stage-art .w-chapter.c3 { background: #fff; color: var(--blue); }
+.ex .stage-art .w-pagerbtns { display: flex; gap: 10px; }
+.ex .win .w-tall { height: 300%; min-height: 900px; }
+.ex .win .w-sticky { position: sticky; top: 0; display: block; width: 100%; object-fit: cover; background: var(--ink); }
+.ex .win .w-bowl { position: relative; min-height: 80%; display: grid; place-items: center; background: var(--ink); color: #fff; padding: 40px var(--gut); }
+.ex .win .w-edge { position: absolute; left: 0; bottom: 100%; width: 100%; height: 6vw; min-height: 40px; fill: var(--ink); }
 .ex .stage .replay { position: absolute; right: 0; bottom: 16px; font-family: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid currentColor; border-radius: 0; padding: 0; cursor: pointer; }
 .ex .stage .replay:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .ex .scrub { display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; }
