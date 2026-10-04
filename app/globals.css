@@ -60,7 +60,7 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .grp-rule { position: absolute; top: -2px; left: 0; right: 0; height: 2px; background: var(--ink); }
 .grp .side p { margin: 8px 0 0; color: var(--mute); font-size: 14px; max-width: 22ch; }
 .names { margin: 0; font-weight: 600; font-stretch: 82%; font-size: clamp(30px, 3.9vw, 66px); line-height: 1.04; letter-spacing: -0.02em; }
-.names a { white-space: nowrap; }
+.names a { display: inline-block; white-space: nowrap; }
 .names a sup { font-size: 0.28em; font-weight: 600; letter-spacing: 0; vertical-align: 1.9em; margin-left: 0.12em; font-stretch: 100%; }
 .names .sep { color: var(--blue); font-weight: 300; padding: 0 0.12em; }
 .names a.on { color: var(--blue); }

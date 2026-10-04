@@ -11,11 +11,13 @@ const all = (root: ParentNode, sel: string) => Array.from(root.querySelectorAll<
 
 /**
  * Holds each element's layout box at its resting width, as an inline-block, so a weight or
- * width change inside it never rewraps the paragraph. Reads first, then writes.
+ * width change inside it never rewraps the paragraph. Reads first, then writes. The width is
+ * exact: GSAP rounds pixel widths by default, and half a pixel more can tip a full line into
+ * breaking earlier. Names are inline-block in CSS too, so pinning never changes how lines break.
  */
 function pin(els: HTMLElement[], align = "left") {
   const widths = els.map((el) => el.getBoundingClientRect().width);
-  els.forEach((el, i) => gsap.set(el, { display: "inline-block", width: widths[i], textAlign: align }));
+  els.forEach((el, i) => gsap.set(el, { display: "inline-block", width: `${widths[i]}px`, textAlign: align, autoRound: false }));
 }
 const UNPIN = "display,width,textAlign";
 
