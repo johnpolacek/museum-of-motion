@@ -170,10 +170,16 @@ export function Hero() {
 
   return (
     <section ref={root} className="hero wrap blue" aria-labelledby="h" data-motion-owner={OWNER} data-phase="initial">
-      {/* Each word performs its numbered exhibit, then rests as plain type. */}
+      {/* Each word performs its numbered exhibit, then rests frozen mid-effect, as on the poster. Poses live in globals.css. */}
       <h1 id="h" aria-label="Every way a page can move." data-intro>
         <span className="w" data-word="every" aria-hidden="true">
-          <span className="t">Every</span>
+          <span className="t">
+            <span className="ch">E</span>
+            <span className="ch">v</span>
+            <span className="ch">e</span>
+            <span className="ch">r</span>
+            <span className="ch">y</span>
+          </span>
           <sup>02</sup>
         </span>{" "}
         <span className="w us" data-word="way" aria-hidden="true">
@@ -185,7 +191,12 @@ export function Hero() {
           <span className="t">a</span>
         </span>{" "}
         <span className="w" data-word="page" aria-hidden="true">
-          <span className="t">page</span>
+          <span className="t">
+            <span className="ch">p</span>
+            <span className="ch">a</span>
+            <span className="ch">g</span>
+            <span className="ch">e</span>
+          </span>
           <sup>06</sup>
         </span>{" "}
         <span className="w" data-word="can" aria-hidden="true">

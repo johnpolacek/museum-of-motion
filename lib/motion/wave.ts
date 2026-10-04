@@ -1,13 +1,13 @@
 // Animaxxing recipe: the wave. Adapted to ripple across several text leaves as one line,
-// with the hero resting at weight 700 and moves scaled to the font size.
+// with weight moves returning to each letter's pose weight and moves scaled to the font size.
 import { gsap, SplitText, prefersReducedMotion } from "./gsap";
 
 /** Delay between neighbouring letters starting their move. */
 const RIPPLE = 0.03;
 /** Each letter is back at rest this many seconds after it starts. */
 const LETTER_TIME = 0.25;
-/** The headline's resting weight (globals.css). */
-const REST = 700;
+/** A letter's resting weight, inherited from its pose (globals.css). */
+const restWeight = (_: number, el: Element) => getComputedStyle(el.parentElement ?? el).fontWeight;
 
 const rnd = gsap.utils.random;
 type Move = (chars: HTMLElement[]) => gsap.core.Timeline;
@@ -31,7 +31,7 @@ function sweep(chars: HTMLElement[], vars: gsap.TweenVars, ease = "power2.inOut"
     .set(chars, { clearProps: "transform,opacity,fontWeight" });
 }
 
-/** The headline sits at 700, so weight moves dip lighter and come back. */
+/** Every weight move returns to the letter's own pose weight when its inline weight clears. */
 const MOVES: Move[] = [
   // Hop: each letter lifts and lands.
   (chars) => ripple(chars, { y: (_: number, el: Element) => -0.06 * em(el) }, "power2.out"),
@@ -49,7 +49,7 @@ const MOVES: Move[] = [
   (chars) =>
     gsap
       .timeline({ defaults: { overwrite: "auto" } })
-      .fromTo(chars, { fontWeight: 200 }, { fontWeight: REST, duration: LETTER_TIME, ease: "power2.out", stagger: RIPPLE, immediateRender: false })
+      .fromTo(chars, { fontWeight: 200 }, { fontWeight: restWeight, duration: LETTER_TIME, ease: "power2.out", stagger: RIPPLE, immediateRender: false })
       .set(chars, { clearProps: "fontWeight" }),
   // Shear: a quick italic slant.
   (chars) => ripple(chars, { skewX: 12 }, "power2.inOut"),
@@ -61,7 +61,8 @@ const MOVES: Move[] = [
 
 /** Pins each letter to its resting width so weight changes cannot reflow the line. */
 function pinWidths(chars: HTMLElement[]): void {
-  const widths = chars.map((char) => char.getBoundingClientRect().width);
+  // Layout width, not the box on screen: a pose like the skew on "can" would inflate it.
+  const widths = chars.map((char) => parseFloat(getComputedStyle(char).width));
   chars.forEach((char, i) => {
     char.style.display = "inline-block";
     char.style.width = `${widths[i] ?? 0}px`;

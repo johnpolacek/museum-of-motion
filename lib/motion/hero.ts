@@ -17,6 +17,7 @@ function parts(root: HTMLElement) {
     h1: one("h1"),
     words: all("[data-word]"),
     leaves: all("[data-word] .t"),
+    chars: (key: string) => all(`[data-word="${key}"] .ch`),
     sups: all("[data-word] sup"),
     word,
     leaf,
@@ -34,7 +35,8 @@ export const heroLeaves = (root: HTMLElement) => parts(root).leaves;
 
 /** Holds a word's layout box at its current width while its type changes width or weight. */
 function pinWidth(el: HTMLElement) {
-  gsap.set(el, { width: el.getBoundingClientRect().width });
+  // Layout width, unaffected by resting transforms such as the skew on "can".
+  gsap.set(el, { width: parseFloat(getComputedStyle(el).width) });
 }
 
 export type HeroIntro = {
@@ -58,6 +60,11 @@ export function heroIntro(root: HTMLElement): HeroIntro {
     for (const t of ([] as HTMLElement[]).concat(targets)) touched.add(t);
     tl.fromTo(targets, from, to, at);
   };
+  /** Enters from `vars` to the element's resting CSS values. */
+  const land = (targets: HTMLElement | HTMLElement[], vars: gsap.TweenVars, at: number) => {
+    for (const t of ([] as HTMLElement[]).concat(targets)) touched.add(t);
+    tl.from(targets, { ...vars, immediateRender: true }, at);
+  };
   const reveal = [p.h1, p.rule, p.sub, p.list, ...p.items];
   for (const el of reveal) touched.add(el);
 
@@ -72,57 +79,39 @@ export function heroIntro(root: HTMLElement): HeroIntro {
     const sup = (key: string, at: number) =>
       tween(p.sup(key), { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: ENTER }, at);
 
-    // 02 Characters on "Every": letters drop in one after another and bounce to rest.
-    const every = SplitText.create(p.leaf("every"), { type: "chars", aria: "none" });
-    splits.push(every);
-    tween(
-      every.chars as HTMLElement[],
-      { yPercent: -70, autoAlpha: 0 },
-      { yPercent: 0, autoAlpha: 1, duration: 0.8, ease: ENTER, stagger: 0.04 },
-      0,
-    );
+    // Headline words land on the poster's frozen poses, which live in globals.css.
+    // `from` tweens read those resting values, so CSS stays the one source of the pose.
+
+    // 02 Characters on "Every": letters drop in one after another and land mid-flight, fading as they rise.
+    const everyChars = p.chars("every");
+    land(everyChars, { yPercent: -70, autoAlpha: 0, duration: 0.8, ease: ENTER, stagger: 0.04 }, 0);
     sup("every", 0.85);
 
-    // 39 Underline sweep on "way": the word widens from condensed while a rule sweeps under it and away.
+    // 39 Underline sweep on "way": the word widens from condensed while its underline sweeps in from the start.
     pinWidth(p.word("way"));
     touched.add(p.word("way"));
-    tween(
-      p.leaf("way"),
-      { fontStretch: "62%", autoAlpha: 0 },
-      { fontStretch: "100%", autoAlpha: 1, duration: 0.8, ease: ENTER },
-      0.22,
-    );
-    tween(p.underline, { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: 0.45, ease: "power2.out" }, 0.3);
-    tl.to(p.underline, { scaleX: 0, transformOrigin: "100% 50%", duration: 0.35, ease: EXIT }, 0.85);
+    land(p.leaf("way"), { fontStretch: "62%", autoAlpha: 0, duration: 0.8, ease: ENTER }, 0.22);
+    land(p.underline, { scaleX: 0, transformOrigin: "0% 50%", duration: 0.6, ease: "power2.out" }, 0.3);
     sup("way", 1.0);
 
     // "a" has no exhibit. It simply rises.
-    tween(p.leaf("a"), { yPercent: 40, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: 0.6, ease: ENTER }, 0.42);
+    land(p.leaf("a"), { yPercent: 40, autoAlpha: 0, duration: 0.6, ease: ENTER }, 0.42);
 
-    // 06 Weight wave on "page": letters arrive hairline and gain weight in a wave.
-    const page = SplitText.create(p.leaf("page"), { type: "chars", aria: "none" });
-    splits.push(page);
-    const pageChars = page.chars as HTMLElement[];
+    // 06 Weight wave on "page": letters arrive hairline and gain weight, each to its own pose weight.
+    const pageChars = p.chars("page");
     // Pinned at resting width so the weight axis moves without reflowing the line.
-    for (const c of pageChars) {
-      c.style.width = `${c.getBoundingClientRect().width}px`;
-      c.style.textAlign = "center";
-    }
-    tween(
-      pageChars,
-      { fontWeight: 100, autoAlpha: 0 },
-      { fontWeight: 700, autoAlpha: 1, duration: 0.9, ease: ENTER, stagger: 0.08 },
-      0.5,
-    );
+    for (const c of pageChars) pinWidth(c);
+    touched.add(p.word("page"));
+    land(pageChars, { fontWeight: 100, autoAlpha: 0, duration: 0.9, ease: ENTER, stagger: 0.08 }, 0.5);
     sup("page", 1.4);
 
-    // 29 Velocity skew on "can": it rushes in leaning hard and springs upright. The screen's one elastic.
-    tween(p.leaf("can"), { xPercent: 60, skewX: -30 }, { xPercent: 0, skewX: 0, duration: 1.0, ease: "elastic.out(1, 0.5)" }, 0.72);
-    tween(p.leaf("can"), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.2, ease: "none" }, 0.72);
+    // 29 Velocity skew on "can": it rushes in leaning hard and springs back to its resting lean. The screen's one elastic.
+    land(p.leaf("can"), { xPercent: 60, skewX: -40, duration: 1.0, ease: "elastic.out(1, 0.5)" }, 0.72);
+    land(p.leaf("can"), { autoAlpha: 0, duration: 0.2, ease: "none" }, 0.72);
     sup("can", 1.45);
 
-    // 01 Line mask on "move.": the line rises from behind its mask.
-    tween(p.leaf("move"), { yPercent: 110 }, { yPercent: 0, duration: 0.8, ease: ENTER }, 0.95);
+    // 01 Line mask on "move.": the line rises from behind its mask and holds partway, as on the poster.
+    land(p.leaf("move"), { yPercent: 110, duration: 0.8, ease: ENTER }, 0.95);
     sup("move", 1.7);
 
     // Rule draws across. power3.out, not the signature: an overshoot would push it past the page edge.
@@ -159,7 +148,7 @@ export function heroOutro(root: HTMLElement): gsap.core.Timeline {
   tl.to(ui, { autoAlpha: 0, y: -8, duration: 0.25, ease: EXIT, stagger: 0.012 }, 0)
     .to(p.rule, { scaleX: 0, transformOrigin: "100% 50%", duration: 0.3, ease: EXIT }, 0)
     .to(p.sups, { autoAlpha: 0, duration: 0.15, ease: EXIT }, 0)
-    .to(p.underline, { scaleX: 0, duration: 0.15, ease: EXIT }, 0)
+    .to(p.underline, { scaleX: 0, transformOrigin: "100% 50%", duration: 0.2, ease: EXIT }, 0)
     .to(p.leaves, { fontStretch: "62%", yPercent: 125, duration: 0.32, ease: EXIT, stagger: 0.03 }, 0.06)
     .set([p.h1, p.rule], { autoAlpha: 0 });
   return tl;
