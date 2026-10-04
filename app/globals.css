@@ -265,6 +265,24 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win svg { display: block; width: 100%; height: 100%; }
 .ex .win .w-statement { min-height: 100%; display: grid; place-items: center; padding: 0 var(--gut); }
 .ex .win .w-statement p { margin: 0; max-width: 18ch; font-size: clamp(32px, 4.6vw, 72px); line-height: 1.05; letter-spacing: -0.03em; font-weight: 600; font-stretch: 82%; }
+.ex .win .w-depth { position: relative; height: 170cqh; overflow: clip; display: grid; place-items: center; }
+.ex .win .w-depth > * { grid-area: 1 / 1; }
+.ex .win .d-rings { width: min(120cqh, 90%); height: auto; }
+.ex .win .d-num { font-weight: 900; font-stretch: 62%; font-size: 92cqh; line-height: 0.8; color: transparent; -webkit-text-stroke: 2px rgba(255,255,255,0.35); }
+.ex .win .d-plate { width: min(48cqh, 40%); aspect-ratio: 4 / 5; overflow: hidden; translate: 55% 0; }
+.ex .win .d-word { display: flex; font-size: clamp(64px, 24cqh, 190px); font-weight: 900; font-stretch: 75%; text-transform: none; line-height: 0.9; letter-spacing: -0.02em; }
+.ex .win .d-word span { display: inline-block; }
+.ex .win .d-tag { justify-self: start; align-self: start; margin: 18% 0 0 8%; }
+.ex .win .d-tag-b { justify-self: end; align-self: end; margin: 0 8% 22% 0; }
+.ex .win .d-dot { width: 14px; height: 14px; background: #fff; justify-self: start; align-self: center; margin-left: 18%; }
+.ex .win .d-dot-b { width: 22px; height: 22px; background: var(--ink); justify-self: end; margin: 0 22% 0 0; align-self: start; margin-top: 30%; }
+.ex .win .d-dot-c { width: 10px; height: 10px; justify-self: center; align-self: end; margin-bottom: 18%; }
+.ex .win .w-windows { display: grid; grid-template-columns: repeat(3, minmax(0, min(26vw, 52cqh))); justify-content: center; gap: calc(var(--gut) * 1.5); padding: 40cqh var(--gut); }
+.ex .win .w-window { margin: 0; display: grid; gap: 10px; align-content: start; }
+.ex .win .w-window:nth-child(2) { margin-top: 18cqh; }
+/* The frame stays put and clips; the picture inside is taller than the frame and slides past it. */
+.ex .win .w-frame { position: relative; aspect-ratio: 3 / 4; overflow: clip; background: var(--ink); }
+.ex .win .w-window-in { position: absolute; left: 0; right: 0; top: -22%; height: 144%; }
 .ex .win .w-sec { min-height: 100%; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: center; gap: var(--gut); padding: 40px var(--gut); }
 .ex .win h3 { margin: 0; font-weight: 800; font-stretch: 75%; text-transform: uppercase; font-size: clamp(28px, 4vw, 60px); line-height: 0.9; }
 .ex .win .w-scene { position: relative; height: 100%; min-height: 260px; }

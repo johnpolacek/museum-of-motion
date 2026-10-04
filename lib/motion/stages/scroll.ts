@@ -95,13 +95,27 @@ const statement = play(["Words", "Chars"], ["words", "chars"], SCROLL_HINT, (tex
 
 /* ---------- Parallax ---------- */
 
-const parallaxStage = play(["Parallax"], ["parallax"], SCROLL_HINT, (text) =>
-  windowed(
-    text,
-    `${CUE}${[24, 25, 26]
-      .map((n, i) => `<section class="w-sec"><div class="w-media" data-parallax="-70">${poster(n, i)}</div><h3 data-parallax="40">Layer ${i + 1}</h3></section>`)
-      .join("")}${END}`,
-    (win) => all(win, ".w-sec").map((sec) => parallax(sec, { scroller: win })),
+// Depth: seven planes at seven speeds. The letters of the word travel opposite ways and only line up
+// as the scene crosses the middle of the window, where every layer's travel passes through zero.
+const DEPTH_LETTERS: Array<[string, number]> = [["D", 150], ["e", -90], ["p", 60], ["t", -140], ["h", 110]];
+const DEPTH = `<section class="w-depth">
+  <svg class="d-rings" data-parallax="-220" viewBox="0 0 400 400" aria-hidden="true"><g fill="none" stroke="#fff" stroke-width="1.5" opacity="0.28"><circle cx="200" cy="200" r="190"/><circle cx="200" cy="200" r="140"/><circle cx="200" cy="200" r="90"/><circle cx="200" cy="200" r="40"/></g></svg>
+  <b class="d-num" data-parallax="-130">27</b>
+  <div class="d-plate" data-parallax="-50">${poster(27, 0)}</div>
+  <h3 class="d-word">${DEPTH_LETTERS.map(([c, t]) => `<span data-parallax="${t}">${c}</span>`).join("")}</h3>
+  <span class="d-tag lab d-tag-a" data-parallax="240">Far · slow</span>
+  <span class="d-tag lab d-tag-b" data-parallax="300">Near · fast</span>
+  <i class="d-dot d-dot-a" data-parallax="320"></i><i class="d-dot d-dot-b" data-parallax="-260"></i><i class="d-dot d-dot-c" data-parallax="200"></i>
+</section>`;
+
+// Windows: each frame holds still while the picture inside slides past it, taller than its frame.
+const WINDOWS = `<section class="w-windows">${[0, 1, 2]
+  .map((i) => `<figure class="w-window"><div class="w-frame"><div class="w-window-in" data-parallax="${[-70, 90, -110][i]}">${poster(25 + i, i + 1)}</div></div><figcaption class="lab" data-parallax="${[24, -24, 32][i]}">Window ${i + 1}</figcaption></figure>`)
+  .join("")}</section>`;
+
+const parallaxStage = play(["Depth", "Windows"], ["depth", "windows"], SCROLL_HINT, (text, p) =>
+  windowed(text, `${CUE}${p.variation === "windows" ? WINDOWS : DEPTH}${END}`, (win) =>
+    all(win, ".w-depth, .w-windows").map((sec) => parallax(sec, { scroller: win })),
   ),
 );
 
