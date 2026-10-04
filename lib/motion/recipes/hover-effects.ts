@@ -208,6 +208,89 @@ export function underlineSweep(link: HTMLElement): Teardown {
   });
 }
 
+export type Edge = "top" | "right" | "bottom" | "left";
+export type DirectionalFillOptions = {
+  duration?: number;
+  /** Edge keyboard focus fills from. */
+  focusFrom?: Edge;
+};
+
+/** The fill's clip, collapsed onto each edge. */
+const COLLAPSED: Record<Edge, string> = {
+  top: "inset(0% 0% 100% 0%)",
+  right: "inset(0% 0% 0% 100%)",
+  bottom: "inset(100% 0% 0% 0%)",
+  left: "inset(0% 100% 0% 0%)",
+};
+const FULL = "inset(0% 0% 0% 0%)";
+
+/** The edge nearest a point, weighed by the box's aspect so a wide tile's sides are not too easy to hit. */
+function nearestEdge(box: DOMRect, x: number, y: number): Edge {
+  const dx = (x - box.left - box.width / 2) / box.width;
+  const dy = (y - box.top - box.height / 2) / box.height;
+  return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : dy > 0 ? "bottom" : "top";
+}
+
+export function directionalFill(target: HTMLElement, fill: HTMLElement, { duration = 0.3, focusFrom = "bottom" }: DirectionalFillOptions = {}): Teardown {
+  const reduced = prefersReducedMotion();
+  return own((dispose, after) => {
+    after(snapshotStyles([fill], ["clip-path"]));
+    dispose(() => gsap.killTweensOf(fill));
+    gsap.set(fill, { clipPath: COLLAPSED.top });
+    let hovered = false;
+    let focused = false;
+    let pressed = false;
+    let shown = false;
+    const go = (show: boolean, edge: Edge) => {
+      if (show === shown) return;
+      shown = show;
+      // Entering starts collapsed on the entry edge; leaving collapses onto the exit edge.
+      if (show) gsap.set(fill, { clipPath: COLLAPSED[edge] });
+      gsap.to(fill, {
+        clipPath: show ? FULL : COLLAPSED[edge],
+        duration: reduced ? 0 : show ? duration : duration * 0.8,
+        ease: show ? "power3.out" : "power2.in",
+        overwrite: "auto",
+      });
+    };
+    const edgeOf = (event: PointerEvent) => nearestEdge(target.getBoundingClientRect(), event.clientX, event.clientY);
+    const sync = (edge: Edge) => go(hovered || focused || pressed, edge);
+
+    listen(dispose, target, "pointerenter", (event) => {
+      if (event.pointerType !== "mouse") return;
+      hovered = true;
+      sync(edgeOf(event));
+    });
+    listen(dispose, target, "pointerleave", (event) => {
+      if (event.pointerType !== "mouse") return;
+      hovered = false;
+      sync(edgeOf(event));
+    });
+    listen(dispose, target, "pointerdown", (event) => {
+      if (event.pointerType === "mouse") return;
+      pressed = true;
+      sync(edgeOf(event));
+    });
+    const lift = (event: PointerEvent) => {
+      if (event.pointerType === "mouse" || !pressed) return;
+      pressed = false;
+      sync(edgeOf(event));
+    };
+    listen(dispose, target, "pointerup", lift);
+    listen(dispose, target, "pointercancel", lift);
+    listen(dispose, target, "focusin", (event) => {
+      if (!(event.target as Element).matches(":focus-visible")) return;
+      focused = true;
+      sync(focusFrom);
+    });
+    listen(dispose, target, "focusout", (event) => {
+      if (target.contains(event.relatedTarget as Node | null)) return;
+      focused = false;
+      sync(focusFrom);
+    });
+  });
+}
+
 export type ImageZoomOptions = {
   /** Defaults to `[data-zoom-image]` inside the card, else its first `img` or `video`. */
   image?: HTMLElement | null;

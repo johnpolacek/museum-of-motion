@@ -410,6 +410,13 @@ const DATA: Exhibit[] = [
     desc: "The image scales up slightly while its card is hot."
   },
   {
+    name: "Directional fill",
+    group: "pointer",
+    builders: "directionalFill",
+    src: "hover-effects",
+    desc: "A fill slides in from the side the mouse came from and out the side it leaves."
+  },
+  {
     name: "Hover preview",
     group: "pointer",
     builders: "hoverPreview",
@@ -429,6 +436,13 @@ const DATA: Exhibit[] = [
     builders: "tilt",
     src: "pointer-effects",
     desc: "A card tilts toward the mouse in 3D."
+  },
+  {
+    name: "Spotlight",
+    group: "pointer",
+    builders: "spotlight",
+    src: "pointer-effects",
+    desc: "A circle follows the mouse and uncovers a second layer."
   },
   {
     name: "Cursor follower",

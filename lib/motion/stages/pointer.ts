@@ -3,9 +3,9 @@
 // lib/motion/recipes. Nothing loops: the stage waits for the visitor, so it shows a hint instead of a scrub.
 import { gsap, SplitText } from "../gsap";
 import { live, play, type StageDef } from "../stage-core";
-import { imageZoom, textRoll, underlineSweep } from "../recipes/hover-effects";
+import { directionalFill, imageZoom, textRoll, underlineSweep } from "../recipes/hover-effects";
 import { hoverPreview } from "../recipes/media-effects";
-import { cursorFollower, dragTrack, imageTrail, magnetic, momentumHover, proximity, tilt } from "../recipes/pointer-effects";
+import { cursorFollower, dragTrack, imageTrail, magnetic, momentumHover, proximity, spotlight, tilt } from "../recipes/pointer-effects";
 import { morphToggle } from "../recipes/svg-effects";
 import { dialogMotion, disclosure, enterExit, menuOverlay, tabIndicator } from "../recipes/component-motion";
 import { captureLayout, captureShared, playShared } from "../recipes/layout-flip";
@@ -64,6 +64,26 @@ const zoom = play(["Image zoom"], ["zoom"], "Hover or tab to a card.", (text) =>
       .map((n, i) => `<article class="card"><button type="button" class="card-hit"><span class="frame"><span data-zoom-image>${poster(n, i)}</span></span><span class="card-title">${NAMES[i]}</span></button></article>`)
       .join("")}</div>`,
     (layer) => all(layer, ".card").map((c) => imageZoom(c)),
+  ),
+);
+
+/* ---------- Directional fill ---------- */
+
+const fillTiles = play(["Directional fill"], ["fill"], "Move the mouse across the tiles, in and out from any side. Tab or tap one.", (text) =>
+  live(
+    text,
+    `<nav class="fills" aria-label="Sample">${["Collection", "Exhibits", "Recipes", "About"].map((l) => `<button type="button" class="fill-tile"><span class="fill-tile-fill" aria-hidden="true"></span><span>${l}</span></button>`).join("")}</nav>`,
+    (layer) => all(layer, ".fill-tile").map((t) => directionalFill(t, one(t, ".fill-tile-fill"), { focusFrom: "left" })),
+  ),
+);
+
+/* ---------- Spotlight ---------- */
+
+const spot = play(["Spotlight"], ["spot"], "Move the mouse over the poster. Press and hold on touch. Tab to open it all.", (text) =>
+  live(
+    text,
+    `<div class="spot" tabindex="0" aria-label="Poster with a hidden layer"><div class="spot-base"><b>Every way<br>a page<br>can move.</b></div><div class="spot-reveal"><b>Every way<br>a page<br>can move.</b></div></div>`,
+    (layer) => [spotlight(one(layer, ".spot"), one(layer, ".spot-reveal"), { radius: 110 })],
   ),
 );
 
@@ -560,9 +580,11 @@ export const POINTER_STAGES: Record<string, StageDef> = {
   "label-roll": labelRoll,
   "underline-sweep": underline,
   "image-zoom": zoom,
+  "directional-fill": fillTiles,
   "hover-preview": preview,
   magnetic: magnet,
   tilt: tiltCards,
+  spotlight: spot,
   "cursor-follower": follower,
   "momentum-hover": momentum,
   proximity: dock,

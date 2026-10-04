@@ -281,6 +281,96 @@ export function cursorFollower(cursor: HTMLElement, { label, labelSpeed = 60 }: 
   });
 }
 
+export type SpotlightOptions = {
+  /** Circle radius in px while the mouse is over the surface. */
+  radius?: number;
+  /** Seconds the circle takes to catch the mouse. */
+  follow?: number;
+};
+
+export function spotlight(surface: HTMLElement, layer: HTMLElement, { radius = 120, follow = 0.35 }: SpotlightOptions = {}): Teardown {
+  const reduced = prefersReducedMotion();
+  return own((dispose, after) => {
+    after(snapshotStyles([layer], ["clip-path"]));
+    const spot = { x: 0, y: 0, r: 0 };
+    const draw = () => {
+      layer.style.clipPath = `circle(${spot.r}px at ${spot.x}px ${spot.y}px)`;
+    };
+    draw();
+    // Reduced motion places the circle on the pointer directly; a zero-length quickTo would not write.
+    const place = (prop: "x" | "y") => (value: number) => {
+      spot[prop] = value;
+      draw();
+    };
+    const toX = reduced ? place("x") : gsap.quickTo(spot, "x", { duration: follow, ease: FOLLOW_EASE, onUpdate: draw });
+    const toY = reduced ? place("y") : gsap.quickTo(spot, "y", { duration: follow, ease: FOLLOW_EASE, onUpdate: draw });
+    dispose(() => gsap.killTweensOf(spot));
+    /** The pointer within the surface; `jump` places the circle there without sliding in. */
+    const aim = (event: PointerEvent, jump = false) => {
+      const box = surface.getBoundingClientRect();
+      const x = event.clientX - box.left;
+      const y = event.clientY - box.top;
+      toX(x, jump ? x : undefined);
+      toY(y, jump ? y : undefined);
+    };
+    const open = (to: number, entering: boolean) =>
+      gsap.to(spot, {
+        r: to,
+        duration: reduced ? 0 : entering ? 0.5 : 0.3,
+        ease: entering ? "back.out(1.6)" : "power2.in",
+        overwrite: "auto",
+        onUpdate: draw,
+      });
+    /** Enough to cover the whole surface from its center. */
+    const whole = () => {
+      const box = surface.getBoundingClientRect();
+      return Math.hypot(box.width, box.height) / 2 + 1;
+    };
+    let focused = false;
+    let held = false;
+
+    listen(dispose, surface, "pointerenter", (event) => {
+      if (event.pointerType !== "mouse" || focused) return;
+      aim(event, true);
+      open(radius, true);
+    });
+    listen(dispose, surface, "pointermove", (event) => {
+      if ((event.pointerType === "mouse" || held) && !focused) aim(event);
+    });
+    listen(dispose, surface, "pointerleave", (event) => {
+      if (event.pointerType === "mouse" && !focused) open(0, false);
+    });
+    // Touch and pen: press and hold. A scroll that starts cancels the pointer, and the circle closes.
+    listen(dispose, surface, "pointerdown", (event) => {
+      if (event.pointerType === "mouse" || focused) return;
+      held = true;
+      aim(event, true);
+      open(radius, true);
+    });
+    const release = (event: PointerEvent) => {
+      if (event.pointerType === "mouse" || !held) return;
+      held = false;
+      if (!focused) open(0, false);
+    };
+    listen(dispose, surface, "pointerup", release);
+    listen(dispose, surface, "pointercancel", release);
+    // Keyboard: the whole layer opens from the center while focus is inside.
+    listen(dispose, surface, "focusin", (event) => {
+      if (!(event.target as Element).matches(":focus-visible")) return;
+      focused = true;
+      const box = surface.getBoundingClientRect();
+      toX(box.width / 2, box.width / 2);
+      toY(box.height / 2, box.height / 2);
+      open(whole(), true);
+    });
+    listen(dispose, surface, "focusout", (event) => {
+      if (surface.contains(event.relatedTarget as Node | null) || !focused) return;
+      focused = false;
+      open(0, false);
+    });
+  });
+}
+
 export type MomentumOptions = {
   /** Selects the hit areas inside the root. */
   items?: string;

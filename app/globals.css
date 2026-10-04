@@ -134,6 +134,14 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 /* Interactive stages: real controls on the stage, styled like the site's pills and type. */
 .ex .controls .hint { grid-column: 1 / -1; margin: 0; }
 .ex .stage-art.live { padding: 0 var(--gut); }
+.ex .stage-art .fills { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: min(92%, 760px); border-top: 1px solid rgba(255,255,255,0.5); border-left: 1px solid rgba(255,255,255,0.5); }
+.ex .stage-art .fill-tile { position: relative; isolation: isolate; display: grid; place-items: center; height: clamp(72px, 12vw, 130px); font: 700 clamp(18px, 2.6vw, 34px)/1 var(--sans); font-stretch: 80%; letter-spacing: -0.01em; color: #fff; background: none; border: 0; border-right: 1px solid rgba(255,255,255,0.5); border-bottom: 1px solid rgba(255,255,255,0.5); cursor: pointer; }
+.ex .stage-art .fill-tile-fill { position: absolute; inset: 0; z-index: -1; background: var(--ink); clip-path: inset(0 0 100% 0); }
+.ex .stage-art .spot { position: relative; width: min(92%, 760px); aspect-ratio: 16 / 7; background: var(--ink); color: rgba(255,255,255,0.18); }
+.ex .stage-art .spot b { display: grid; place-content: center start; height: 100%; padding: 0 6%; font-weight: 800; font-stretch: 75%; font-size: clamp(30px, 6.4vw, 92px); line-height: 0.9; letter-spacing: -0.02em; }
+.ex .stage-art .spot-base { height: 100%; }
+.ex .stage-art .spot-reveal { position: absolute; inset: 0; background: #fff; color: var(--blue); clip-path: circle(0px at 50% 50%); }
+.ex .stage-art .spot-reveal b { font-weight: 900; font-stretch: 125%; }
 .ex .stage-art .btns { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
 .ex .stage-art .pill { font: 600 14px/1 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: inherit; background: none; border: 1px solid rgba(255,255,255,0.6); border-radius: 99px; padding: 12px 20px; cursor: pointer; }
 .ex .stage-art .pill.big { font-size: clamp(14px, 1.6vw, 20px); padding: 18px 30px; }
