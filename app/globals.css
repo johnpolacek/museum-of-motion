@@ -15,7 +15,8 @@ a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .blue { background: var(--blue); color: #fff; }
 
 .mast { display: flex; justify-content: space-between; align-items: center; height: 64px; }
-.mast .word { font-weight: 800; font-stretch: 75%; font-size: 18px; letter-spacing: 0.02em; text-transform: uppercase; }
+.mast .word { font-weight: 800; font-stretch: 75%; font-size: 18px; letter-spacing: 0.02em; text-transform: uppercase; font-kerning: none; text-rendering: optimizeSpeed; }
+.mast .wm { display: inline-block; }
 .mast nav { display: flex; gap: 28px; }
 
 /* Hero */

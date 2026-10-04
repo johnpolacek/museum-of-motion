@@ -6,6 +6,7 @@ import { finished, fontsReady, gsap, prefersReducedMotion, useGSAP } from "@/lib
 import { armRecovery, claimVisit, disarm, handOff } from "@/lib/motion/boot";
 import { heroIntro, heroLeaves, heroOutro, type HeroIntro } from "@/lib/motion/hero";
 import { startWave, type WaveStop } from "@/lib/motion/wave";
+import { announceHeroSettled } from "@/lib/motion/events";
 import { useTransitionController } from "./motion/TransitionProvider";
 
 const OWNER = "hero";
@@ -63,6 +64,7 @@ export function Hero() {
         intro?.finish();
         gsap.set(targets, { clearProps: "opacity,visibility" });
         el.dataset.phase = "settled";
+        announceHeroSettled();
         if (!animate) return;
         runWave();
         io = new IntersectionObserver(([entry]) => {

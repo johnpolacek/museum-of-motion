@@ -1,8 +1,11 @@
 "use client";
 
 // The masthead persists across pages: one intro on first load, no outro.
+// Its wordmark performs last, a letter-by-letter tour of the collection.
 import { useRef } from "react";
-import { gsap, prefersReducedMotion, useGSAP } from "@/lib/motion/gsap";
+import { fontsReady, gsap, prefersReducedMotion, useGSAP } from "@/lib/motion/gsap";
+import { heroSettled } from "@/lib/motion/events";
+import { wordmarkTour, type WordmarkTour } from "@/lib/motion/wordmark";
 import { armRecovery, claimVisit, disarm, handOff } from "@/lib/motion/boot";
 import { TransitionLink } from "./motion/TransitionLink";
 
@@ -13,14 +16,16 @@ export function Masthead() {
   const visit = useRef<"animate" | "settle">(null);
 
   useGSAP(
-    () => {
+    (_, contextSafe) => {
       const el = root.current!;
       visit.current ??= claimVisit(OWNER);
-      const word = el.querySelector<HTMLElement>(".word")!;
+      const leaf = el.querySelector<HTMLElement>(".word .wm")!;
       const links = Array.from(el.querySelectorAll<HTMLElement>("nav a"));
-      const targets = [word, ...links];
+      let alive = true;
+      let tour: WordmarkTour | null = null;
       const settle = () => {
-        gsap.set(targets, { clearProps: "opacity,visibility,transform,fontStretch,fontWeight" });
+        tour?.finish();
+        gsap.set([leaf, ...links], { clearProps: "opacity,visibility,transform" });
         el.dataset.phase = "settled";
       };
       if (visit.current === "settle" || prefersReducedMotion()) {
@@ -28,32 +33,52 @@ export function Masthead() {
         handOff(OWNER);
         return;
       }
-      armRecovery(OWNER, settle);
+      armRecovery(OWNER, () => {
+        alive = false;
+        tour?.timeline.kill();
+        settle();
+      });
 
-      // Wordmark arrives condensed and light, then widens and gains weight to rest.
-      const tl = gsap.timeline({ defaults: { overwrite: "auto" }, onComplete: settle });
-      tl.fromTo(
-        word,
-        { autoAlpha: 0, fontStretch: "62%", fontWeight: 200 },
-        { autoAlpha: 1, fontStretch: "75%", fontWeight: 800, duration: 0.8, ease: "signature" },
-        0,
-      ).fromTo(
+      // Nav labels rise in with the page. The wordmark waits its turn: it performs last.
+      gsap.set(leaf, { autoAlpha: 0 });
+      gsap.fromTo(
         links,
         { autoAlpha: 0, y: 10 },
-        { autoAlpha: 1, y: 0, duration: 0.4, ease: "signature", stagger: 0.04 },
-        0.2,
+        { autoAlpha: 1, y: 0, duration: 0.4, ease: "signature", stagger: 0.04, delay: 0.2, clearProps: "transform" },
       );
       el.dataset.phase = "intro";
       handOff(OWNER);
-      return () => disarm(OWNER);
+
+      // On the home page, after the hero lands. Elsewhere, a beat after the page appears.
+      const cue = window.location.pathname === "/" ? heroSettled(5000) : new Promise((r) => setTimeout(r, 400));
+      Promise.all([cue, fontsReady(600)]).then(
+        contextSafe!(() => {
+          if (!alive) return;
+          try {
+            tour = wordmarkTour(leaf);
+          } catch (error) {
+            console.error(error);
+            settle();
+            return;
+          }
+          tour.timeline.eventCallback("onComplete", settle).play();
+        }),
+      );
+      return () => {
+        alive = false;
+        disarm(OWNER);
+        tour?.finish();
+      };
     },
     { scope: root },
   );
 
   return (
     <header ref={root} className="mast wrap blue" data-motion-owner={OWNER} data-phase="initial">
-      <TransitionLink className="word" href="/" data-intro>
-        Museum of Motion
+      <TransitionLink className="word" href="/">
+        <span className="wm" data-intro>
+          Museum of Motion
+        </span>
       </TransitionLink>
       <nav className="lab" aria-label="Main">
         <TransitionLink href="/#collection" data-intro>
