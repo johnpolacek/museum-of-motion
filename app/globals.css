@@ -55,7 +55,9 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .coll { padding-top: clamp(64px, 8vw, 128px); padding-bottom: clamp(64px, 8vw, 128px); }
 .coll > header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: clamp(32px, 4vw, 64px); }
 .coll > header h2 { margin: 0; font-weight: 800; font-stretch: 75%; font-size: clamp(40px, 5vw, 88px); letter-spacing: -0.02em; text-transform: uppercase; line-height: 0.9; }
-.grp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 5fr); gap: var(--gut); padding: 22px 0 36px; border-top: 2px solid var(--ink); }
+.grp { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 5fr); gap: var(--gut); padding: 22px 0 36px; border-top: 2px solid transparent; }
+/* The group rule, drawn as its own element so it can draw across. The transparent border keeps its 2px of layout. */
+.grp-rule { position: absolute; top: -2px; left: 0; right: 0; height: 2px; background: var(--ink); }
 .grp .side p { margin: 8px 0 0; color: var(--mute); font-size: 14px; max-width: 22ch; }
 .names { margin: 0; font-weight: 600; font-stretch: 82%; font-size: clamp(30px, 3.9vw, 66px); line-height: 1.04; letter-spacing: -0.02em; }
 .names a { white-space: nowrap; }

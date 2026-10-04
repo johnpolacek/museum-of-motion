@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Archivo } from "next/font/google";
+import { Footer } from "@/components/Footer";
 import { Masthead } from "@/components/Masthead";
 import { TransitionProvider } from "@/components/motion/TransitionProvider";
 import { BOOT_SCRIPT } from "@/lib/motion/boot";
@@ -26,16 +27,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <TransitionProvider>
           <Masthead />
           {children}
+          <Footer />
         </TransitionProvider>
-        <footer className="foot wrap blue">
-          <div className="big">Museum of Motion</div>
-          <nav className="lab" aria-label="Credits">
-            <a href="https://github.com/johnpolacek/animaxxing-skills">Animaxxing skills ↗</a>
-            <a href="https://github.com/greensock/gsap-skills">Official GSAP skills ↗</a>
-            <a href="https://gsap.com">GSAP ↗</a>
-            <span>Type: Archivo</span>
-          </nav>
-        </footer>
       </body>
     </html>
   );

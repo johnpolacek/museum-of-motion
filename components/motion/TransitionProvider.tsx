@@ -1,16 +1,20 @@
 "use client";
 
-// Route transition controller. The current page registers an outro. A transition-aware link
-// cancels its navigation, waits for the outro to reach its end state, then pushes.
+// Route transition controller. Each owner on the page registers an outro. A transition-aware link
+// cancels its navigation, waits for every outro to reach its end state, then pushes.
 // Back and forward never run an outro: they arrive through the router as usual.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { ScrollTrigger } from "@/lib/motion/gsap";
 
-/** Plays the page outro. Returns null when there is nothing to show, so the link navigates natively. */
-export type Outro = () => Promise<void> | null;
+/** Where the navigation came from: the destination, and the link element clicked, if any. */
+export type OutroContext = { href: string; source: Element | null };
+
+/** Plays one part of the page's outro. Returns null when it has nothing on screen to move. */
+export type Outro = (context: OutroContext) => Promise<void> | null;
 
 type NavigateEvent = { preventDefault: () => void };
-type NavigateOptions = { replace?: boolean; scroll?: boolean };
+type NavigateOptions = { replace?: boolean; scroll?: boolean; source?: Element | null };
 
 type Controller = {
   registerOutro: (outro: Outro) => () => void;
@@ -27,7 +31,8 @@ const LOCK_WATCHDOG = 5000;
 export function TransitionProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const outro = useRef<Outro | null>(null);
+  // Every owner on the page registers its own outro: hero, collection. They play together.
+  const outros = useRef(new Set<Outro>());
   const token = useRef(0);
   const locked = useRef(false);
   const lockTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -37,17 +42,20 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
     token.current++;
     locked.current = false;
     clearTimeout(lockTimer.current);
+    // Persistent owners such as the footer keep their triggers across pages: remeasure for the new page.
+    const frame = requestAnimationFrame(() => ScrollTrigger.refresh());
+    return () => cancelAnimationFrame(frame);
   }, [pathname]);
 
   const registerOutro = useCallback((fn: Outro) => {
-    outro.current = fn;
+    outros.current.add(fn);
     return () => {
-      if (outro.current === fn) outro.current = null;
+      outros.current.delete(fn);
     };
   }, []);
 
   const navigate = useCallback(
-    (e: NavigateEvent, href: string, { replace, scroll }: NavigateOptions) => {
+    (e: NavigateEvent, href: string, { replace, scroll, source = null }: NavigateOptions) => {
       // One navigation at a time. The first accepted destination wins.
       if (locked.current) {
         e.preventDefault();
@@ -58,8 +66,9 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
       if (url.origin !== window.location.origin) return;
       if (url.pathname === window.location.pathname && url.search === window.location.search) return;
 
-      const run = outro.current?.();
-      if (!run) return;
+      const runs = [...outros.current].map((fn) => fn({ href, source })).filter((run) => run !== null);
+      if (!runs.length) return;
+      const run = Promise.all(runs);
       e.preventDefault();
       locked.current = true;
       const mine = ++token.current;

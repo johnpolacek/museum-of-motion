@@ -1,3 +1,4 @@
+import { CollectionMotion } from "@/components/CollectionMotion";
 import { Hero } from "@/components/Hero";
 import { TransitionLink } from "@/components/motion/TransitionLink";
 import { GROUPS, byGroup, two } from "@/lib/exhibits";
@@ -7,15 +8,16 @@ export default function Home() {
     <main>
       <Hero />
 
-      <section className="coll wrap" id="collection" aria-labelledby="coll-h">
-        <header>
+      <CollectionMotion>
+        <header className="coll-head" data-intro>
           <h2 id="coll-h">Collection</h2>
           <span className="lab">63 exhibits</span>
         </header>
         {GROUPS.map((g) => {
           const items = byGroup(g.key);
           return (
-            <section className="grp" key={g.key} aria-labelledby={`g-${g.key}`}>
+            <section className="grp" key={g.key} aria-labelledby={`g-${g.key}`} data-intro>
+              <i className="grp-rule" aria-hidden="true"></i>
               <div className="side">
                 <span className="lab" id={`g-${g.key}`}>
                   {g.name} · {items.length}
@@ -40,7 +42,7 @@ export default function Home() {
             </section>
           );
         })}
-      </section>
+      </CollectionMotion>
     </main>
   );
 }
