@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Museum of Motion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Layout: a review sheet. Title and brief on top, six directions as screenshot cards below, lettered for feedback. */
+  :root {
+    --bg: #f5f6f8; --fg: #121317; --mute: #5b606b; --line: #d9dce3; --frame: #ffffff; --accent: #2130ff;
+    --sans: 'Schibsted Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #0f1014; --fg: #eceef3; --mute: #9ba0ad; --line: #2a2d35; --frame: #17181d; --accent: #8f97ff; color-scheme: dark; }
+  }
+  :root[data-theme="dark"] { --bg: #0f1014; --fg: #eceef3; --mute: #9ba0ad; --line: #2a2d35; --frame: #17181d; --accent: #8f97ff; color-scheme: dark; }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 400 16px/1.55 var(--sans); -webkit-text-size-adjust: 100%; }
+  img { max-width: 100%; }
+  .page { max-width: 1240px; margin: 0 auto; padding-inline: clamp(16px, 3vw, 40px); padding-block: clamp(32px, 5vw, 72px) 56px; display: grid; gap: clamp(36px, 5vw, 64px); }
+  a { color: inherit; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
+  .label { font: 500 12px/1.4 var(--mono); letter-spacing: 0.04em; text-transform: uppercase; color: var(--mute); }
+
+  header { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px clamp(24px, 4vw, 64px); align-items: end; }
+  header .top { display: grid; gap: 14px; }
+  h1 { margin: 0; font-weight: 800; font-size: clamp(44px, 6.4vw, 92px); line-height: 0.95; letter-spacing: -0.035em; text-wrap: balance; }
+  .brief { display: grid; gap: 12px; max-width: 58ch; }
+  .brief p { margin: 0; }
+  .brief p.lede { font-size: 19px; line-height: 1.45; }
+  .brief p.note { color: var(--mute); font-size: 15px; }
+
+  .grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px clamp(16px, 2vw, 28px); }
+  .card { display: grid; gap: 14px; text-decoration: none; min-width: 0; }
+  .shot { display: block; width: 100%; max-width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; border: 1px solid var(--line); border-radius: 6px; background: var(--frame); transition: border-color 0.2s, transform 0.2s; }
+  .card .meta { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: baseline; }
+  .card .letter { grid-row: span 3; align-self: start; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--accent); color: var(--accent); font: 700 15px/1 var(--sans); }
+  .card h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.2; }
+  .card p { margin: 0; color: var(--fg); font-size: 15px; line-height: 1.45; }
+  .card .type { font: 400 12px/1.4 var(--mono); color: var(--mute); }
+  @media (hover: hover) {
+    .card:hover .shot { border-color: var(--accent); transform: translateY(-2px); }
+    .card:hover h2 { text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .shot { transition: none; } .card:hover .shot { transform: none; } }
+
+  footer { border-top: 1px solid var(--line); padding-top: 18px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; color: var(--mute); font-size: 14px; }
+
+  @media (max-width: 1000px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 760px) { header { grid-template-columns: 1fr; } }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="top">
+      <span class="label">Animating with Agents · demo directions</span>
+      <h1>Museum of Motion</h1>
+    </div>
+    <div class="brief">
+      <p class="lede">A fictional museum whose exhibits are the 63 effect recipes in the Animaxxing skills, grouped by what drives the motion: time, scroll, pointer, or drag.</p>
+      <p class="note">Each direction shows the same content: the landing view, the full collection, one exhibit page (01 Line mask), and About. These are static layouts. Play buttons, scrub bars, and hover states are drawn but don’t work yet.</p>
+    </div>
+  </header>
+
+  <ul class="grid" aria-label="Design directions">
+    <li><a class="card" href="a-index.html"><img class="shot" src="thumbs/a-index.jpg" alt="Direction A: a white page with a large black headline and four columns listing every exhibit by number." width="960" height="600"><span class="meta"><span class="letter" aria-hidden="true">A</span><h2>Index</h2><p>Swiss type directory on white. The landing view lists every exhibit by number. The exhibit page draws a paused frame as a diagram.</p><span class="type">Geist · Geist Mono</span></span></a></li>
+    <li><a class="card" href="b-notation.html"><img class="shot" src="thumbs/b-notation.jpg" alt="Direction B: a dark page with a grid of small line plots, one per exhibit." width="960" height="600"><span class="meta"><span class="letter" aria-hidden="true">B</span><h2>Notation</h2><p>Dark specimen sheet. Every exhibit is drawn as a small motion plot. The exhibit page pairs the real timing curve with a frame and a film strip.</p><span class="type">IBM Plex Sans · IBM Plex Mono</span></span></a></li>
+    <li><a class="card" href="c-poster.html"><img class="shot" src="thumbs/c-poster.jpg" alt="Direction C: a cobalt blue page with a huge white headline, each word caught mid-effect and numbered." width="960" height="600"><span class="meta"><span class="letter" aria-hidden="true">C</span><h2>Poster</h2><p>Cobalt field, large type. Each word of the headline is caught mid-effect and numbered to its exhibit.</p><span class="type">Archivo</span></span></a></li>
+    <li><a class="card" href="d-stack.html"><img class="shot" src="thumbs/d-stack.jpg" alt="Direction D: a yellow page with three ruled lines of condensed black capitals." width="960" height="600"><span class="meta"><span class="letter" aria-hidden="true">D</span><h2>Stack</h2><p>Yellow field, condensed capitals. Three ruled headline lines, one exhibit per line.</p><span class="type">Big Shoulders Display · Inter Tight</span></span></a></li>
+    <li><a class="card" href="e-rooms.html"><img class="shot" src="thumbs/e-rooms.jpg" alt="Direction E: a vermilion page showing exhibit 02 of 63 played on the headline, with arrows and a colored progress strip." width="960" height="600"><span class="meta"><span class="letter" aria-hidden="true">E</span><h2>Rooms</h2><p>A color for each group. The landing plays one exhibit at a time on the headline, with a pager.</p><span class="type">Bricolage Grotesque</span></span></a></li>
+    <li><a class="card" href="f-annotated.html"><img class="shot" src="thumbs/f-annotated.jpg" alt="Direction F: a black page with a wide white headline and lime callouts naming the effect on each word." width="960" height="600"><span class="meta"><span class="letter" aria-hidden="true">F</span><h2>Annotated</h2><p>Black field, wide type. Callouts with leader lines name the exhibit on each word.</p><span class="type">Unbounded · JetBrains Mono</span></span></a></li>
+  </ul>
+
+  <footer>
+    <span>Museum of Motion is fictional. The exhibits are real recipes from <a href="https://github.com/johnpolacek/animaxxing-skills">Animaxxing skills</a>.</span>
+    <span>Every direction has a phone layout too.</span>
+  </footer>
+</div>
+</body>
+</html>

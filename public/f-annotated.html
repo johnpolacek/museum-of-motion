@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Museum of Motion · F · Annotated</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Unbounded:wght@200..900&display=swap" rel="stylesheet">
+<style>
+  /* F. Annotated. Black field, wide type. Lime callouts name the exhibit playing on each word. */
+  :root {
+    --bg: #0e0e0e; --ink: #f2f2ee; --mute: #9a9a94; --line: #2c2c2a; --lime: #d4ff3f;
+    --display: 'Unbounded', system-ui, sans-serif; --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --gut: clamp(16px, 2.4vw, 36px);
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.55 var(--mono); }
+  a { color: inherit; text-decoration: none; }
+  a:focus-visible { outline: 1px solid var(--lime); outline-offset: 3px; }
+  .wrap { padding: 0 var(--gut); }
+  .mono { font: 400 12px/1.4 var(--mono); }
+  .mute { color: var(--mute); }
+  .lime { color: var(--lime); }
+
+  .mast { display: flex; justify-content: space-between; align-items: center; height: 60px; }
+  .mast .word { font: 700 15px/1 var(--display); letter-spacing: 0.01em; }
+  .mast nav { display: flex; gap: 24px; }
+
+  /* Hero */
+  .hero { min-height: calc(100svh - 60px); display: grid; grid-template-rows: 1fr auto; padding-bottom: 24px; }
+  .hero h1 { align-self: center; margin: 0; font: 700 clamp(36px, 8.3vw, 160px)/1 var(--display); letter-spacing: -0.03em; }
+  /* Words flow and wrap. Each keeps room above it for its callout. */
+  .w { display: inline-block; position: relative; margin: 0.62em 0.22em 0 0; line-height: 1; }
+  .w:last-child { margin-right: 0; }
+  .w > .call + * { vertical-align: top; }
+  /* The callout: a label above the word and a leader line down to it. */
+  .w .call { position: absolute; left: 0; bottom: 100%; margin-bottom: 0.1em; padding-bottom: 10px; border-left: 1px solid var(--lime); padding-left: 8px; font: 500 max(11px, 0.1em)/1.3 var(--mono); letter-spacing: 0; color: var(--lime); white-space: nowrap; }
+  .w .call::before { content: ''; position: absolute; left: -3px; bottom: -3px; width: 5px; height: 5px; border-radius: 50%; background: var(--lime); }
+  .w .call small { display: block; color: var(--mute); font-weight: 400; font-size: 1em; }
+  .ch { display: inline-block; transform-origin: 50% 0; }
+  .mk { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: 0.08em; }
+  .mk > span { display: inline-block; }
+  .hero .under { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--gut); align-items: end; border-top: 1px solid var(--line); padding-top: 16px; }
+  .hero .under p { margin: 0; max-width: 52ch; font-size: 14px; line-height: 1.55; }
+
+  /* Collection */
+  .coll { padding-top: clamp(56px, 7vw, 112px); padding-bottom: clamp(56px, 7vw, 112px); }
+  .coll > header { display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 12px; margin-bottom: 32px; }
+  .coll > header h2 { margin: 0; font: 700 clamp(36px, 5vw, 88px)/0.95 var(--display); letter-spacing: -0.03em; }
+  .cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gut); }
+  .cols h3 { margin: 0 0 4px; font: 600 22px/1.1 var(--display); letter-spacing: -0.02em; display: flex; justify-content: space-between; align-items: baseline; }
+  .cols h3 span { font: 400 12px var(--mono); color: var(--mute); }
+  .cols p.note { margin: 0 0 14px; min-height: 3em; color: var(--mute); font-size: 12px; }
+  .cols ol { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--ink); }
+  .cols li a { display: grid; grid-template-columns: 2.4em 1fr; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .cols li a .n { color: var(--mute); font-size: 12px; padding-top: 2px; }
+  .cols li a b { font: 500 15px/1.2 var(--display); letter-spacing: -0.01em; }
+  .cols li a code { grid-column: 2; font: 400 11px/1.4 var(--mono); color: var(--mute); overflow-wrap: anywhere; }
+  .cols li a.on b, .cols li a.on .n { color: var(--lime); }
+  @media (hover: hover) { .cols li a:hover b { color: var(--lime); } }
+
+  /* Exhibit */
+  .ex { padding-top: 18px; padding-bottom: clamp(56px, 7vw, 112px); border-top: 1px solid var(--line); display: grid; gap: 28px; }
+  .ex .bar { display: flex; justify-content: space-between; }
+  .ex .bar nav { display: flex; gap: 22px; }
+  .ex h2 { margin: 0; font: 800 clamp(52px, 9vw, 164px)/0.92 var(--display); letter-spacing: -0.04em; }
+  .ex h2 .n { color: var(--lime); font-weight: 200; }
+  .ex .stage { position: relative; border: 1px solid var(--line); padding: clamp(28px, 4vw, 64px) 6%; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 32px; align-items: center; }
+  .ex .stage .ln { font: 700 clamp(34px, 5.6vw, 100px)/1.04 var(--display); letter-spacing: -0.03em; overflow: hidden; padding-bottom: 0.06em; }
+  .ex .stage .ln > span { display: block; }
+  .ex .stage .tag { font: 500 12px/1.3 var(--mono); color: var(--lime); display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+  .ex .stage .tag::before { content: ''; width: clamp(24px, 6vw, 96px); border-top: 1px solid var(--lime); }
+  .ex .stage .tag small { color: var(--mute); font-size: 12px; }
+  .ex .scrub { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; }
+  .ex .rail { position: relative; height: 1px; background: var(--line); }
+  .ex .rail::before { content: ''; position: absolute; left: 0; top: 0; width: 63.2%; height: 1px; background: var(--lime); }
+  .ex .rail::after { content: '0.24 s'; position: absolute; left: 63.2%; top: -22px; transform: translateX(-50%); color: var(--lime); font: 500 11px var(--mono); }
+  .ex .rail i { position: absolute; left: 63.2%; top: -6px; width: 1px; height: 13px; background: var(--lime); }
+  .ex .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: var(--gut); }
+  .ex .grid2 p { margin: 0 0 18px; font: 500 clamp(20px, 1.8vw, 28px)/1.25 var(--display); letter-spacing: -0.02em; }
+  .ex .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ex .tabs a { padding: 6px 12px; border: 1px solid var(--line); font-size: 12px; }
+  .ex .tabs a.on { border-color: var(--lime); color: var(--lime); }
+  .ex dl { margin: 0; }
+  .ex dl div { display: grid; grid-template-columns: 11em 1fr; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); font-size: 13px; }
+  .ex dt { color: var(--mute); }
+  .ex dd { margin: 0; }
+  .ex .src { display: inline-block; margin-top: 14px; color: var(--lime); }
+
+  .about { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--gut); padding-top: 18px; padding-bottom: clamp(56px, 7vw, 112px); border-top: 1px solid var(--line); }
+  .about p { margin: 0 0 0.7em; font: 500 clamp(22px, 2.4vw, 38px)/1.2 var(--display); letter-spacing: -0.025em; max-width: 30ch; }
+  .about p a { color: var(--lime); }
+  .foot { padding-top: 18px; padding-bottom: 32px; border-top: 1px solid var(--line); display: grid; gap: 18px; }
+  .foot .big { font: 800 clamp(26px, 6.3vw, 120px)/0.95 var(--display); letter-spacing: -0.04em; white-space: nowrap; }
+  .foot nav { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+
+  @media (max-width: 1000px) {
+    .cols { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 40px; }
+    .ex .grid2, .about { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 13.4vw; }
+    .w { margin-top: 1.1em; }
+    .w .call { font-size: 10px; }
+    .hero .under { grid-template-columns: 1fr; }
+    .cols { grid-template-columns: 1fr; }
+    .cols p.note { min-height: 0; }
+    .ex .stage { grid-template-columns: 1fr; }
+    .ex .stage .tag { margin-bottom: 10px; }
+    .ex .stage .tag::before { width: 24px; }
+    .ex dl div { grid-template-columns: 1fr; gap: 2px; }
+    .foot .big { white-space: normal; }
+  }
+</style>
+</head>
+<body>
+<header class="mast wrap">
+  <a class="word" href="#top">Museum of Motion</a>
+  <nav class="mono" aria-label="Main"><a href="#collection">Collection</a><a href="#about">About</a></nav>
+</header>
+
+<main id="top">
+  <section class="hero wrap" aria-labelledby="h">
+    <h1 id="h" aria-label="Every way a page can move."><span class="flow" aria-hidden="true"><span class="w"><span class="call">02 Characters<small>flip, 0.12 s in</small></span><span id="flip"></span></span><span class="w"><span class="call">03 Word slide<small>x −0.12 em</small></span><span style="display: inline-block; transform: translateX(-0.12em); opacity: 0.55">way</span></span><span class="w"><span class="call">06 Weight wave<small>wght 200 to 900</small></span><span id="ww"></span></span><span class="w"><span class="call">43 Tilt<small>toward the pointer</small></span><span style="display: inline-block; transform: perspective(600px) rotateY(-28deg) rotateX(12deg)">can</span></span><span class="w"><span class="call">01 Line mask<small>87% in</small></span><span class="mk"><span style="transform: translateY(14%)">move.</span></span></span></span></h1>
+    <div class="under">
+      <p>Sixty-three web animation effects, each shown on its own: what it does, what drives it, and how it handles touch, keyboard, and reduced motion.</p>
+      <span class="mono lime">Every callout is an exhibit ↓</span>
+    </div>
+  </section>
+
+  <section class="coll wrap" id="collection" aria-labelledby="coll-h">
+    <header><h2 id="coll-h">Collection</h2><span class="mono mute">63 exhibits, by what drives the motion</span></header>
+    <div class="cols" id="cols"></div>
+  </section>
+
+  <section class="ex wrap" id="exhibit" aria-labelledby="ex-h">
+    <div class="bar mono mute"><span>Time · 01 of 63</span><nav><a href="#">← 63 Card stack</a><a href="#">02 Characters →</a></nav></div>
+    <h2 id="ex-h"><span class="n">01 </span>Line mask</h2>
+    <div class="stage" id="stage" role="img" aria-label="Line mask at 0.24 seconds: the first two lines are nearly in, the third is still rising."></div>
+    <div class="scrub mono"><span>0.00</span><span class="rail" aria-hidden="true"><i></i></span><span>0.38 s</span></div>
+    <div class="grid2">
+      <div><p>Whole lines wipe up from behind masks, one after another.</p><div class="tabs mono" aria-label="Variations"><a class="on" href="#">Line mask</a><a href="#">Ellipse</a><a href="#">Highlight</a></div></div>
+      <div><dl id="fields"></dl><a class="src mono" href="#" id="src">View the recipe ↗</a></div>
+    </div>
+  </section>
+
+  <section class="about wrap" id="about" aria-labelledby="about-h">
+    <h2 id="about-h" class="mono mute" style="margin: 0; font-weight: 400">About</h2>
+    <div>
+      <p>Museum of Motion is a fictional museum. Its exhibits are the effect recipes in <a href="https://github.com/johnpolacek/animaxxing-skills">Animaxxing skills</a>.</p>
+      <p>It is the demo for “Animating with Agents,” an article on <a href="https://tympanus.net/codrops/">Codrops</a>.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot wrap">
+  <div class="big">Museum of Motion</div>
+  <nav class="mono mute" aria-label="Credits"><a href="https://github.com/johnpolacek/animaxxing-skills">Animaxxing skills ↗</a><a href="https://github.com/greensock/gsap-skills">Official GSAP skills ↗</a><a href="https://gsap.com">GSAP ↗</a><span>Unbounded and JetBrains Mono</span></nav>
+</footer>
+
+<script src="data.js"></script>
+<script>
+  // 02 Characters, flip: each letter tips down about its top edge. Caught with the last letters still tipping.
+  document.getElementById('flip').innerHTML = [...'Every'].map((c, i) => `<span class="ch" style="transform: perspective(500px) rotateX(${[0, 0, -8, -18, -32][i]}deg); opacity: ${[1, 1, 0.95, 0.85, 0.7][i]}">${c}</span>`).join('');
+  // 06 Weight wave, across the Unbounded weight axis.
+  document.getElementById('ww').innerHTML = [...'a page'].map((c, i) => `<span style="font-weight: ${[900, 900, 700, 320, 200, 520][i]}">${c === ' ' ? '&nbsp;' : c}</span>`).join('');
+
+  document.getElementById('cols').innerHTML = GROUPS.map((g) => `
+    <section aria-labelledby="c-${g.key}"><h3 id="c-${g.key}">${g.name}<span>${byGroup(g.key).length}</span></h3><p class="note">${g.note}</p>
+    <ol>${byGroup(g.key).map((e) => `<li><a href="#exhibit"${e.no === 1 ? ' class="on"' : ''}><span class="n">${two(e.no)}</span><b>${e.name}</b><code>${e.builders.split(', ').slice(0, 2).join(', ')}${e.builders.split(', ').length > 2 ? ' …' : ''}${e.gl ? ' · WebGL' : ''}</code></a></li>`).join('')}</ol></section>`).join('');
+
+  // The stage at 0.24 s, computed from the recipe: yPercent 110 to 0, 0.28 s, power3.out, 0.05 s apart.
+  const p3o = (t) => 1 - Math.pow(1 - t, 3), clamp = (v) => Math.max(0, Math.min(1, v)), T = 0.24;
+  document.getElementById('stage').innerHTML = ['Every way a', 'page can', 'move.'].map((l, i) => {
+    const p = p3o(clamp((T - i * 0.05) / 0.28)), y = 110 * (1 - p);
+    return `<span class="ln" aria-hidden="true"><span style="transform: translateY(${y.toFixed(1)}%)">${l}</span></span><span class="tag" aria-hidden="true">line ${i + 1} · ${Math.round(p * 100)}% <small>starts ${(i * 0.05).toFixed(2)} s</small></span>`;
+  }).join('');
+
+  document.getElementById('fields').innerHTML = SAMPLE.fields.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  document.getElementById('src').href = recipeUrl(SAMPLE.exhibit);
+</script>
+<a class="mm-back" href="index.html">← All directions</a>
+<style>.mm-back { position: fixed; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 1000; padding: 9px 14px; border-radius: 99px; background: rgba(20, 20, 20, 0.84); color: #fff !important; font: 500 12px/1 system-ui, sans-serif; letter-spacing: 0; text-transform: none; text-decoration: none; } .mm-back:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }</style>
+</body>
+</html>

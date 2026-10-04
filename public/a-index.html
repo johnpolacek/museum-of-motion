@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Museum of Motion · A · Index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* A. Index. The collection is a directory of type. One signal color marks what is on view. */
+  :root {
+    --bg: #ffffff; --ink: #0a0a0a; --mute: #6b6b6b; --line: #e3e3e3; --signal: #ff3d00;
+    --sans: 'Geist', system-ui, sans-serif; --mono: 'Geist Mono', ui-monospace, monospace;
+    --gut: clamp(16px, 2.2vw, 32px);
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.5 var(--sans); }
+  a { color: inherit; text-decoration: none; }
+  a:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+  .mono { font-family: var(--mono); font-size: 12px; letter-spacing: 0.01em; }
+  .mute { color: var(--mute); }
+  .grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gut); padding: 0 var(--gut); }
+
+  .mast { position: sticky; top: 0; z-index: 5; background: var(--bg); align-items: center; height: 56px; border-bottom: 1px solid var(--line); }
+  .mast .word { grid-column: 1 / span 4; font-weight: 600; letter-spacing: -0.01em; }
+  .mast nav { grid-column: 5 / span 4; display: flex; gap: 24px; }
+  .mast nav a[aria-current] { color: var(--signal); }
+  .mast .count { grid-column: 9 / -1; justify-self: end; }
+
+  .hero { padding-top: clamp(40px, 7vw, 112px); padding-bottom: clamp(32px, 4vw, 64px); row-gap: 28px; align-items: end; }
+  .hero h1 { grid-column: 1 / span 9; margin: 0; font-weight: 500; font-size: clamp(52px, 8.6vw, 164px); line-height: 0.9; letter-spacing: -0.055em; }
+  .hero h1 sup { font: 500 0.16em/1 var(--mono); letter-spacing: 0; vertical-align: top; color: var(--signal); margin-left: 0.2em; }
+  .hero .sub { grid-column: 10 / -1; margin: 0; max-width: 34ch; color: var(--ink); }
+
+  /* Directory: the landing view. Four drivers, every exhibit by number. */
+  .dir { border-top: 1px solid var(--ink); padding-top: 14px; padding-bottom: clamp(56px, 7vw, 120px); row-gap: 40px; }
+  .col { grid-column: span 3; }
+  .col h2 { display: flex; justify-content: space-between; margin: 0 0 14px; font-size: 15px; font-weight: 600; }
+  .col h2 .mono { font-weight: 400; }
+  .col p.note { margin: 0 0 18px; min-height: 3em; font-size: 13px; color: var(--mute); max-width: 30ch; }
+  .col ol { list-style: none; margin: 0; padding: 0; }
+  .col li a { display: grid; grid-template-columns: 34px 1fr auto; align-items: baseline; padding: 5px 0; border-top: 1px solid var(--line); font-size: 15px; }
+  .col li a .n { font: 400 12px var(--mono); color: var(--mute); }
+  .col li a .gl { font: 500 10px var(--mono); color: var(--mute); border: 1px solid var(--line); padding: 1px 4px; }
+  .col li a.on { color: var(--signal); }
+  .col li a.on .n { color: var(--signal); }
+  .col li a.on::after { content: '→'; grid-column: 3; }
+  @media (hover: hover) { .col li a:hover { color: var(--signal); } .col li a:hover .n { color: var(--signal); } }
+
+  .onview { margin-top: 32px; }
+  .onview .stage-s { aspect-ratio: 4 / 3; background: var(--ink); color: #fff; display: grid; align-content: center; padding: 8% 9%; }
+  .onview .stage-s .ln { font-size: clamp(22px, 2.1vw, 34px); }
+  .onview .cap { display: flex; justify-content: space-between; margin-top: 8px; }
+
+  /* Frozen frame: three lines caught mid line mask. */
+  .ln { display: block; overflow: hidden; font-weight: 500; letter-spacing: -0.04em; line-height: 1.02; padding-bottom: 0.06em; }
+  .ln > span { display: block; }
+  /* Mask boxes drawn faintly, so the frozen frame reads as a diagram, not a glitch. */
+  .stage .ln { position: relative; }
+  .stage .ln[data-p]::after { content: attr(data-p); position: absolute; right: 8px; top: 6px; font: 400 11px/1 var(--mono); letter-spacing: 0; color: rgba(255,255,255,0.55); }
+  .stage .ln, .stage-s .ln { outline: 1px dashed rgba(255,255,255,0.28); outline-offset: 0; margin-bottom: 0.08em; }
+
+  /* Collection table */
+  .coll { border-top: 1px solid var(--ink); padding-top: 14px; padding-bottom: clamp(56px, 7vw, 120px); }
+  .coll > header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 36px; }
+  .coll > header h2 { margin: 0; font-size: clamp(32px, 3.6vw, 56px); font-weight: 500; letter-spacing: -0.04em; }
+  .coll table { grid-column: 1 / -1; width: 100%; border-collapse: collapse; }
+  .coll th { text-align: left; font: 400 12px var(--mono); color: var(--mute); padding: 0 12px 8px 0; }
+  .coll tbody th { font: 600 15px var(--sans); color: var(--ink); padding: 36px 0 10px; border-bottom: 1px solid var(--ink); }
+  .coll tbody th span { font: 400 12px var(--mono); color: var(--mute); margin-left: 12px; }
+  .coll td { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--line); vertical-align: baseline; }
+  .coll td.n { width: 6%; font: 400 12px var(--mono); color: var(--mute); }
+  .coll td.name { width: 20%; font-weight: 500; }
+  .coll td.desc { width: 38%; }
+  .coll td.b { font: 400 12px var(--mono); color: var(--mute); word-break: break-word; }
+  .coll td.src { width: 4%; text-align: right; }
+
+  /* Exhibit drill-in */
+  .ex { border-top: 1px solid var(--ink); padding-top: 14px; padding-bottom: clamp(56px, 7vw, 120px); row-gap: 28px; }
+  .ex .bar { grid-column: 1 / -1; display: flex; justify-content: space-between; }
+  .ex .bar nav { display: flex; gap: 20px; }
+  .ex .head { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 24px; flex-wrap: wrap; }
+  .ex .head .no { font: 500 clamp(52px, 8.6vw, 164px)/0.9 var(--sans); letter-spacing: -0.055em; color: var(--signal); }
+  .ex .head h2 { margin: 0; font-weight: 500; font-size: clamp(52px, 8.6vw, 164px); line-height: 0.9; letter-spacing: -0.055em; }
+  .ex .stage { grid-column: 1 / span 8; background: var(--ink); color: #fff; aspect-ratio: 16 / 10; display: grid; align-content: center; padding: 0 9%; }
+  .ex .stage .ln { font-size: clamp(30px, 4.6vw, 80px); }
+  .ex .tl { grid-column: 1 / span 8; margin-top: -12px; }
+  .tl .track { position: relative; height: 28px; border-bottom: 1px solid var(--ink); }
+  .tl .track i { position: absolute; bottom: 0; height: 6px; border-left: 1px solid var(--ink); }
+  .tl .track b { position: absolute; bottom: -18px; transform: translateX(-50%); font: 400 11px var(--mono); white-space: nowrap; }
+  .tl .track b:first-of-type { transform: none; }
+  .tl .track b:last-of-type { transform: translateX(-100%); }
+  .tl .seg { position: absolute; height: 6px; background: var(--ink); opacity: 0.18; }
+  .tl .play { position: absolute; top: -4px; bottom: -4px; border-left: 1.5px solid var(--signal); }
+  .tl .play::before { content: '0.14 s'; white-space: nowrap; position: absolute; top: -14px; left: 4px; font: 500 11px var(--mono); color: var(--signal); }
+  .tl .vars { display: flex; gap: 8px; margin-top: 34px; flex-wrap: wrap; }
+  .tl .vars a { border: 1px solid var(--line); padding: 6px 12px; font-size: 13px; }
+  .tl .vars a.on { border-color: var(--ink); background: var(--ink); color: #fff; }
+  .ex .spec { grid-column: 9 / -1; grid-row: 3 / span 2; align-self: start; }
+  .ex .spec p { margin: 0 0 24px; font-size: 18px; line-height: 1.35; letter-spacing: -0.01em; }
+  .ex dl { margin: 0; }
+  .ex dl div { display: grid; grid-template-columns: 9.5em 1fr; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); }
+  .ex dt { font: 400 12px var(--mono); color: var(--mute); padding-top: 2px; }
+  .ex dd { margin: 0; }
+  .ex .src { display: inline-block; margin-top: 18px; border-bottom: 1px solid var(--ink); }
+
+  .about { border-top: 1px solid var(--ink); padding-top: 14px; padding-bottom: clamp(56px, 7vw, 120px); row-gap: 24px; }
+  .about h2 { grid-column: 1 / span 4; margin: 0; font-size: 15px; font-weight: 600; }
+  .about .body { grid-column: 5 / span 6; }
+  .about .body p { margin: 0 0 1em; font-size: 20px; line-height: 1.4; letter-spacing: -0.012em; }
+  .about .body p a { border-bottom: 1px solid var(--ink); }
+
+  .foot { border-top: 1px solid var(--ink); padding-top: 14px; padding-bottom: 40px; row-gap: 16px; }
+  .foot .big { grid-column: 1 / span 8; font-size: clamp(40px, 6vw, 112px); font-weight: 500; letter-spacing: -0.055em; line-height: 0.9; }
+  .foot .links { grid-column: 9 / -1; display: grid; gap: 6px; align-content: start; }
+
+  @media (max-width: 1100px) {
+    .col { grid-column: span 6; }
+    .ex .stage, .ex .tl, .ex .spec { grid-column: 1 / -1; }
+    .hero h1 { grid-column: 1 / -1; }
+    .hero .sub { grid-column: 1 / span 8; }
+  }
+  @media (max-width: 700px) {
+    .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .mast nav { grid-column: 3 / -1; justify-self: end; gap: 16px; }
+    .mast .word { grid-column: 1 / span 2; }
+    .mast .count { display: none; }
+    .hero .sub { grid-column: 1 / -1; }
+    .col { grid-column: 1 / -1; }
+    .col p.note { min-height: 0; }
+    .coll td.b, .coll thead { display: none; }
+    .coll td.desc { width: auto; font-size: 13px; color: var(--mute); }
+    .coll tr { display: grid; grid-template-columns: 34px 1fr 20px; }
+    .coll td { border: 0; padding: 2px 0; }
+    .coll td.n { grid-row: span 2; width: auto; padding-top: 4px; }
+    .coll td.name, .coll td.desc { grid-column: 2; width: auto; }
+    .coll td.src { grid-column: 3; grid-row: 1; width: auto; }
+    .coll tbody tr:not(.g) { padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .coll tbody tr.g { display: block; }
+    .ex .head { gap: 12px; }
+    .ex dl div { grid-template-columns: 1fr; gap: 2px; }
+    .about h2, .about .body, .foot .big, .foot .links { grid-column: 1 / -1; }
+    .about .body p { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+<header class="mast grid">
+  <a class="word" href="#top">Museum of Motion</a>
+  <nav class="mono" aria-label="Main"><a href="#collection">Collection</a><a href="#exhibit" aria-current="page">Exhibit</a><a href="#about">About</a></nav>
+  <span class="count mono mute">63 exhibits · 4 drivers</span>
+</header>
+
+<main id="top">
+  <section class="hero grid" aria-labelledby="h">
+    <h1 id="h">Every way a page can move.</h1>
+    <p class="sub">Sixty-three web animation effects, each shown on its own: what it does, what drives it, and how it handles touch, keyboard, and reduced motion.</p>
+  </section>
+
+  <section class="dir grid" aria-label="Directory" id="dir"></section>
+
+  <section class="coll grid" id="collection" aria-labelledby="coll-h">
+    <header><h2 id="coll-h">Collection</h2><span class="mono mute">Grouped by what drives the motion</span></header>
+    <table>
+      <thead><tr><th>No.</th><th>Exhibit</th><th>What it does</th><th>Builders</th><th><span class="sr">Recipe</span></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </section>
+
+  <section class="ex grid" id="exhibit" aria-labelledby="ex-h">
+    <div class="bar mono"><span class="mute">Exhibit 01 of 63 · Time</span><nav><a href="#">← 63 Card stack</a><a href="#">02 Characters →</a></nav></div>
+    <div class="head"><span class="no" aria-hidden="true">01</span><h2 id="ex-h">Line mask</h2></div>
+    <div class="stage" role="img" aria-label="Line mask, caught at 0.14 seconds: three lines rising behind their masks, each a little behind the one above.">
+      <span class="ln" data-p="87%"><span style="transform: translateY(14%)">Every way</span></span>
+      <span class="ln" data-p="69%"><span style="transform: translateY(35%)">a page can</span></span>
+      <span class="ln" data-p="37%"><span style="transform: translateY(69%)">move.</span></span>
+    </div>
+    <div class="tl" aria-hidden="true">
+      <div class="track">
+        <span class="seg" style="left: 0; width: 73.7%; bottom: 14px"></span>
+        <span class="seg" style="left: 13.2%; width: 73.7%; bottom: 7px"></span>
+        <span class="seg" style="left: 26.3%; width: 73.7%; bottom: 0"></span>
+        <i style="left: 0"></i><b style="left: 0">0</b>
+        <i style="left: 26.3%"></i><b style="left: 26.3%">0.1</b>
+        <i style="left: 52.6%"></i><b style="left: 52.6%">0.2</b>
+        <i style="left: 78.9%"></i><b style="left: 78.9%">0.3</b>
+        <i style="left: 100%"></i><b style="left: 100%">0.38 s</b>
+        <span class="play" style="left: 36.8%"></span>
+      </div>
+      <div class="vars"><a class="on" href="#">Line mask</a><a href="#">Ellipse</a><a href="#">Highlight</a></div>
+    </div>
+    <div class="spec">
+      <p>Whole lines wipe up from behind masks, one after another.</p>
+      <dl id="fields"></dl>
+      <a class="src mono" href="#" id="src">View the recipe ↗</a>
+    </div>
+  </section>
+
+  <section class="about grid" id="about" aria-labelledby="about-h">
+    <h2 id="about-h">About</h2>
+    <div class="body">
+      <p>Museum of Motion is a fictional museum. Its exhibits are the effect recipes in <a href="https://github.com/johnpolacek/animaxxing-skills">Animaxxing skills</a>, shown one at a time.</p>
+      <p>It is the demo for “Animating with Agents,” an article on <a href="https://tympanus.net/codrops/">Codrops</a>.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot grid">
+  <div class="big">Museum of Motion</div>
+  <div class="links mono"><a href="https://github.com/johnpolacek/animaxxing-skills">Animaxxing skills ↗</a><a href="https://github.com/greensock/gsap-skills">Official GSAP skills ↗</a><a href="https://gsap.com">GSAP ↗</a><span class="mute">Type: Geist and Geist Mono</span></div>
+</footer>
+
+<script src="data.js"></script>
+<script>
+  const DRIVER = { time: 'Time', scroll: 'Scroll', pointer: 'Pointer', drag: 'Drag' };
+  document.getElementById('dir').innerHTML = GROUPS.map((g) => `
+    <div class="col">
+      <h2>${g.name}<span class="mono mute">${two(byGroup(g.key).length)}</span></h2>
+      <p class="note">${g.note}</p>
+      <ol>${byGroup(g.key).map((e) => `<li><a href="#exhibit"${e.no === 1 ? ' class="on"' : ''}><span class="n">${two(e.no)}</span>${e.name}${e.gl ? '<span class="gl">GL</span>' : ''}</a></li>`).join('')}</ol>
+      ${g.key === 'drag' ? `<div class="onview" aria-hidden="true">
+        <div class="stage-s"><span class="ln"><span style="transform: translateY(14%)">Every way</span></span><span class="ln"><span style="transform: translateY(35%)">a page can</span></span><span class="ln"><span style="transform: translateY(69%)">move.</span></span></div>
+        <div class="cap mono"><span>On view: 01 Line mask</span><span class="mute">Hover any name</span></div>
+      </div>` : ''}
+    </div>`).join('');
+
+  document.getElementById('rows').innerHTML = GROUPS.map((g) => `
+    <tr class="g"><th colspan="5" scope="rowgroup">${g.name}<span>${g.note}</span></th></tr>
+    ${byGroup(g.key).map((e) => `<tr><td class="n">${two(e.no)}</td><td class="name">${e.name}</td><td class="desc">${e.desc}</td><td class="b">${e.builders}</td><td class="src"><a href="${recipeUrl(e)}" aria-label="${e.name} recipe">↗</a></td></tr>`).join('')}`).join('');
+
+  document.getElementById('fields').innerHTML = SAMPLE.fields.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  document.getElementById('src').href = recipeUrl(SAMPLE.exhibit);
+</script>
+<style>.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }</style>
+<a class="mm-back" href="index.html">← All directions</a>
+<style>.mm-back { position: fixed; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 1000; padding: 9px 14px; border-radius: 99px; background: rgba(20, 20, 20, 0.84); color: #fff !important; font: 500 12px/1 system-ui, sans-serif; letter-spacing: 0; text-transform: none; text-decoration: none; } .mm-back:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }</style>
+</body>
+</html>

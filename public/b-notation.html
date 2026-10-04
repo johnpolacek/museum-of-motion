@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Museum of Motion · B · Notation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* B. Notation. Every exhibit is drawn as a plot: what drives it along the bottom, how far it has moved up the side. */
+  :root {
+    --bg: #0b0b0b; --ink: #ecebe6; --mute: #8f8e89; --line: #2a2a2a; --grid: #1a1a1a; --accent: #ffb14a;
+    --sans: 'IBM Plex Sans', system-ui, sans-serif; --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --gut: clamp(16px, 2.2vw, 32px);
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.55 var(--sans); }
+  a { color: inherit; text-decoration: none; }
+  a:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+  .mono { font: 400 12px/1.5 var(--mono); letter-spacing: 0.02em; }
+  .up { text-transform: uppercase; letter-spacing: 0.08em; }
+  .mute { color: var(--mute); }
+  .wrap { padding: 0 var(--gut); }
+
+  .mast { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 56px; border-bottom: 1px solid var(--line); }
+  .mast nav { display: flex; gap: 28px; }
+  .mast nav a[aria-current] { color: var(--accent); }
+  .mast .r { justify-self: end; }
+
+  .hero { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--gut); align-items: end; padding-top: clamp(48px, 8vw, 128px); padding-bottom: 40px; }
+  .hero h1 { margin: 0; font-weight: 300; font-size: clamp(48px, 6.6vw, 116px); line-height: 0.98; letter-spacing: -0.035em; }
+  .hero p { margin: 0; color: var(--mute); max-width: 38ch; }
+
+  /* Specimen sheet: the landing view. */
+  .key { display: flex; flex-wrap: wrap; gap: 8px 28px; align-items: center; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .key svg { width: 54px; height: 30px; vertical-align: middle; margin-right: 8px; }
+  .sheet { list-style: none; margin: 0 0 clamp(64px, 8vw, 128px); padding: 0; display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); border-left: 1px solid var(--line); }
+  .sheet li a { display: grid; grid-template-rows: auto 1fr auto; aspect-ratio: 1 / 1.08; padding: 10px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .sheet li a .top { display: flex; justify-content: space-between; }
+  .sheet li a svg { width: 100%; height: 100%; min-height: 0; }
+  .sheet li a b { font-weight: 400; font-size: 13px; line-height: 1.2; }
+  .sheet li a.on { background: #15120d; }
+  .sheet li a.on .n, .sheet li a.on b { color: var(--accent); }
+  .sheet li a.on svg .c { stroke: var(--accent); }
+  @media (hover: hover) { .sheet li a:hover { background: #141414; } }
+  .sheet li.gh { grid-column: 1 / -1; padding: 22px 10px 10px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); display: flex; gap: 16px; align-items: baseline; }
+  .sheet li.gh b { font-weight: 400; font-size: 20px; }
+
+  /* Glyph strokes */
+  svg .ax { stroke: #3a3a3a; stroke-width: 1; fill: none; }
+  svg .c { stroke: var(--ink); stroke-width: 1.4; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  svg .c2 { stroke: var(--mute); stroke-width: 1; fill: none; stroke-dasharray: 2 3; }
+  svg .dt { fill: var(--ink); }
+  svg .lb { font: 400 8px var(--mono); fill: var(--mute); }
+  svg .band { fill: #1c1c1c; }
+
+  /* Collection: the index. */
+  .coll { padding-bottom: clamp(64px, 8vw, 128px); }
+  .coll > header { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 0 32px; border-top: 1px solid var(--line); }
+  .coll > header h2 { margin: 0; font-weight: 300; font-size: clamp(32px, 3.6vw, 56px); letter-spacing: -0.03em; }
+  .grp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 3fr); gap: var(--gut); padding: 24px 0 40px; border-top: 1px solid var(--line); }
+  .grp h3 { margin: 0 0 6px; font-weight: 400; font-size: 22px; }
+  .grp ol { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: var(--gut); }
+  .grp li { break-inside: avoid; }
+  .grp li a { display: grid; grid-template-columns: 54px 28px 1fr; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--grid); }
+  .grp li a svg { width: 54px; height: 34px; }
+  .grp li a span.t { display: grid; }
+  .grp li a span.t small { color: var(--mute); font-size: 13px; }
+
+  /* Exhibit */
+  .ex { padding-bottom: clamp(64px, 8vw, 128px); }
+  .ex .bar { display: flex; justify-content: space-between; padding: 14px 0; border-top: 1px solid var(--line); }
+  .ex h2 { margin: 24px 0 32px; font-weight: 300; font-size: clamp(48px, 6.6vw, 116px); line-height: 0.98; letter-spacing: -0.035em; }
+  .ex h2 .n { color: var(--accent); font-family: var(--mono); font-size: 0.42em; letter-spacing: 0; vertical-align: 0.9em; margin-right: 0.3em; }
+  .ex .pair { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: var(--gut); align-items: stretch; }
+  .panel { border: 1px solid var(--line); padding: 14px; display: grid; grid-template-rows: auto 1fr; gap: 10px; }
+  .panel > .mono { display: flex; justify-content: space-between; }
+  .big svg { width: 100%; height: auto; display: block; }
+  .big .c { stroke-width: 1.6; }
+  .big .ph { stroke: var(--accent); stroke-width: 1.2; }
+  .big .hit { fill: var(--accent); }
+  .big .lb { font-size: 10px; }
+  .big .lbA { font: 500 10px var(--mono); fill: var(--accent); }
+  .stage { position: relative; background: #000; display: grid; align-content: center; padding: 0 8%; min-height: 220px; container-type: inline-size; }
+  #now { display: grid; }
+  #now .stage { height: 100%; }
+  .ln { display: block; overflow: hidden; font-weight: 400; letter-spacing: -0.03em; line-height: 1.05; padding-bottom: 0.05em; outline: 1px dashed #3a3a3a; margin-bottom: 0.1em; position: relative; }
+  .ln > span { display: block; }
+  .stage .ln { font-size: 8.6cqw; }
+  .stage .ln::after { content: attr(data-y); position: absolute; right: 6px; top: 4px; font: 400 10px/1 var(--mono); letter-spacing: 0; color: var(--mute); }
+  .strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-top: var(--gut); }
+  .strip figure { margin: 0; }
+  .strip .stage { min-height: 0; aspect-ratio: 4 / 3; padding: 0 9%; }
+  .strip .stage .ln { font-size: 13cqw; outline-color: #262626; }
+  .strip .stage .ln::after { display: none; }
+  .strip figcaption { margin-top: 6px; }
+  .strip figure.on figcaption { color: var(--accent); }
+  .specs { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: var(--gut); margin-top: var(--gut); }
+  .specs p { margin: 0; font-size: 22px; line-height: 1.35; font-weight: 300; letter-spacing: -0.01em; max-width: 28ch; }
+  .specs .vars { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+  .specs .vars a { border: 1px solid var(--line); padding: 5px 10px; }
+  .specs .vars a.on { border-color: var(--accent); color: var(--accent); }
+  .specs dl { margin: 0; }
+  .specs dl div { display: grid; grid-template-columns: 11em 1fr; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+  .specs dt { color: var(--mute); }
+  .specs dd { margin: 0; }
+  .specs .src { display: inline-block; margin-top: 14px; color: var(--accent); }
+
+  .about { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 3fr); gap: var(--gut); padding: 14px 0 clamp(64px, 8vw, 128px); border-top: 1px solid var(--line); }
+  .about p { margin: 0 0 1em; font-weight: 300; font-size: clamp(22px, 2.2vw, 30px); line-height: 1.3; letter-spacing: -0.015em; max-width: 34ch; }
+  .about p a { border-bottom: 1px solid var(--mute); }
+  .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px; padding: 14px 0 40px; border-top: 1px solid var(--line); }
+  .foot nav { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+
+  @media (max-width: 1200px) { .sheet { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+  @media (max-width: 1000px) {
+    .hero, .ex .pair, .specs, .grp, .about { grid-template-columns: 1fr; }
+    .grp ol { columns: 1; }
+  }
+  @media (max-width: 640px) {
+    .mast { grid-template-columns: 1fr auto; }
+    .mast .r { display: none; }
+    .mast nav { gap: 16px; }
+    .sheet { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .sheet li a b { font-size: 12px; }
+    .strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .strip figure:nth-child(2), .strip figure:nth-child(4) { display: none; }
+    .specs dl div { grid-template-columns: 1fr; gap: 2px; }
+  }
+</style>
+</head>
+<body>
+<header class="mast wrap">
+  <a class="mono up" href="#top">Museum of Motion</a>
+  <nav class="mono up" aria-label="Main"><a href="#sheet" aria-current="page">Sheet</a><a href="#collection">Index</a><a href="#about">About</a></nav>
+  <span class="r mono up mute">Plates 01–63</span>
+</header>
+
+<main id="top">
+  <section class="hero wrap" aria-labelledby="h">
+    <h1 id="h">Every way a page can move.</h1>
+    <p>Sixty-three web animation effects, each shown on its own: what it does, what drives it, and how it handles touch, keyboard, and reduced motion.</p>
+  </section>
+
+  <section class="wrap" id="sheet" aria-label="Specimen sheet">
+    <div class="key mono mute" id="key"></div>
+    <ul class="sheet" id="cells"></ul>
+  </section>
+
+  <section class="coll wrap" id="collection" aria-labelledby="coll-h">
+    <header><h2 id="coll-h">Index</h2><span class="mono mute">By what drives the motion</span></header>
+    <div id="groups"></div>
+  </section>
+
+  <section class="ex wrap" id="exhibit" aria-labelledby="ex-h">
+    <div class="bar mono up mute"><span>Plate 01 · Time</span><span><a href="#">← 63</a> &nbsp; <a href="#">02 →</a></span></div>
+    <h2 id="ex-h"><span class="n">01</span>Line mask</h2>
+    <div class="pair">
+      <div class="panel big"><div class="mono mute"><span>Progress of each line against time</span><span>power3.out</span></div><svg id="plot" viewBox="0 0 640 340" role="img" aria-label="Three power3.out curves, 0.05 seconds apart, each 0.28 seconds long. The playhead is at 0.14 seconds."></svg></div>
+      <div class="panel"><div class="mono mute"><span>Frame at 0.14 s</span><span>masks dashed</span></div><div id="now"></div></div>
+    </div>
+    <div class="strip" id="strip"></div>
+    <div class="specs">
+      <div>
+        <p>Whole lines wipe up from behind masks, one after another.</p>
+        <div class="vars mono"><a class="on" href="#">Line mask</a><a href="#">Ellipse</a><a href="#">Highlight</a></div>
+      </div>
+      <div class="mono">
+        <dl id="fields"></dl>
+        <a class="src" href="#" id="src">View the recipe ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="about wrap" id="about" aria-labelledby="about-h">
+    <h2 id="about-h" class="mono up mute" style="margin: 0">About</h2>
+    <div>
+      <p>Museum of Motion is a fictional museum. Its exhibits are the effect recipes in <a href="https://github.com/johnpolacek/animaxxing-skills">Animaxxing skills</a>.</p>
+      <p>It is the demo for “Animating with Agents,” an article on <a href="https://tympanus.net/codrops/">Codrops</a>.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot wrap mono mute">
+  <span class="up">Museum of Motion</span>
+  <nav aria-label="Credits"><a href="https://github.com/johnpolacek/animaxxing-skills">Animaxxing skills ↗</a><a href="https://github.com/greensock/gsap-skills">Official GSAP skills ↗</a><a href="https://gsap.com">GSAP ↗</a><span>IBM Plex Sans and Mono</span></nav>
+</footer>
+
+<script src="data.js"></script>
+<script>
+  // Eases and patterns for the plots. Each returns progress 0..1 for input 0..1.
+  const EASE = {
+    p3o: (t) => 1 - Math.pow(1 - t, 3),
+    p2o: (t) => 1 - Math.pow(1 - t, 2),
+    io: (t) => -(Math.cos(Math.PI * t) - 1) / 2,
+    lin: (t) => t,
+    el: (t) => t <= 0 ? 0 : t >= 1 ? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * (2 * Math.PI / 3)) + 1,
+  };
+  const DRIVER = { time: 'time', scroll: 'scroll', pointer: 'pointer', drag: 'drag' };
+  const W = 120, H = 80, X0 = 10, X1 = 114, Y0 = 66, Y1 = 12;
+  const px = (t) => X0 + t * (X1 - X0), py = (v) => Y0 - v * (Y0 - Y1);
+  const path = (f, a = 0, b = 1, n = 60) => { let d = ''; for (let i = 0; i <= n; i++) { const t = a + (b - a) * i / n; d += (i ? 'L' : 'M') + px(t).toFixed(1) + ' ' + py(f(t)).toFixed(1); } return d; };
+  const clamp = (v) => Math.max(0, Math.min(1, v));
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+  function curves(g) {
+    const [kind, nStr] = g.split(':'); const n = +nStr || 1;
+    const c = (d) => `<path class="c" d="${d}"/>`, c2 = (d) => `<path class="c2" d="${d}"/>`;
+    if (EASE[kind]) {
+      const off = n > 1 ? Math.min(0.08, 0.45 / (n - 1)) : 0, dur = 1 - off * (n - 1);
+      let s = ''; for (let i = 0; i < n; i++) s += c(path((t) => EASE[kind](clamp((t - i * off) / dur)))); return s;
+    }
+    switch (kind) {
+      case 'noise': { seed = 11; let d = ''; for (let i = 0; i <= 14; i++) { const t = i / 14, v = i === 14 ? 1 : clamp(t + (rnd() - 0.5) * (1 - t) * 1.4); d += (i ? 'L' : 'M') + px(t).toFixed(1) + ' ' + py(v).toFixed(1); } return c(d); }
+      case 'speak': { const w = [0.1, 0.18, 0.08, 0.24, 0.12, 0.2]; let t = 0, v = 0, d = `M${px(0)} ${py(0)}`; w.forEach((dw) => { const nv = v + 1 / w.length; d += `L${px(t + dw * 0.35).toFixed(1)} ${py(nv).toFixed(1)}L${px(t + dw).toFixed(1)} ${py(nv).toFixed(1)}`; t += dw; v = nv; }); return c(d); }
+      case 'dip': { let s = ''; for (let i = 0; i < n; i++) { const a = i * 0.07; s += c(path((t) => 1 - 0.6 * Math.sin(Math.PI * clamp((t - a) / 0.5)))); } return s; }
+      case 'ripple': return c(path((t) => 0.5 + 0.28 * Math.sin(t * Math.PI * 6) * Math.max(0, Math.sin(t * Math.PI * 3)), 0, 1, 120));
+      case 'orbit': return `<ellipse class="c" cx="62" cy="39" rx="40" ry="20"/><circle class="dt" cx="${62 + 40 * Math.cos(-0.7)}" cy="${39 + 20 * Math.sin(-0.7)}" r="3"/>`;
+      case 'saw': return c(path((t) => (t * 3) % 1, 0, 0.999, 180));
+      case 'steps': return c(path((t) => Math.min(1, Math.floor(t * 5) / 4), 0, 1, 200));
+      case 'bow': return c2(`M${px(0.5)} ${py(1)}L${px(0.5)} ${py(0)}`) + c(`M${px(0.42)} ${py(1)}Q${px(0.85)} ${py(0.5)} ${px(0.42)} ${py(0)}`);
+      case 'ready': return c(path((t) => t < 0.2 ? t * 2 : t < 0.45 ? 0.4 + (t - 0.2) * 0.4 : t < 0.7 ? 0.5 + (t - 0.45) * 1.2 : 0.8 + (t - 0.7) * 0.667));
+      case 'fall': { let s = ''; for (let i = 0; i < n; i++) { const a = i * 0.12; s += c(path((t) => 1 - Math.pow(clamp((t - a) / 0.45), 2), a, Math.min(1, a + 0.45), 30)); } return s; }
+      case 'pulse': { let d = `M${px(0)} ${py(0.1)}`; [0.15, 0.45, 0.62, 0.88].forEach((p) => { d += `L${px(p - 0.03)} ${py(0.1)}L${px(p)} ${py(0.9)}L${px(p + 0.03)} ${py(0.1)}`; }); return c(d + `L${px(1)} ${py(0.1)}`); }
+      case 'fan': return [0.35, 0.65, 1].map((k) => c(path((t) => t * k))).join('');
+      case 'pin': return `<rect class="band" x="${px(0.25)}" y="${Y1}" width="${px(0.75) - px(0.25)}" height="${Y0 - Y1}"/>` + c(path((t) => clamp((t - 0.25) / 0.5)));
+      case 'stairs': return c(path((t) => { const k = Math.min(2, Math.floor(t * 3)), f = t * 3 - k; return (k + EASE.io(clamp((f - 0.5) * 2))) / 3 + (t >= 0.999 ? 1 / 3 : 0); }, 0, 1, 150));
+      case 'skew': return c2(`M${px(0)} ${py(0.5)}L${px(1)} ${py(0.5)}`) + c(path((t) => 0.5 + 0.42 * Math.exp(-4 * t) * Math.sin(14 * t), 0, 1, 120));
+      case 'toggle': return c(`M${px(0)} ${py(0.15)}L${px(0.3)} ${py(0.15)}L${px(0.33)} ${py(0.85)}L${px(0.63)} ${py(0.85)}L${px(0.66)} ${py(0.15)}L${px(1)} ${py(0.15)}`);
+      case 'lag': return c2(`M${px(0)} ${py(0)}L${px(0.2)} ${py(0)}L${px(0.2)} ${py(1)}L${px(1)} ${py(1)}`) + c(path((t) => t < 0.2 ? 0 : 1 - Math.exp(-7 * (t - 0.2))));
+      case 'frames': { let s = ''; for (let i = 0; i <= 12; i++) s += `<circle class="dt" cx="${px(i / 12).toFixed(1)}" cy="${py(i / 12).toFixed(1)}" r="1.8"/>`; return s; }
+      case 'swap': return c(path((t) => 0.5 + 0.5 * EASE.p3o(clamp(t / 0.7)))) + c(path((t) => 0.5 * EASE.p3o(clamp((t - 0.1) / 0.7))));
+      case 'sweep': return c(`M${px(0)} ${py(0)}L${px(0.3)} ${py(1)}L${px(0.6)} ${py(1)}L${px(0.9)} ${py(0)}`) + c2(`M${px(0.6)} ${py(1)}L${px(0.6)} ${py(0)}`);
+      case 'field': return [10, 20, 30].map((r) => `<circle class="c2" cx="62" cy="39" r="${r}"/>`).join('') + `<circle class="dt" cx="74" cy="33" r="3"/><path class="c" d="M62 39L72 34"/>`;
+      case 'trail': { let s = ''; for (let i = 0; i < 8; i++) { const t = i / 7; s += `<circle class="dt" cx="${px(t).toFixed(1)}" cy="${py(0.5 + 0.35 * Math.sin(t * 5)).toFixed(1)}" r="${(1 + t * 2.4).toFixed(1)}" opacity="${(0.25 + t * 0.75).toFixed(2)}"/>`; } return s; }
+      case 'hold': return c(path((t) => t < 0.35 ? EASE.p3o(t / 0.35) : t < 0.65 ? 1 : 1 - Math.pow((t - 0.65) / 0.35, 3)));
+      case 'burst': { let s = ''; for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; s += `<path class="c" d="M${(62 + 8 * Math.cos(a)).toFixed(1)} ${(39 + 8 * Math.sin(a)).toFixed(1)}L${(62 + 26 * Math.cos(a)).toFixed(1)} ${(39 + 22 * Math.sin(a)).toFixed(1)}"/>`; } return s; }
+      case 'arc': { let s = ''; for (let i = 0; i < n; i++) { const w = 0.45 + i * 0.12, h = 0.95 - i * 0.12; s += c(path((t) => { const u = t / w; return u > 1 ? -1 : 4 * h * u * (1 - u) * (1 - u * 0.15); }, 0, Math.min(1, w), 40)); } return s; }
+      case 'throw': return c(path((t) => t > 0.82 ? 1 : (1 - Math.exp(-5 * t)) / (1 - Math.exp(-4.1)) * 0.96));
+      case 'grid': { let s = ''; for (let r = 0; r < 3; r++) for (let k = 0; k < 5; k++) s += `<rect class="${(r + k) % 4 ? 'c2' : 'c'}" x="${16 + k * 19 + (r % 2) * 8}" y="${16 + r * 16}" width="12" height="10"/>`; return s; }
+    }
+    return '';
+  }
+  function glyph(e, size) {
+    const axes = `<path class="ax" d="M${X0} ${Y1 - 4}L${X0} ${Y0}L${X1 + 2} ${Y0}"/><text class="lb" x="${X1 + 2}" y="${Y0 + 10}" text-anchor="end">${DRIVER[e.group]}</text>`;
+    return `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">${axes}${curves(e.g)}</svg>`;
+  }
+
+  document.getElementById('key').innerHTML = `<span>How to read a plate</span><span>Along the bottom: what drives it</span><span>Up the side: how far it has moved</span>`;
+  document.getElementById('cells').innerHTML = GROUPS.map((g) => `<li class="gh"><b>${g.name}</b><span class="mono mute">${g.note}</span></li>` + byGroup(g.key).map((e) => `<li><a href="#exhibit"${e.no === 1 ? ' class="on"' : ''}><span class="top mono mute"><span class="n">${two(e.no)}</span>${e.gl ? '<span>GL</span>' : ''}</span>${glyph(e)}<b>${e.name}</b></a></li>`).join('')).join('');
+  document.getElementById('groups').innerHTML = GROUPS.map((g) => `
+    <section class="grp"><div><h3>${g.name}</h3><p class="mono mute" style="margin: 0">${g.note}</p></div>
+    <ol>${byGroup(g.key).map((e) => `<li><a href="#exhibit">${glyph(e)}<span class="mono mute">${two(e.no)}</span><span class="t">${e.name}<small>${e.desc}</small></span></a></li>`).join('')}</ol></section>`).join('');
+
+  // Line mask, from the recipe: yPercent 110 to 0 over 0.28 s, power3.out, 0.05 s between lines.
+  const DUR = 0.28, GAP = 0.05, TOTAL = DUR + GAP * 2, LINES = ['Every way', 'a page can', 'move.'];
+  const prog = (t, i) => EASE.p3o(clamp((t - i * GAP) / DUR));
+  const frame = (t, labels) => `<div class="stage">${LINES.map((l, i) => { const y = 110 * (1 - prog(t, i)); return `<span class="ln" data-y="${labels ? y.toFixed(0) + '%' : ''}"><span style="transform: translateY(${y.toFixed(1)}%)">${l}</span></span>`; }).join('')}</div>`;
+  document.getElementById('now').innerHTML = frame(0.14, true);
+  const STRIP = [0, 0.07, 0.14, 0.24, TOTAL];
+  document.getElementById('strip').innerHTML = STRIP.map((t) => `<figure class="${t === 0.14 ? 'on' : ''}" aria-hidden="true">${frame(t)}<figcaption class="mono mute">${t.toFixed(2)} s</figcaption></figure>`).join('');
+
+  // The big plot.
+  const PW = 640, PH = 340, L = 56, R = 620, T = 20, B = 300;
+  const bx = (t) => L + t / TOTAL * (R - L), by = (v) => B - v * (B - T);
+  let p = '';
+  for (let s = 0; s <= TOTAL + 1e-6; s += 0.05) p += `<path class="ax" d="M${bx(s).toFixed(1)} ${T}L${bx(s).toFixed(1)} ${B}" opacity="0.5"/><text class="lb" x="${bx(s).toFixed(1)}" y="${B + 18}" text-anchor="middle">${s.toFixed(2)}</text>`;
+  p += `<path class="ax" d="M${L} ${T}L${L} ${B}L${R} ${B}"/><text class="lb" x="${L - 8}" y="${by(1) + 4}" text-anchor="end">0%</text><text class="lb" x="${L - 8}" y="${by(0) + 4}" text-anchor="end">110%</text><text class="lb" x="${R}" y="${B + 34}" text-anchor="end">seconds</text>`;
+  LINES.forEach((l, i) => {
+    let d = ''; for (let k = 0; k <= 80; k++) { const t = k / 80 * TOTAL; d += (k ? 'L' : 'M') + bx(t).toFixed(1) + ' ' + by(prog(t, i)).toFixed(1); }
+    p += `<path class="c" d="${d}"/><text class="lb" x="${bx(0.14) - 10}" y="${by(prog(0.14, i)) + 4}" text-anchor="end">line ${i + 1}</text>`;
+  });
+  p += `<path class="ph" d="M${bx(0.14)} ${T - 6}L${bx(0.14)} ${B}"/><text class="lbA" x="${bx(0.14) + 6}" y="${T + 4}">0.14 s</text>`;
+  LINES.forEach((l, i) => { p += `<circle class="hit" cx="${bx(0.14).toFixed(1)}" cy="${by(prog(0.14, i)).toFixed(1)}" r="4"/>`; });
+  document.getElementById('plot').innerHTML = p;
+
+  document.getElementById('fields').innerHTML = SAMPLE.fields.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  document.getElementById('src').href = recipeUrl(SAMPLE.exhibit);
+</script>
+<a class="mm-back" href="index.html">← All directions</a>
+<style>.mm-back { position: fixed; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 1000; padding: 9px 14px; border-radius: 99px; background: rgba(20, 20, 20, 0.84); color: #fff !important; font: 500 12px/1 system-ui, sans-serif; letter-spacing: 0; text-transform: none; text-decoration: none; } .mm-back:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }</style>
+</body>
+</html>
