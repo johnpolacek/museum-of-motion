@@ -8,6 +8,7 @@ import { heroIntro, heroLeaves, heroOutro, type HeroIntro } from "@/lib/motion/h
 import { startWave, type WaveStop } from "@/lib/motion/wave";
 import { cueWordmark } from "@/lib/motion/events";
 import { useTransitionController } from "./motion/TransitionProvider";
+import { COUNT_WORDS, numberOf } from "@/lib/exhibits";
 
 const OWNER = "hero";
 const PAUSE_KEY = "mom:wave-paused";
@@ -187,12 +188,12 @@ export function Hero() {
             <span className="ch">r</span>
             <span className="ch">y</span>
           </span>
-          <sup>02</sup>
+          <sup>{numberOf("characters")}</sup>
         </span>{" "}
         <span className="w us" data-word="way" aria-hidden="true">
           <span className="t">way</span>
           <i data-ul></i>
-          <sup>39</sup>
+          <sup>{numberOf("underline-sweep")}</sup>
         </span>{" "}
         <span className="w" data-word="a" aria-hidden="true">
           <span className="t">a</span>
@@ -204,32 +205,38 @@ export function Hero() {
             <span className="ch">g</span>
             <span className="ch">e</span>
           </span>
-          <sup>06</sup>
+          <sup>{numberOf("weight-wave")}</sup>
         </span>{" "}
         <span className="w" data-word="can" aria-hidden="true">
           <span className="t">can</span>
-          <sup>29</sup>
+          <sup>{numberOf("velocity-skew")}</sup>
         </span>{" "}
         <span className="w" data-word="move" aria-hidden="true">
           <span className="mk">
             <span className="t">move.</span>
           </span>
-          <sup>01</sup>
+          <sup>{numberOf("line-mask")}</sup>
         </span>
       </h1>
       <div className="under">
         <i className="rule" data-rule data-intro aria-hidden="true"></i>
         <p data-sub data-intro>
-          Sixty-three web animation effects, each shown on its own: what it does, what drives it, and how it handles
+          {COUNT_WORDS} web animation effects, each shown on its own: what it does, what drives it, and how it handles
           touch, keyboard, and reduced motion.
         </p>
         <div className="side">
           <ol className="lab" aria-label="In this headline" data-list data-intro>
-            <li>01 Line mask</li>
-            <li>02 Characters</li>
-            <li>06 Weight wave</li>
-            <li>29 Velocity skew</li>
-            <li>39 Underline sweep</li>
+            {[
+              ["line-mask", "Line mask"],
+              ["characters", "Characters"],
+              ["weight-wave", "Weight wave"],
+              ["velocity-skew", "Velocity skew"],
+              ["underline-sweep", "Underline sweep"],
+            ].map(([slug, name]) => (
+              <li key={slug}>
+                {numberOf(slug)} {name}
+              </li>
+            ))}
           </ol>
           <button type="button" className="lab wave-toggle" data-wave-toggle data-intro hidden={!waveOn} onClick={toggle}>
             {paused ? "Play wave" : "Pause wave"}

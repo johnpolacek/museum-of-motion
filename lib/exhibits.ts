@@ -649,6 +649,20 @@ export const recipeUrl = (e: Exhibit) =>
 
 export const two = (n: number) => String(n).padStart(2, "0");
 
+const ONES = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
+const TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+/** 1 to 99 in words, capitalized: "Seventy-six". */
+export const inWords = (n: number) => {
+  const words = n < 20 ? ONES[n] : TENS[Math.floor(n / 10)] + (n % 10 ? `-${ONES[n % 10]}` : "");
+  return words.charAt(0).toUpperCase() + words.slice(1);
+};
+
+/** The collection's size, spelled out for copy. */
+export const COUNT_WORDS = inWords(EXHIBITS.length);
+
+/** An exhibit's two-digit number, by slug. */
+export const numberOf = (slug: string) => two(EXHIBITS.find((e) => e.slug === slug)?.no ?? 0);
+
 export const byGroup = (key: GroupKey) => EXHIBITS.filter((e) => e.group === key);
 
 export const groupName = (key: GroupKey) => GROUPS.find((g) => g.key === key)!.name;

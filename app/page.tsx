@@ -1,7 +1,7 @@
 import { CollectionMotion } from "@/components/CollectionMotion";
 import { Hero } from "@/components/Hero";
 import { TransitionLink } from "@/components/motion/TransitionLink";
-import { GROUPS, byGroup, two } from "@/lib/exhibits";
+import { EXHIBITS, GROUPS, byGroup, two } from "@/lib/exhibits";
 
 export default function Home() {
   return (
@@ -11,7 +11,7 @@ export default function Home() {
       <CollectionMotion>
         <header className="coll-head" data-intro>
           <h2 id="coll-h">Collection</h2>
-          <span className="lab">63 exhibits</span>
+          <span className="lab">{EXHIBITS.length} exhibits</span>
         </header>
         {GROUPS.map((g) => {
           const items = byGroup(g.key);

@@ -1,13 +1,14 @@
-// Live stages for the Time exhibits, 10 to 21 (20 Shader wipe waits for the WebGL batch). Each builds its
+// Live stages for the Time exhibits. Each builds its
 // own art inside the stage and plays it on the loop engine, so pause, scrub, and knobs work the same.
 // Moves and values come from the animaxxing recipes: media effects, SVG effects, counters and marquees,
 // page covers, physics effects, and sound cues.
 import { gsap } from "../gsap";
 import { art, assemble, def, EXIT, rnd, type StageDef } from "../stage-core";
+import { EXHIBITS } from "../../exhibits";
 
 const OPEN = "inset(0% 0% 0% 0%)";
 
-/* ---------- 10 Image reveal ---------- */
+/* ---------- Image reveal ---------- */
 
 const CLOSED: Record<string, string> = {
   up: "inset(100% 0% 0% 0%)",
@@ -64,7 +65,7 @@ const imageReveal = def(
   },
 );
 
-/* ---------- 11 Line draw ---------- */
+/* ---------- Line draw ---------- */
 
 const DRAWING = `
 <svg viewBox="0 0 800 320" class="drawing">
@@ -95,7 +96,7 @@ const lineDraw = def(["Line draw"], ["draw"], ["duration", "stagger", "hold", "e
   );
 });
 
-/* ---------- 12 Path follow ---------- */
+/* ---------- Path follow ---------- */
 
 const ROUTE = "M400 160 C 560 0, 760 80, 640 200 C 540 300, 260 20, 160 120 C 40 240, 240 320, 400 160 Z";
 const pathFollow = def(
@@ -137,7 +138,7 @@ const pathFollow = def(
   { duration: { label: "Lap", min: 2, max: 12, step: 0.5 } },
 );
 
-/* ---------- 13 Count-up ---------- */
+/* ---------- Count-up ---------- */
 
 type Figure = { prefix: string; value: number; decimals: number; suffix: string; label: string };
 const FIGURES: Figure[] = [
@@ -243,7 +244,7 @@ const odometer = def(["Odometer"], ["roll"], ["duration", "stagger", "hold", "ea
   );
 });
 
-/* ---------- 14 Marquee ---------- */
+/* ---------- Marquee ---------- */
 
 const MARQUEE_WORDS = ["Line mask", "Characters", "Word slide", "Scramble", "Speak-in", "Weight wave", "Letter wave", "Marquee"];
 
@@ -288,7 +289,7 @@ const marquee = def(
   { duration: { label: "Speed", min: 30, max: 400, step: 10, unit: "px/s" } },
 );
 
-/* ---------- 15 Logo cycle ---------- */
+/* ---------- Logo cycle ---------- */
 
 const MARKS = ["ACME", "Bolt", "CRANE", "dune", "Echo", "FERN", "gale", "HALO"];
 /** Cell i alternates between marks i and i + 4. Swapping cells in this order returns every cell home in eight swaps. */
@@ -329,12 +330,12 @@ const logoCycle = def(["Logo cycle"], ["cycle"], ["duration", "hold", "ease"], {
   );
 }, {}, { hold: { label: "Every" } });
 
-/* ---------- 16 Curtain, 17 Curve cover, 18 Preloader: a small page swaps behind a cover ---------- */
+/* ---------- Curtain, 17 Curve cover, 18 Preloader: a small page swaps behind a cover ---------- */
 
 const MINI = (cover: string) => `
 <div class="mini">
   <div class="pg pg-a"><span class="lab">Museum of Motion</span><b>Collection</b><i></i><i></i><i></i></div>
-  <div class="pg pg-b"><span class="lab">Time · 01 of 63</span><b>01 Line mask</b><i></i><i></i></div>
+  <div class="pg pg-b"><span class="lab">Time · 01 of ${EXHIBITS.length}</span><b>01 Line mask</b><i></i><i></i></div>
   ${cover}
 </div>`;
 
@@ -468,7 +469,7 @@ const preloader = def(["Preloader"], ["preload"], ["duration", "hold"], { durati
   );
 });
 
-/* ---------- 19 Rain ---------- */
+/* ---------- Rain ---------- */
 
 const RAIN_SETS: Record<string, string[]> = {
   shapes: ["●", "▲", "■", "◆", "✳"],
@@ -518,7 +519,7 @@ const rain = def(
   },
 );
 
-/* ---------- 21 Sound cues ---------- */
+/* ---------- Sound cues ---------- */
 
 /** A short synthesized tick, ±40 cents of variety, so each line sounds a little different. */
 function tick(ctx: AudioContext, base: number, volume = 0.18) {

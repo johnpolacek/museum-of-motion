@@ -4,6 +4,7 @@ import { Footer } from "@/components/Footer";
 import { Masthead } from "@/components/Masthead";
 import { TransitionProvider } from "@/components/motion/TransitionProvider";
 import { BOOT_SCRIPT } from "@/lib/motion/boot";
+import { COUNT_WORDS } from "@/lib/exhibits";
 import "./globals.css";
 
 const archivo = Archivo({
@@ -15,7 +16,7 @@ const archivo = Archivo({
 export const metadata: Metadata = {
   title: "Museum of Motion",
   description:
-    "Sixty-three web animation effects, each shown on its own: what it does, what drives it, and how it handles touch, keyboard, and reduced motion.",
+    `${COUNT_WORDS} web animation effects, each shown on its own: what it does, what drives it, and how it handles touch, keyboard, and reduced motion.`,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

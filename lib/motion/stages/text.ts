@@ -1,4 +1,4 @@
-// Live stages for the text exhibits, 01 to 09. Recipes from the animaxxing skill's split entrances,
+// Live stages for the text exhibits. Recipes from the animaxxing skill's split entrances,
 // speak-in, wave, route letters, and the motion vocabulary's shelf.
 import { gsap, SplitText } from "../gsap";
 import { art, assemble, def, end, EXIT, pinWidths, rnd, split, type Act, type LoopParams, type StageDef } from "../stage-core";
@@ -7,7 +7,7 @@ import { glitch as glitchImage } from "../recipes/webgl/uniform-effects";
 import { posterUrl } from "./webgl";
 import { EXHIBITS } from "../../exhibits";
 
-/* ---------- 01 Line mask ---------- */
+/* ---------- Line mask ---------- */
 
 const ELLIPSE = {
   closedBottom: "ellipse(20% 0% at 50% 100%)",
@@ -97,7 +97,7 @@ export const lineMask = def(
   },
 );
 
-/* ---------- 02 Characters ---------- */
+/* ---------- Characters ---------- */
 
 export const characters = def(
   ["Characters", "Cascade", "Flip", "Spring", "Scatter", "Fall"],
@@ -179,7 +179,7 @@ export const characters = def(
   },
 );
 
-/* ---------- 03 Word slide ---------- */
+/* ---------- Word slide ---------- */
 
 export const wordSlide = def(["Word slide"], ["slide"], ["duration", "stagger", "hold", "ease"], { duration: 0.5, stagger: 0.05, hold: 2, ease: "signature" }, (text, p) => {
   const splits: SplitText[] = [];
@@ -194,7 +194,7 @@ export const wordSlide = def(["Word slide"], ["slide"], ["duration", "stagger", 
   });
 });
 
-/* ---------- 04 Scramble ---------- */
+/* ---------- Scramble ---------- */
 
 const NOISE = "01{}/<>()=;";
 export const scramble = def(["Scramble"], ["scramble"], ["duration", "stagger", "hold"], { duration: 0.9, stagger: 0.15, hold: 2, ease: "none" }, (text, p) => {
@@ -224,7 +224,7 @@ export const scramble = def(["Scramble"], ["scramble"], ["duration", "stagger", 
   });
 });
 
-/* ---------- 05 Speak-in ---------- */
+/* ---------- Speak-in ---------- */
 
 /** Word entrances from the speak-in recipe, as start states; each lands at rest. */
 const WORD_INS: gsap.TweenVars[] = [
@@ -268,7 +268,7 @@ export const speakIn = def(["Speak-in"], ["speak"], ["duration", "hold"], { dura
   });
 });
 
-/* ---------- 06 Weight wave ---------- */
+/* ---------- Weight wave ---------- */
 
 export const weightWave = def(["Weight wave"], ["wave"], ["duration", "stagger", "hold", "ease"], { duration: 0.7, stagger: 0.03, hold: 1, ease: "power2.inOut" }, (text, p) => {
   const splits: SplitText[] = [];
@@ -295,7 +295,7 @@ export const weightWave = def(["Weight wave"], ["wave"], ["duration", "stagger",
   });
 });
 
-/* ---------- 07 Letter wave ---------- */
+/* ---------- Letter wave ---------- */
 
 type Move = (chars: HTMLElement[], p: LoopParams, em: number) => gsap.TweenVars;
 /** The wave recipe's moves, as the out-and-back half of each. Weight moves go lighter, so letters need no extra room. */
@@ -336,7 +336,7 @@ export const letterWave = def(
   },
 );
 
-/* ---------- 08 Route letters ---------- */
+/* ---------- Route letters ---------- */
 
 export const routeLetters = def(
   ["Letters", "Sides"],
@@ -384,7 +384,7 @@ export const routeLetters = def(
   },
 );
 
-/* ---------- 09 Paired entrances ---------- */
+/* ---------- Paired entrances ---------- */
 
 type Pair = { from: gsap.TweenVars; to: gsap.TweenVars; out: gsap.TweenVars };
 const PAIRS: Record<string, Pair> = {

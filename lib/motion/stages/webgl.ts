@@ -1,4 +1,4 @@
-// WebGL stages: 20 Shader wipe, 37 Scroll wave, 59 Hover lens. Each draws real <img> posters as planes on
+// WebGL stages: Shader wipe, Scroll wave, Hover lens. Each draws real <img> posters as planes on
 // the animaxxing-webgl skill's one shared canvas (OGL), and GSAP tweens the planes' uniforms. The <img>
 // stays the page: without WebGL, under reduced motion, or after a lost context, the poster shows as is.
 import { gsap } from "../gsap";
@@ -27,7 +27,7 @@ export function posterUrl(n: number, i: number) {
 /** Builds a plane per image; the planes hold the shared stage while they live. */
 const planes = (images: HTMLImageElement[]) => images.map((img) => imagePlane(img));
 
-/* ---------- 20 Shader wipe ---------- */
+/* ---------- Shader wipe ---------- */
 
 const shaderWipe = def(
   ["Shader wipe"],
@@ -57,7 +57,7 @@ const shaderWipe = def(
   },
 );
 
-/* ---------- 37 Scroll wave ---------- */
+/* ---------- Scroll wave ---------- */
 
 /**
  * The canvas is fixed to the viewport, so a plane inside a scrolling box would draw past the box's edges.
@@ -76,7 +76,7 @@ const scrollWaveStage = play(["Scroll wave"], ["wave"], "Scroll the page past th
   ),
 );
 
-/* ---------- 59 Hover lens ---------- */
+/* ---------- Hover lens ---------- */
 
 const hoverLens = play(["Hover lens"], ["lens"], "Move the mouse over a poster. Tab to one to center the lens.", (text) =>
   live(

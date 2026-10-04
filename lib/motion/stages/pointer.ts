@@ -1,4 +1,4 @@
-// Interactive stages for the Pointer and Drag exhibits, 38 to 63 (59 Hover lens waits for the WebGL batch).
+// Interactive stages for the Pointer and Drag exhibits.
 // Each mounts real controls inside the stage and wires the animaxxing recipe to them, unchanged, from
 // lib/motion/recipes. Nothing loops: the stage waits for the visitor, so it shows a hint instead of a scrub.
 import { gsap, SplitText } from "../gsap";
@@ -7,6 +7,7 @@ import { directionalFill, imageZoom, textRoll, underlineSweep } from "../recipes
 import { hoverPreview } from "../recipes/media-effects";
 import { cursorFollower, dragTrack, imageTrail, magnetic, momentumHover, proximity, spotlight, swipeDismiss, tilt } from "../recipes/pointer-effects";
 import { sortable } from "../recipes/sortable";
+import { COUNT_WORDS } from "../../exhibits";
 import { morphToggle } from "../recipes/svg-effects";
 import { pressFeedback } from "../recipes/press-feedback";
 import { shake } from "../recipes/accents";
@@ -44,7 +45,7 @@ const posterUrl = (n: number, i: number) =>
 const all = (root: ParentNode, sel: string) => Array.from(root.querySelectorAll<HTMLElement>(sel));
 const one = <T extends Element = HTMLElement>(root: ParentNode, sel: string) => root.querySelector(sel) as T;
 
-/* ---------- 38 to 40 Hover effects ---------- */
+/* ---------- Hover effects ---------- */
 
 const labelRoll = play(["Label roll"], ["roll"], "Hover or tab to a button.", (text) =>
   live(text, `<div class="btns">${["Start", "View the collection", "Play"].map((l) => `<button type="button" class="pill">${l}</button>`).join("")}</div>`, (layer) =>
@@ -150,7 +151,7 @@ const stateBtn = play(["Success", "Error"], ["success", "error"], "Press Send. T
   ),
 );
 
-/* ---------- 41 Hover preview ---------- */
+/* ---------- Hover preview ---------- */
 
 const preview = play(["Hover preview"], ["preview"], "Move the mouse over the list. Touch shows the list alone.", (text) =>
   live(
@@ -162,7 +163,7 @@ const preview = play(["Hover preview"], ["preview"], "Move the mouse over the li
   ),
 );
 
-/* ---------- 42 to 47 Pointer effects ---------- */
+/* ---------- Pointer effects ---------- */
 
 const magnet = play(["Magnetic"], ["magnetic"], "Bring the mouse near a button.", (text) =>
   live(text, `<div class="btns">${["Start", "Explore", "Play"].map((l) => `<button type="button" class="pill big"><span data-magnetic-inner>${l}</span></button>`).join("")}</div>`, (layer) =>
@@ -220,7 +221,7 @@ const trail = play(["Image trail"], ["trail"], "Move the mouse across the stage.
   ),
 );
 
-/* ---------- 48 Icon morph ---------- */
+/* ---------- Icon morph ---------- */
 
 const ICONS: [string, string, string][] = [
   ["Menu", "M4 7h16M4 12h16M4 17h16", "M6 6l12 12M12 12l0 0M18 6L6 18"],
@@ -246,7 +247,7 @@ const iconMorph = play(["Icon morph"], ["morph"], "Click or press an icon.", (te
   ),
 );
 
-/* ---------- 49 to 53 Component motion ---------- */
+/* ---------- Component motion ---------- */
 
 const menu = play(
   ["Top", "Bottom", "Left", "Right"],
@@ -428,7 +429,7 @@ const tabs = play(["Tab indicator"], ["tabs"], "Pick a tab, by click or arrow ke
   );
 });
 
-/* ---------- 54 and 55 Layout Flip ---------- */
+/* ---------- and 55 Layout Flip ---------- */
 
 const GROUPED: [string, string][] = [
   ["Line mask", "time"], ["Marquee", "time"], ["Parallax", "scroll"], ["Pinned scene", "scroll"], ["Magnetic", "pointer"],
@@ -495,7 +496,7 @@ const shared = play(["Shared element"], ["shared"], "Open a poster. Close it to 
   ),
 );
 
-/* ---------- 56 to 58 Particles, confetti, blast-off ---------- */
+/* ---------- Particles, confetti, blast-off ---------- */
 
 const PARTICLES: Record<string, ParticleEffectDefinition> = { marquee: runners, reactor, resolve, slipstream, ignite };
 
@@ -559,7 +560,7 @@ const confetti = play(
 const blast = play(["Blast-off"], ["blast"], "Press a button. Reset brings the hero back.", (text) =>
   live(
     text,
-    `<div class="mini-hero"><h3 class="mh-title">Every way a page can move.</h3><p class="mh-sub">Sixty-three effects, each shown on its own.</p><div class="mh-btns"><button type="button" class="pill go">Start</button><button type="button" class="pill go">Explore</button></div><button type="button" class="pill mh-reset" hidden>Reset</button></div>`,
+    `<div class="mini-hero"><h3 class="mh-title">Every way a page can move.</h3><p class="mh-sub">${COUNT_WORDS} effects, each shown on its own.</p><div class="mh-btns"><button type="button" class="pill go">Start</button><button type="button" class="pill go">Explore</button></div><button type="button" class="pill mh-reset" hidden>Reset</button></div>`,
     (layer) => {
       const root = one(layer, ".mini-hero");
       const heading = one(root, ".mh-title");
@@ -647,7 +648,7 @@ const swipe = play(["Swipe to dismiss"], ["swipe"], "Drag a note sideways, or fl
   ),
 );
 
-/* ---------- 60 to 63 Drag ---------- */
+/* ---------- Drag ---------- */
 
 const cardsHtml = (from: number, n: number, cls = "drag-card") =>
   Array.from({ length: n }, (_, i) => `<div class="${cls}" tabindex="0" aria-label="Poster ${from + i}">${poster(from + i, i)}</div>`).join("");

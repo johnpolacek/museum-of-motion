@@ -1,4 +1,4 @@
-// Stages for the Scroll exhibits, 22 to 36. Each stage holds a small scrolling window, a page within the
+// Stages for the Scroll exhibits. Each stage holds a small scrolling window, a page within the
 // page, and the animaxxing recipe runs against it with `scroller` set to that window. Nothing loops:
 // scrolling is the control. Recipes are copied unchanged into lib/motion/recipes, apart from the
 // section pager's `embedded` option, marked where it is defined.
@@ -70,7 +70,7 @@ function windowed(text: HTMLElement, inner: string, wire: (win: HTMLElement, lay
   );
 }
 
-/* ---------- 22 Scroll reveal ---------- */
+/* ---------- Scroll reveal ---------- */
 
 const reveal = play(["Rise", "Plop"], ["rise", "plop"], SCROLL_HINT, (text, p) =>
   windowed(text, `${CUE}<div class="w-grid">${Array.from({ length: 12 }, (_, i) => `<div class="w-card">${poster(22 + i, i)}</div>`).join("")}</div>${END}`, (win) => [
@@ -83,7 +83,7 @@ const reveal = play(["Rise", "Plop"], ["rise", "plop"], SCROLL_HINT, (text, p) =
   ]),
 );
 
-/* ---------- 23 Scrubbed statement ---------- */
+/* ---------- Scrubbed statement ---------- */
 
 const statement = play(["Words", "Chars"], ["words", "chars"], SCROLL_HINT, (text, p) =>
   windowed(
@@ -93,7 +93,7 @@ const statement = play(["Words", "Chars"], ["words", "chars"], SCROLL_HINT, (tex
   ),
 );
 
-/* ---------- 24 Parallax ---------- */
+/* ---------- Parallax ---------- */
 
 const parallaxStage = play(["Parallax"], ["parallax"], SCROLL_HINT, (text) =>
   windowed(
@@ -105,7 +105,7 @@ const parallaxStage = play(["Parallax"], ["parallax"], SCROLL_HINT, (text) =>
   ),
 );
 
-/* ---------- 25 Pinned scene ---------- */
+/* ---------- Pinned scene ---------- */
 
 const pinned = play(["Pinned scene"], ["pinned"], SCROLL_HINT, (text) =>
   windowed(
@@ -128,7 +128,7 @@ const pinned = play(["Pinned scene"], ["pinned"], SCROLL_HINT, (text) =>
   ),
 );
 
-/* ---------- 26 Horizontal run ---------- */
+/* ---------- Horizontal run ---------- */
 
 const run = play(["Run", "Drift"], ["run", "drift"], SCROLL_HINT, (text, p) =>
   windowed(
@@ -143,7 +143,7 @@ const run = play(["Run", "Drift"], ["run", "drift"], SCROLL_HINT, (text, p) =>
   ),
 );
 
-/* ---------- 27 Waypoints ---------- */
+/* ---------- Waypoints ---------- */
 
 const waypoints = play(["Waypoints"], ["waypoints"], SCROLL_HINT, (text) =>
   windowed(
@@ -155,7 +155,7 @@ const waypoints = play(["Waypoints"], ["waypoints"], SCROLL_HINT, (text) =>
   ),
 );
 
-/* ---------- 28 Progress ---------- */
+/* ---------- Progress ---------- */
 
 const PARAS = [
   "A hairline at the top reports how far through the page you are.",
@@ -169,7 +169,7 @@ const progress = play(["Progress"], ["progress"], SCROLL_HINT, (text) =>
   ]),
 );
 
-/* ---------- 29 Velocity skew ---------- */
+/* ---------- Velocity skew ---------- */
 
 const skew = play(["Velocity skew"], ["skew"], "Scroll inside the window, fast and slow.", (text) =>
   windowed(text, `${CUE}<div class="w-cols">${Array.from({ length: 10 }, (_, i) => `<div class="w-skew">${poster(29 + i, i)}</div>`).join("")}</div>${END}`, (win) => [
@@ -177,7 +177,7 @@ const skew = play(["Velocity skew"], ["skew"], "Scroll inside the window, fast a
   ]),
 );
 
-/* ---------- 30 Header theme, 31 Hide on scroll ---------- */
+/* ---------- Header theme, 31 Hide on scroll ---------- */
 
 const HEAD = `<header class="w-head"><b>Museum of Motion</b><span class="lab">Collection · About</span></header>`;
 const BANDS = (n: number) =>
@@ -191,7 +191,7 @@ const hideOnScroll = play(["Hide on scroll"], ["hide"], "Scroll down to hide the
   windowed(text, `${HEAD}${BANDS(8)}`, (win) => [scrollDirection(win, { scroller: win })], "hiding"),
 );
 
-/* ---------- 32 Smooth scroll ---------- */
+/* ---------- Smooth scroll ---------- */
 
 const NAMES = ["Line mask", "Characters", "Word slide", "Scramble", "Speak-in", "Weight wave", "Letter wave", "Route letters", "Paired entrances", "Image reveal", "Line draw", "Path follow", "Count-up", "Marquee"];
 
@@ -204,7 +204,7 @@ const smooth = play(["Lenis", "Native"], ["lenis", "native"], "Wheel inside the 
   }),
 );
 
-/* ---------- 33 Section pager ---------- */
+/* ---------- Section pager ---------- */
 
 const pager = play(["Section pager"], ["pager"], "Wheel, swipe, or use the arrow keys inside the box.", (text) =>
   live(
@@ -228,7 +228,7 @@ const pager = play(["Section pager"], ["pager"], "Wheel, swipe, or use the arrow
   ),
 );
 
-/* ---------- 34 Scrubbed video, 35 Frame sequence ---------- */
+/* ---------- Scrubbed video, 35 Frame sequence ---------- */
 
 /** Sticky media fills the window's height while its section scrolls three windows' worth. */
 const holdHeight = (win: HTMLElement, media: HTMLElement) => (media.style.height = `${win.clientHeight}px`);
@@ -262,7 +262,7 @@ const frames = play(["Frame sequence"], ["frames"], SCROLL_HINT, (text) =>
   }),
 );
 
-/* ---------- 36 Shape scrub ---------- */
+/* ---------- Shape scrub ---------- */
 
 const shape = play(["Shape scrub"], ["shape"], SCROLL_HINT, (text) =>
   windowed(

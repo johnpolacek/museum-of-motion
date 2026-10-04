@@ -46,7 +46,7 @@ Exits are roughly half as long as entrances.
 
 ## By surface
 
-**Home hero.** Each headline word performs the exhibit it is numbered with, then lands at rest: 02 Characters on "Every", 39 Underline sweep on "way", 06 Weight wave on "page", 29 Velocity skew on "can", 01 Line mask on "move." The mock's frozen frames are snapshots of these moves.
+**Home hero.** Each headline word performs the exhibit it is numbered with, then lands at rest: 02 Characters on "Every", 45 Underline sweep on "way", 08 Weight wave on "page", 34 Velocity skew on "can", 01 Line mask on "move." The hero reads these numbers from the collection, so they follow any renumbering. The mock's frozen frames are snapshots of these moves.
 
 **Collection.** Group rules draw across. Names arrive with a weight gain as they scroll in. On hover and keyboard focus, a name widens. Its blue color swaps instantly, as in the static site, and is never tweened.
 
