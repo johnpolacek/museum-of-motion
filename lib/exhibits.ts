@@ -1,7 +1,7 @@
 // Museum of Motion: every exhibit is an effect recipe from the Animaxxing skills.
 // `src` is the recipe file. `gl` marks animaxxing-webgl.
 
-export type GroupKey = "time" | "scroll" | "pointer" | "drag";
+export type GroupKey = "type" | "play" | "scroll" | "pointer" | "drag";
 
 export type Exhibit = {
   name: string;
@@ -15,8 +15,13 @@ export type Exhibit = {
 
 export const GROUPS: { key: GroupKey; name: string; note: string }[] = [
   {
-    key: "time",
-    name: "Time",
+    key: "type",
+    name: "Type",
+    note: "Letters, words, and numbers perform: they split, scramble, swell, and count."
+  },
+  {
+    key: "play",
+    name: "Play",
     note: "Plays once the page starts it: entrances, exits, loops."
   },
   {
@@ -39,7 +44,7 @@ export const GROUPS: { key: GroupKey; name: string; note: string }[] = [
 const DATA: Exhibit[] = [
   {
     name: "Line mask",
-    group: "time",
+    group: "type",
     builders: "linesMaskIn, linesMaskOut",
     src: "split-entrances",
     desc: "Whole lines wipe up from behind masks.",
@@ -50,7 +55,7 @@ const DATA: Exhibit[] = [
   },
   {
     name: "Characters",
-    group: "time",
+    group: "type",
     builders: "charsImplodeIn, charsExplodeOut, charsRiseIn, charsCascadeIn, charsFlipIn, charsSpringIn, charsScatterIn, charsFallOut",
     src: "split-entrances",
     desc: "Letters slam together from all around and blow apart, or rise, tip, spring, and scatter.",
@@ -65,21 +70,21 @@ const DATA: Exhibit[] = [
   },
   {
     name: "Word slide",
-    group: "time",
+    group: "type",
     builders: "wordsSlideIn, wordsSlideOut",
     src: "split-entrances",
     desc: "Words zip together from alternating sides."
   },
   {
     name: "Scramble",
-    group: "time",
+    group: "type",
     builders: "scrambleIn, scrambleOut",
     src: "split-entrances",
     desc: "Text resolves out of noise."
   },
   {
     name: "Glitch",
-    group: "time",
+    group: "type",
     builders: "glitchIn, glitchOut",
     src: "split-entrances",
     desc: "The signal drops: bands, blocks, and letters jump, then snap clean.",
@@ -93,7 +98,7 @@ const DATA: Exhibit[] = [
   },
   {
     name: "Typewriter",
-    group: "time",
+    group: "type",
     builders: "typeIn, typeOut, retype",
     src: "typewriter",
     desc: "Typed one character at a time behind a caret, at a person's uneven pace.",
@@ -103,35 +108,59 @@ const DATA: Exhibit[] = [
   },
   {
     name: "Speak-in",
-    group: "time",
+    group: "type",
     builders: "speakIn",
     src: "speak-in",
     desc: "Display copy arrives word by word, at speaking pace."
   },
   {
     name: "Weight wave",
-    group: "time",
+    group: "type",
     builders: "charsWeightWave",
     src: "split-entrances",
     desc: "A wave of weight runs through a line."
   },
   {
     name: "Letter wave",
-    group: "time",
+    group: "type",
     builders: "startWave",
     src: "wave",
     desc: "Every few seconds, a small move ripples across a heading."
   },
   {
     name: "Route letters",
-    group: "time",
+    group: "type",
     builders: "buildPageIntro, buildPageOutro",
     src: "route-letters",
     desc: "A whole page arrives and leaves at once: the headline by letter, the rest as blocks."
   },
   {
+    name: "Text on path",
+    group: "type",
+    builders: "pathLoop",
+    src: "svg-effects",
+    desc: "A line of text rides a curve into place, or turns around a badge.",
+    vars: [
+      "Badge"
+    ]
+  },
+  {
+    name: "Count-up",
+    group: "type",
+    builders: "countUp",
+    src: "counters-and-marquees",
+    desc: "Figures count to their final value and keep their format."
+  },
+  {
+    name: "Odometer",
+    group: "type",
+    builders: "odometer",
+    src: "counters-and-marquees",
+    desc: "Digit columns roll to each new value, forward when it rises and back when it falls."
+  },
+  {
     name: "Entrances and exits",
-    group: "time",
+    group: "play",
     builders: "fadeIn, riseIn, dropIn, slideIn, scaleIn, popIn, wipeUp, wipeAcross, flipIn, focusIn, weightIn",
     src: "motion-vocabulary",
     desc: "Eleven ways to arrive and leave, from a plain fade to a weight shift.",
@@ -151,66 +180,42 @@ const DATA: Exhibit[] = [
   },
   {
     name: "Reveal",
-    group: "time",
+    group: "play",
     builders: "imageReveal",
     src: "media-effects",
     desc: "A wipe opens a frame while what is inside settles from a slight zoom: an image, a video, any block."
   },
   {
     name: "Line draw",
-    group: "time",
+    group: "play",
     builders: "drawIn, drawOut",
     src: "svg-effects",
     desc: "Strokes draw along their length."
   },
   {
     name: "Path follow",
-    group: "time",
+    group: "play",
     builders: "followPath",
     src: "svg-effects",
     desc: "A small mark loops along a path."
-  },  {
-    name: "Text on path",
-    group: "time",
-    builders: "pathLoop",
-    src: "svg-effects",
-    desc: "A line of text rides a curve into place, or turns around a badge.",
-    vars: [
-      "Badge"
-    ]
-  },
-
-  {
-    name: "Count-up",
-    group: "time",
-    builders: "countUp",
-    src: "counters-and-marquees",
-    desc: "Figures count to their final value and keep their format."
-  },
-  {
-    name: "Odometer",
-    group: "time",
-    builders: "odometer",
-    src: "counters-and-marquees",
-    desc: "Digit columns roll to each new value, forward when it rises and back when it falls."
   },
   {
     name: "Marquee",
-    group: "time",
+    group: "play",
     builders: "marquee",
     src: "counters-and-marquees",
     desc: "A row scrolls sideways forever and slows on hover."
   },
   {
     name: "Cycle",
-    group: "time",
+    group: "play",
     builders: "logoCycle",
     src: "counters-and-marquees",
     desc: "One cell at a time swaps to the next item in the pool: logos, names, figures, anything."
   },
   {
     name: "Curtain",
-    group: "time",
+    group: "play",
     builders: "curtain, curveCover",
     src: "page-covers",
     desc: "A cover sweeps over the page while it changes underneath: staggered panels, tilted, titled, or one curved edge.",
@@ -220,11 +225,9 @@ const DATA: Exhibit[] = [
       "Curve"
     ]
   },
-
-
   {
     name: "Shader",
-    group: "time",
+    group: "play",
     builders: "wipe, dissolve, pixelate, ripple, glitch",
     src: "uniform-effects",
     desc: "An image comes and goes on the GPU: wiped, dissolved, pixelated, rippled, or glitched.",
@@ -235,16 +238,14 @@ const DATA: Exhibit[] = [
       "Glitch"
     ],
     gl: true
-  },  {
+  },
+  {
     name: "Timeline",
-    group: "time",
+    group: "play",
     builders: "gsap.timeline, drawIn",
     src: "motion-vocabulary",
     desc: "One master timeline nests five parts, placed with labels and overlaps. Play it, scrub it, reverse it, or jump to a label."
   },
-
-
-
   {
     name: "Scroll reveal",
     group: "scroll",
@@ -259,7 +260,6 @@ const DATA: Exhibit[] = [
       "Letters"
     ]
   },
-
   {
     name: "Parallax",
     group: "scroll",
@@ -308,8 +308,6 @@ const DATA: Exhibit[] = [
     src: "scroll-effects",
     desc: "One element travels onto a marker in each later section."
   },
-
-
   {
     name: "Header",
     group: "scroll",
@@ -323,8 +321,6 @@ const DATA: Exhibit[] = [
       "Section"
     ]
   },
-
-
   {
     name: "Section pager",
     group: "scroll",
@@ -336,10 +332,6 @@ const DATA: Exhibit[] = [
       "Loop"
     ]
   },
-
-
-
-
   {
     name: "Scroll wave",
     group: "scroll",
@@ -360,10 +352,6 @@ const DATA: Exhibit[] = [
       "Zoom"
     ]
   },
-
-
-
-
   {
     name: "Feedback",
     group: "pointer",
@@ -376,8 +364,6 @@ const DATA: Exhibit[] = [
       "Error"
     ]
   },
-
-
   {
     name: "Cursor",
     group: "pointer",
@@ -390,7 +376,6 @@ const DATA: Exhibit[] = [
       "Spotlight"
     ]
   },
-
   {
     name: "Attract",
     group: "pointer",
@@ -403,13 +388,6 @@ const DATA: Exhibit[] = [
       "Momentum"
     ]
   },
-
-
-
-
-
-
-
   {
     name: "Icon morph",
     group: "pointer",
@@ -430,10 +408,6 @@ const DATA: Exhibit[] = [
       "Interruptible"
     ]
   },
-
-
-
-
   {
     name: "Tab indicator",
     group: "pointer",
@@ -441,7 +415,6 @@ const DATA: Exhibit[] = [
     src: "component-motion",
     desc: "An underline slides onto the selected tab."
   },
-
   {
     name: "Flip",
     group: "pointer",
@@ -452,8 +425,6 @@ const DATA: Exhibit[] = [
       "Shared"
     ]
   },
-
-
   {
     name: "Particles",
     group: "pointer",

@@ -433,14 +433,14 @@ const tabs = play(["Tab indicator"], ["tabs"], "Pick a tab, by click or arrow ke
 /* ---------- and 55 Layout Flip ---------- */
 
 const GROUPED: [string, string][] = [
-  ["Line mask", "time"], ["Marquee", "time"], ["Parallax", "scroll"], ["Pinned", "scroll"], ["Magnetic", "pointer"],
-  ["Tilt", "pointer"], ["Drag track", "drag"], ["Card stack", "drag"], ["Rain", "time"],
+  ["Line mask", "type"], ["Scramble", "type"], ["Marquee", "play"], ["Parallax", "scroll"], ["Pinned", "scroll"], ["Attract", "pointer"],
+  ["Cursor", "pointer"], ["Drag track", "drag"], ["Card stack", "drag"], ["Timeline", "play"],
 ];
 
 const layoutFlip = play(["Layout Flip"], ["flip"], "Filter the tiles.", (text) =>
   live(
     text,
-    `<div class="filters" role="group" aria-label="Filter">${["all", "time", "scroll", "pointer", "drag"].map((f, i) => `<button type="button" class="pill" aria-pressed="${i === 0}" data-filter="${f}">${f[0].toUpperCase() + f.slice(1)}</button>`).join("")}</div>
+    `<div class="filters" role="group" aria-label="Filter">${["all", "type", "play", "scroll", "pointer", "drag"].map((f, i) => `<button type="button" class="pill" aria-pressed="${i === 0}" data-filter="${f}">${f[0].toUpperCase() + f.slice(1)}</button>`).join("")}</div>
      <ul class="tiles">${GROUPED.map(([n, g]) => `<li class="tile-card" data-group="${g}">${n}</li>`).join("")}</ul>`,
     (layer) => {
       const tiles = all(layer, ".tile-card");
