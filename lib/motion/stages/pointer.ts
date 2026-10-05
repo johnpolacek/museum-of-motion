@@ -432,7 +432,7 @@ const tabs = play(["Tab indicator"], ["tabs"], "Pick a tab, by click or arrow ke
 /* ---------- and 55 Layout Flip ---------- */
 
 const GROUPED: [string, string][] = [
-  ["Line mask", "time"], ["Marquee", "time"], ["Parallax", "scroll"], ["Pinned scene", "scroll"], ["Magnetic", "pointer"],
+  ["Line mask", "time"], ["Marquee", "time"], ["Parallax", "scroll"], ["Pinned", "scroll"], ["Magnetic", "pointer"],
   ["Tilt", "pointer"], ["Drag track", "drag"], ["Card stack", "drag"], ["Rain", "time"],
 ];
 

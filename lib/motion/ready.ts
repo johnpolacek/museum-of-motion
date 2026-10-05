@@ -25,7 +25,7 @@ export const LIVE_STAGES = new Set([
   "hover-lens",
   "scroll-reveal",
   "parallax",
-  "pinned-scene",
+  "pinned",
   "stacking-cards",
   "zoom-through",
   "horizontal-run",

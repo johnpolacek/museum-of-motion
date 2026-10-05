@@ -251,7 +251,7 @@ const DATA: Exhibit[] = [
     desc: "Layers drift at different rates while their section passes."
   },
   {
-    name: "Pinned scene",
+    name: "Pinned",
     group: "scroll",
     builders: "pinnedScene",
     src: "scroll-effects",

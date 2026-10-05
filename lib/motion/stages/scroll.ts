@@ -46,14 +46,25 @@ const END = `<section class="w-pad"><p class="lab">End</p></section>`;
 
 /**
  * A scrolling window filling the stage. `wire` gets the window and returns teardowns. Triggers are
- * measured once the window has its size, and again after fonts load.
+ * measured once the window has its size, and again after fonts load. Lenis drives the window unless
+ * `smoothed` is false, as on the Smooth scroll exhibit, which compares Lenis with native scrolling.
  */
-function windowed(text: HTMLElement, inner: string, wire: (win: HTMLElement, layer: HTMLElement) => Array<() => void>, className = ""): Play {
+function windowed(
+  text: HTMLElement,
+  inner: string,
+  wire: (win: HTMLElement, layer: HTMLElement) => Array<() => void>,
+  className = "",
+  smoothed = true,
+): Play {
   return live(
     text,
     `<div class="win ${className}" tabindex="0" role="region" aria-label="A scrolling sample page">${inner}</div>`,
     (layer) => {
       const win = one(layer, ".win");
+      // The skill's Lenis drives the window's scroll from GSAP's ticker, so pins and scrubbed transforms
+      // land in the same frame as the scroll. Left native, the browser scrolls first and a pinned
+      // section shakes a frame behind.
+      const smooth = smoothed ? lenisScroll({ wrapper: win, content: win }) : undefined;
       const offs = wire(win, layer);
       const frame = requestAnimationFrame(() => ScrollTrigger.refresh());
       let alive = true;
@@ -64,6 +75,7 @@ function windowed(text: HTMLElement, inner: string, wire: (win: HTMLElement, lay
           cancelAnimationFrame(frame);
         },
         ...offs,
+        () => smooth?.destroy(),
       ];
     },
     "scroll",
@@ -119,9 +131,9 @@ const parallaxStage = play(["Depth", "Windows"], ["depth", "windows"], SCROLL_HI
   ),
 );
 
-/* ---------- Pinned scene ---------- */
+/* ---------- Pinned ---------- */
 
-const pinned = play(["Pinned scene"], ["pinned"], SCROLL_HINT, (text) =>
+const pinned = play(["Pinned"], ["pinned"], SCROLL_HINT, (text) =>
   windowed(
     text,
     `${CUE}<section class="w-scene">${["Pin", "Scrub", "Release"].map((s, i) => `<div class="w-step"><span class="lab">Step ${i + 1}</span><b>${s}</b></div>`).join("")}</section>${END}`,
@@ -215,7 +227,7 @@ const smooth = play(["Lenis", "Native"], ["lenis", "native"], "Wheel inside the 
     // Lenis on the window element instead of the page, stepped by GSAP's ticker as the recipe does.
     const s = lenisScroll({ wrapper: win, content: one(win, ".w-content"), lerp: 0.08 });
     return [s.destroy];
-  }),
+  }, "", false),
 );
 
 /* ---------- Section pager ---------- */
@@ -353,7 +365,7 @@ const textOnPath = play(["Curve", "Badge"], ["curve", "badge"], SCROLL_HINT, (te
 export const SCROLL_STAGES: Record<string, StageDef> = {
   "scroll-reveal": reveal,
   parallax: parallaxStage,
-  "pinned-scene": pinned,
+  pinned,
   "stacking-cards": stacking,
   "zoom-through": zoom,
   "horizontal-run": run,
