@@ -1,12 +1,14 @@
 import { Fragment } from "react";
 import { CollectionMotion } from "@/components/CollectionMotion";
 import { Hero } from "@/components/Hero";
+import { HomeLanding } from "@/components/HomeLanding";
 import { TransitionLink } from "@/components/motion/TransitionLink";
 import { EXHIBITS, GROUPS, byGroup, two } from "@/lib/exhibits";
 
 export default function Home() {
   return (
     <main>
+      <HomeLanding />
       <Hero />
 
       <CollectionMotion>

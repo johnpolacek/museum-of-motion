@@ -7,9 +7,22 @@ import { fontsReady, gsap, prefersReducedMotion, useGSAP } from "@/lib/motion/gs
 import { wordmarkCue } from "@/lib/motion/events";
 import { wordmarkTour, type WordmarkTour } from "@/lib/motion/wordmark";
 import { armRecovery, claimVisit, disarm, handOff } from "@/lib/motion/boot";
+import { collectionTargets, glideTo } from "@/lib/motion/home-nav";
 import { TransitionLink } from "./motion/TransitionLink";
 
 const OWNER = "mast";
+
+/**
+ * On the home page these links move the page instead of navigating: every click glides, even when
+ * the address would not change. Elsewhere they navigate as links, with the page transition.
+ */
+function onHome(e: React.MouseEvent<HTMLAnchorElement>, to: "top" | "collection") {
+  if (window.location.pathname !== "/" || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+  const { section, heading } = collectionTargets();
+  if (to === "collection" && !section) return;
+  e.preventDefault();
+  glideTo(to === "top" ? "top" : section!, to === "top" ? null : heading);
+}
 
 export function Masthead() {
   const root = useRef<HTMLElement>(null);
@@ -75,13 +88,13 @@ export function Masthead() {
 
   return (
     <header ref={root} className="mast wrap blue" data-motion-owner={OWNER} data-phase="initial">
-      <TransitionLink className="word" href="/">
+      <TransitionLink className="word" href="/" onClick={(e) => onHome(e, "top")}>
         <span className="wm" data-intro>
           Museum of Motion
         </span>
       </TransitionLink>
       <nav className="lab" aria-label="Main">
-        <TransitionLink href="/#collection" data-intro>
+        <TransitionLink href="/#collection" data-intro onClick={(e) => onHome(e, "collection")}>
           Collection
         </TransitionLink>
         <TransitionLink href="/about" data-intro>

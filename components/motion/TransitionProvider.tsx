@@ -7,6 +7,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef } fr
 import { usePathname, useRouter } from "next/navigation";
 import { ScrollTrigger } from "@/lib/motion/gsap";
 import type { SharedState } from "@/lib/motion/shared";
+import { settleScroll, startScrollMemory } from "@/lib/motion/scroll-memory";
 
 /** Where the navigation came from: the destination, and the link element clicked, if any. */
 export type OutroContext = { href: string; source: Element | null };
@@ -43,6 +44,8 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
   const lockTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const shared = useRef<{ pathname: string; state: SharedState } | null>(null);
 
+  useEffect(() => startScrollMemory(), []);
+
   // A new route is showing: release the lock and invalidate any pending push (back or forward mid-outro).
   useEffect(() => {
     token.current++;
@@ -50,8 +53,14 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
     clearTimeout(lockTimer.current);
     // A handoff only survives into the page it was made for. A history move elsewhere drops it.
     if (shared.current && shared.current.pathname !== pathname) shared.current = null;
+    // Back, Forward, and reload return to where this page was left.
+    settleScroll(pathname);
     // Persistent owners such as the footer keep their triggers across pages: remeasure for the new page.
-    const frame = requestAnimationFrame(() => ScrollTrigger.refresh());
+    // ScrollTrigger's memory is cleared first, or the re-measure puts back a position from another page.
+    const frame = requestAnimationFrame(() => {
+      ScrollTrigger.clearScrollMemory("manual");
+      ScrollTrigger.refresh();
+    });
     return () => cancelAnimationFrame(frame);
   }, [pathname]);
 

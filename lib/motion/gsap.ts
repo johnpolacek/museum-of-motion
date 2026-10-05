@@ -6,9 +6,10 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Flip } from "gsap/Flip";
 import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
 import { MotionPathPlugin } from "gsap/MotionPathPlugin";
+import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import { useGSAP } from "@gsap/react";
 
-gsap.registerPlugin(useGSAP, SplitText, CustomEase, ScrollTrigger, Flip, DrawSVGPlugin, MotionPathPlugin);
+gsap.registerPlugin(useGSAP, SplitText, CustomEase, ScrollTrigger, Flip, DrawSVGPlugin, MotionPathPlugin, ScrollToPlugin);
 
 // MOTION.md: one entrance curve, one exit curve.
 CustomEase.create("signature", "M0,0 C0.2,1.5 0.35,1 1,1");
