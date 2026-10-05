@@ -8,6 +8,8 @@ Dependencies: `gsap`, `gsap/ScrollTrigger`. `scrubStatement` also needs `gsap/Sp
 
 Setup: `scrubStatement` with `by: "chars"` needs [stable typography](../text-stability.md#stable-typography-for-character-animation); words keep natural kerning. Verify the revert with the [cleanup checks](../verification.md#splittext-cleanup-stability).
 
+Nested scrollers: `scroller` points every builder at an element that scrolls on its own, such as a panel or a demo window. The browser scrolls that element before any script runs, and ScrollTrigger pins inside it with a transform set a frame later, so a pinned section hops on every wheel step and scrubbed moves trail the content. Drive the element with [smooth scroll](smooth-scroll.md#scrolling-an-element)'s `lenisScroll({ wrapper, content })` so the scroll and the pin land in the same frame. `ScrollTrigger.normalizeScroll` is built for the document and does not fix a nested scroller. Touch stays native unless `syncTouch` is set; check pins on a phone. Pins on the document's own scroll use fixed positioning and do not hop.
+
 ```ts
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";

@@ -302,10 +302,6 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win .w-dock.right { grid-column: 2; grid-row: 1; }
 .ex .win .w-way:has(.right) h3 { grid-column: 1; grid-row: 1; }
 .ex .win .w-way:has(.left) h3 { grid-column: 2; grid-row: 1; }
-.ex .win .w-bar { position: sticky; top: 0; z-index: 2; height: 4px; background: rgba(255,255,255,0.2); }
-.ex .win .w-bar i { display: block; height: 100%; background: #fff; transform-origin: 0 50%; }
-.ex .win .w-article { max-width: 54ch; padding: 32px var(--gut); }
-.ex .win .w-article p { margin: 0 0 1.2em; font-size: 20px; line-height: 1.45; }
 .ex .win .w-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 var(--gut); }
 .ex .win .w-head { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center; padding: 16px var(--gut); color: var(--ink); background: rgba(255,255,255,0.92); transition: color 0.3s, background-color 0.3s, transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1); }
 .ex .win .w-head b { font-weight: 800; font-stretch: 75%; text-transform: uppercase; }

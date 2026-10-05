@@ -12,7 +12,6 @@ import {
   revealOnScroll,
   runDrift,
   scrollDirection,
-  scrollProgress,
   scrollWaypoints,
   scrubStatement,
   stackCards,
@@ -179,20 +178,6 @@ const waypoints = play(["Waypoints"], ["waypoints"], SCROLL_HINT, (text) =>
      <section class="w-way"><div data-waypoint class="w-dock left"></div><h3>Ship</h3></section>${END}`,
     (win) => [scrollWaypoints(one(win, "[data-traveller]"), all(win, "[data-waypoint]"), { scroller: win })],
   ),
-);
-
-/* ---------- Progress ---------- */
-
-const PARAS = [
-  "A hairline at the top reports how far through the page you are.",
-  "It runs under reduced motion too, unsmoothed, because it is information, not decoration.",
-  "It scales from the left edge, a transform only, so it never moves the layout.",
-  "Keep reading, or keep scrolling. The line keeps count.",
-];
-const progress = play(["Progress"], ["progress"], SCROLL_HINT, (text) =>
-  windowed(text, `<div class="w-bar"><i></i></div><article class="w-article">${[...PARAS, ...PARAS, ...PARAS].map((t) => `<p>${t}</p>`).join("")}</article>`, (win) => [
-    scrollProgress(one(win, ".w-bar i"), { scroller: win }),
-  ]),
 );
 
 /* ---------- Velocity skew ---------- */
@@ -370,7 +355,6 @@ export const SCROLL_STAGES: Record<string, StageDef> = {
   "zoom-through": zoom,
   "horizontal-run": run,
   waypoints,
-  progress,
   "velocity-skew": skew,
   "header-theme": headerTheme,
   "hide-on-scroll": hideOnScroll,

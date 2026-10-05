@@ -30,7 +30,6 @@ export const LIVE_STAGES = new Set([
   "zoom-through",
   "horizontal-run",
   "waypoints",
-  "progress",
   "velocity-skew",
   "header-theme",
   "hide-on-scroll",

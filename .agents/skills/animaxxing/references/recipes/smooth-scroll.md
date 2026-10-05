@@ -195,6 +195,17 @@ export function smootherScroll(
 }
 ```
 
+## Scrolling an element
+
+`lenisScroll` also drives one element's scroll instead of the window's: pass the element as both `wrapper` and `content`, and the element's own triggers as `scroller`. Use it when [scroll effects](scroll-effects.md) pin inside a nested scroller, where native scrolling makes the pin hop a frame behind. The element keeps native keyboard and scrollbar scrolling. Destroy it with the element's owner, not the shell.
+
+```ts
+// Example: a panel that scrolls on its own, with a pinned scene inside it.
+const smooth = lenisScroll({ wrapper: panel, content: panel });
+const scene = pinnedScene(panel.querySelector("section")!, build, { scroller: panel });
+// On unmount: scene(); smooth.destroy();
+```
+
 ## Wiring
 
 ```ts

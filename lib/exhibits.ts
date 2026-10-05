@@ -291,13 +291,7 @@ const DATA: Exhibit[] = [
     src: "scroll-effects",
     desc: "One element travels onto a marker in each later section."
   },
-  {
-    name: "Progress",
-    group: "scroll",
-    builders: "scrollProgress",
-    src: "scroll-effects",
-    desc: "A rule grows with reading progress."
-  },
+
   {
     name: "Velocity skew",
     group: "scroll",

@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
       { source: "/exhibits/confetti", destination: "/exhibits/physics", permanent: true },
       { source: "/exhibits/rain", destination: "/exhibits/physics", permanent: true },
       { source: "/exhibits/pinned-scene", destination: "/exhibits/pinned", permanent: true },
+      { source: "/exhibits/progress", destination: "/", permanent: true },
     ];
   },
 };
