@@ -420,9 +420,10 @@ const DATA: Exhibit[] = [
     group: "pointer",
     builders: "menuOverlay, dialogMotion, disclosure, enterExit",
     src: "component-motion",
-    desc: "Panels come and go: a full-screen menu, a dialog, an accordion, and an open that turns back if you change your mind halfway.",
+    desc: "Panels come and go: a full-screen menu, a dialog that grows out of its button, a drawer, an accordion, and an open that turns back if you change your mind halfway.",
     vars: [
       "Dialog",
+      "Drawer",
       "Disclosure",
       "Interruptible"
     ]

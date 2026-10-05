@@ -331,11 +331,12 @@ const dialog = play(
     live(
       text,
       `<button type="button" class="pill big dlg-open">Open dialog</button>
-       <dialog class="stage-dialog ${p.variation === "center" ? "" : `drawer drawer-${p.variation}`}" aria-labelledby="stage-dlg-title"><h2 id="stage-dlg-title">Dialog</h2><p>Native &lt;dialog&gt;, animated in and out. Focus and Escape stay the browser's.</p><button type="button" class="pill dlg-close">Close</button></dialog>`,
+       <dialog class="stage-dialog ${p.variation === "center" ? "" : `drawer drawer-${p.variation}`}" aria-labelledby="stage-dlg-title"><h2 id="stage-dlg-title">${p.variation === "center" ? "Dialog" : "Drawer"}</h2><p>A native &lt;dialog&gt;, animated in and out. Focus and Escape stay the browser's.</p><button type="button" class="pill dlg-close">Close</button></dialog>`,
       (layer) => {
         const opener = one(layer, ".dlg-open");
         const dlg = one<HTMLDialogElement>(layer, "dialog");
-        const d = dialogMotion(dlg, { placement: p.variation as "center" });
+        // Centered, it opens as a circle out of the button that opened it; the edges slide in as drawers.
+        const d = p.variation === "center" ? dialogMotion(dlg, { from: opener }) : dialogMotion(dlg, { placement: p.variation as "right" });
         const open = () => d.open();
         const close = () => d.close();
         opener.addEventListener("click", open);
@@ -745,6 +746,7 @@ const attractMerged = merge([
 const openAndCloseMerged = merge([
   { label: "Menu", key: "menu", def: menu },
   { label: "Dialog", key: "dialog", def: dialog },
+  { label: "Drawer", key: "drawer", def: dialog, variation: "right" },
   { label: "Disclosure", key: "disclosure", def: accordion },
   { label: "Interruptible", key: "interruptible", def: enterAndExit },
 ]);

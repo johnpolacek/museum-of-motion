@@ -198,6 +198,8 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art.live:has(.ee-panel) { align-content: center; }
 .ex .stage-dialog { max-width: 420px; border: 0; padding: 28px; background: #fff; color: var(--ink); }
 .ex .stage-dialog h2 { margin: 0 0 8px; font-weight: 800; font-stretch: 75%; text-transform: uppercase; font-size: 32px; }
+/* The dialog sits inside the stage; without this its text takes the stage's display size. */
+.ex .stage-dialog p { margin: 0 0 20px; font-size: 17px; line-height: 1.45; letter-spacing: 0; font-weight: 400; }
 .ex .stage-dialog .pill { border-color: var(--ink); }
 .ex .stage-dialog::backdrop { background: rgb(11 11 11 / 0.55); opacity: var(--dialog-backdrop, 1); }
 .ex .stage-dialog.drawer { margin: 0; max-width: none; max-height: none; }

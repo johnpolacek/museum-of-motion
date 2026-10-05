@@ -259,6 +259,8 @@ export type DialogPlacement = "center" | Edge;
 export type DialogMotionOptions = {
   /** `center` scales in; an edge slides the dialog in from that side. */
   placement?: DialogPlacement;
+  /** Opens out of this element and closes back into it, in place of `placement`'s move. */
+  from?: Element;
   duration?: number;
 };
 
@@ -270,7 +272,7 @@ export type DialogMotion = {
   revert: Teardown;
 };
 
-const DIALOG_PROPS = ["opacity", "transform", "translate", "--dialog-backdrop"];
+const DIALOG_PROPS = ["opacity", "transform", "translate", "clip-path", "--dialog-backdrop"];
 const ONSTAGE = { opacity: 1, x: 0, y: 0, xPercent: 0, yPercent: 0, scale: 1, "--dialog-backdrop": 1 };
 const OFFSTAGE: Record<DialogPlacement, gsap.TweenVars> = {
   center: { scale: 0.96, y: 8 },
@@ -280,7 +282,22 @@ const OFFSTAGE: Record<DialogPlacement, gsap.TweenVars> = {
   right: { xPercent: 100 },
 };
 
-export function dialogMotion(dialog: HTMLDialogElement, { placement = "center", duration = 0.3 }: DialogMotionOptions = {}): DialogMotion {
+/**
+ * Circles in the dialog's own coordinates: a dot at the element's center, and one from the same
+ * center large enough to reach the dialog's farthest corner. Measured at each call, so a moved
+ * trigger still lines up.
+ */
+function iris(dialog: HTMLElement, from: Element) {
+  const d = dialog.getBoundingClientRect();
+  const b = from.getBoundingClientRect();
+  const x = b.left + b.width / 2 - d.left;
+  const y = b.top + b.height / 2 - d.top;
+  const reach = Math.max(...[[0, 0], [d.width, 0], [0, d.height], [d.width, d.height]].map(([cx, cy]) => Math.hypot(cx! - x, cy! - y)));
+  const circle = (r: number) => `circle(${r}px at ${x}px ${y}px)`;
+  return { closed: circle(Math.min(b.width, b.height) / 2), open: circle(reach) };
+}
+
+export function dialogMotion(dialog: HTMLDialogElement, { placement = "center", from, duration = 0.3 }: DialogMotionOptions = {}): DialogMotion {
   const run = relay();
   const hidden = { opacity: 0, "--dialog-backdrop": 0 };
   const exit = placement === "center" ? { scale: 0.98 } : OFFSTAGE[placement];
@@ -292,6 +309,15 @@ export function dialogMotion(dialog: HTMLDialogElement, { placement = "center", 
       if (dialog.open) dialog.close(returnValue);
     };
     if (prefersReducedMotion()) return tl.call(finish);
+    if (from) {
+      // Back into the element it came from, then gone. At rest the clip is cleared; start from the full circle.
+      const shape = iris(dialog, from);
+      if (!dialog.style.clipPath) gsap.set(dialog, { clipPath: shape.open });
+      return tl
+        .to(dialog, { clipPath: shape.closed, "--dialog-backdrop": 0, duration: duration * 1.2, ease: "power3.in" })
+        .set(dialog, { opacity: 0 })
+        .call(finish);
+    }
     return tl.to(dialog, { ...hidden, ...exit, duration: duration * 0.7, ease: "power2.in" }).call(finish);
   };
   const revert = own((dispose, after) => {
@@ -318,10 +344,18 @@ export function dialogMotion(dialog: HTMLDialogElement, { placement = "center", 
       const tl = run.next();
       if (!dialog.open) {
         // Hidden before its first paint; focus still lands inside because opacity keeps the contents focusable.
-        gsap.set(dialog, { ...hidden, ...OFFSTAGE[placement] });
+        gsap.set(dialog, from ? hidden : { ...hidden, ...OFFSTAGE[placement] });
         dialog.showModal();
+        // Measured once it is laid out: the clip starts as a dot on the element.
+        if (from && !prefersReducedMotion()) gsap.set(dialog, { opacity: 1, clipPath: iris(dialog, from).closed });
       }
       if (prefersReducedMotion()) return tl.set(dialog, ONSTAGE);
+      if (from) {
+        // The circle opens past the farthest corner, then the clip clears, so nothing clips at rest.
+        return tl
+          .to(dialog, { opacity: 1, clipPath: iris(dialog, from).open, "--dialog-backdrop": 1, duration: duration * 2, ease: "power3.inOut" })
+          .set(dialog, { clearProps: "clipPath" });
+      }
       return tl.to(dialog, { ...ONSTAGE, duration, ease: "power3.out" });
     },
     close,
