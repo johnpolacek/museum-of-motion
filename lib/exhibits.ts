@@ -114,19 +114,24 @@ const DATA: Exhibit[] = [
     desc: "Display copy arrives word by word, at speaking pace."
   },
   {
-    name: "Weight wave",
+    name: "Wave",
     group: "type",
-    builders: "charsWeightWave",
+    builders: "charsWeightWave, startWave",
     src: "split-entrances",
-    desc: "A wave of weight runs through a line."
+    desc: "A wave runs through a line: letters gain weight and let it go, or every few seconds a small move ripples across a heading.",
+    vars: [
+      "All",
+      "Hop",
+      "Breathe",
+      "Lean",
+      "Lighten",
+      "Shear",
+      "Squash",
+      "Twist"
+    ]
   },
-  {
-    name: "Letter wave",
-    group: "type",
-    builders: "startWave",
-    src: "wave",
-    desc: "Every few seconds, a small move ripples across a heading."
-  },
+
+
   {
     name: "Route letters",
     group: "type",
@@ -145,19 +150,17 @@ const DATA: Exhibit[] = [
     ]
   },
   {
-    name: "Count-up",
+    name: "Count",
     group: "type",
-    builders: "countUp",
+    builders: "countUp, odometer",
     src: "counters-and-marquees",
-    desc: "Figures count to their final value and keep their format."
+    desc: "Figures count to their final value and keep their format, or digit columns roll to each new value, forward when it rises and back when it falls.",
+    vars: [
+      "Odometer"
+    ]
   },
-  {
-    name: "Odometer",
-    group: "type",
-    builders: "odometer",
-    src: "counters-and-marquees",
-    desc: "Digit columns roll to each new value, forward when it rises and back when it falls."
-  },
+
+
   {
     name: "Entrances and exits",
     group: "play",
@@ -186,19 +189,18 @@ const DATA: Exhibit[] = [
     desc: "A wipe opens a frame while what is inside settles from a slight zoom: an image, a video, any block."
   },
   {
-    name: "Line draw",
+    name: "Path",
     group: "play",
-    builders: "drawIn, drawOut",
+    builders: "drawIn, drawOut, followPath",
     src: "svg-effects",
-    desc: "Strokes draw along their length."
+    desc: "Strokes draw along their length, or a small mark loops along a path.",
+    vars: [
+      "Dot",
+      "Arrow"
+    ]
   },
-  {
-    name: "Path follow",
-    group: "play",
-    builders: "followPath",
-    src: "svg-effects",
-    desc: "A small mark loops along a path."
-  },
+
+
   {
     name: "Marquee",
     group: "play",

@@ -1,7 +1,7 @@
 // Live stages for the text exhibits. Recipes from the animaxxing skill's split entrances,
 // speak-in, wave, route letters, and the motion vocabulary's shelf.
 import { gsap, SplitText } from "../gsap";
-import { art, assemble, def, end, EXIT, pinWidths, rnd, split, type Act, type LoopParams, type StageDef } from "../stage-core";
+import { type Act, art, assemble, def, end, EXIT, type LoopParams, merge, pinWidths, rnd, split, type StageDef } from "../stage-core";
 import { EXHIBITS } from "../../exhibits";
 
 /* ---------- Line mask ---------- */
@@ -799,8 +799,7 @@ export const TEXT_STAGES: Record<string, StageDef> = {
   glitch,
   typewriter,
   "speak-in": speakIn,
-  "weight-wave": weightWave,
-  "letter-wave": letterWave,
+  wave: merge([{ def: weightWave, label: "Weight", key: "weight" }, { def: letterWave, all: true }]),
   "route-letters": routeLetters,
   "entrances-and-exits": paired,
 };

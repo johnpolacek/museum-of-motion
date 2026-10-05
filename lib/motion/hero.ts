@@ -87,7 +87,7 @@ export function heroIntro(root: HTMLElement): HeroIntro {
     land(everyChars, { yPercent: -70, autoAlpha: 0, duration: 0.8, ease: ENTER, stagger: 0.04 }, 0);
     sup("every", 0.85);
 
-    // 33 Link hover, its Underline tab, on "way": the word widens from condensed while its underline sweeps in from the start.
+    // 30 Link hover, its Underline tab, on "way": the word widens from condensed while its underline sweeps in from the start.
     pinWidth(p.word("way"));
     touched.add(p.word("way"));
     land(p.leaf("way"), { fontStretch: "62%", autoAlpha: 0, duration: 0.8, ease: ENTER }, 0.22);
@@ -97,7 +97,7 @@ export function heroIntro(root: HTMLElement): HeroIntro {
     // "a" has no exhibit. It simply rises.
     land(p.leaf("a"), { yPercent: 40, autoAlpha: 0, duration: 0.6, ease: ENTER }, 0.42);
 
-    // 06 Weight wave on "page": letters arrive hairline and gain weight, each to its own pose weight.
+    // 08 Wave, its Weight tab, on "page": letters arrive hairline and gain weight, each to its own pose weight.
     const pageChars = p.chars("page");
     // Pinned at resting width so the weight axis moves without reflowing the line.
     for (const c of pageChars) pinWidth(c);

@@ -138,8 +138,11 @@ export function ExhibitStage({ slug, desc }: Props) {
   };
 
   const set = <K extends keyof LoopParams>(key: K, value: LoopParams[K]) => setParams((p) => ({ ...p, [key]: value }));
-  const has = (knob: Knob) => def.knobs.includes(knob);
-  const spec = (key: "duration" | "stagger" | "hold"): KnobSpec => ({ ...KNOB_DEFAULTS[key], ...def.specs?.[key] });
+  // A merged exhibit's tabs each keep their own knobs.
+  const knobs = def.knobsBy?.[params.variation] ?? def.knobs;
+  const specs = def.specsBy?.[params.variation] ?? def.specs;
+  const has = (knob: Knob) => knobs.includes(knob);
+  const spec = (key: "duration" | "stagger" | "hold"): KnobSpec => ({ ...KNOB_DEFAULTS[key], ...specs?.[key] });
 
   return (
     <>
@@ -196,7 +199,7 @@ export function ExhibitStage({ slug, desc }: Props) {
               </select>
             </label>
           )}
-          {def.knobs.length > 0 && (
+          {knobs.length > 0 && (
             <button type="button" className="ctl" onClick={() => setParams((p) => def.defaults(p.variation))}>
               Reset
             </button>

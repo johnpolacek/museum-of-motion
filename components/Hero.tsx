@@ -205,7 +205,7 @@ export function Hero() {
             <span className="ch">g</span>
             <span className="ch">e</span>
           </span>
-          <sup>{numberOf("weight-wave")}</sup>
+          <sup>{numberOf("wave")}</sup>
         </span>{" "}
         <span className="w" data-word="can" aria-hidden="true">
           <span className="t">can</span>
@@ -230,7 +230,7 @@ export function Hero() {
               ["line-mask", "Line mask"],
               ["characters", "Characters"],
               ["word-slide", "Word slide"],
-              ["weight-wave", "Weight wave"],
+              ["wave", "Wave"],
               ["link-hover", "Link hover"],
             ].map(([slug, name]) => (
               <li key={slug}>

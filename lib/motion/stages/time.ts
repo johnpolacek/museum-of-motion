@@ -3,7 +3,7 @@
 // Moves and values come from the animaxxing recipes: media effects, SVG effects, counters and marquees,
 // and page covers.
 import { gsap, prefersReducedMotion, SplitText } from "../gsap";
-import { art, assemble, def, EXIT, live, pinWidths, play, type StageDef } from "../stage-core";
+import { art, assemble, def, EXIT, live, merge, pinWidths, play, type StageDef } from "../stage-core";
 import { drawIn, pathLoop } from "../recipes/svg-effects";
 import { EXHIBITS } from "../../exhibits";
 
@@ -641,10 +641,8 @@ export const TIME_STAGES: Record<string, StageDef> = {
   "text-on-path": textOnPath,
   timeline,
   reveal: imageReveal,
-  "line-draw": lineDraw,
-  "path-follow": pathFollow,
-  "count-up": countUp,
-  odometer,
+  path: merge([{ def: lineDraw, label: "Draw", key: "draw" }, { def: pathFollow, all: true }]),
+  count: merge([{ def: countUp, label: "Count-up", key: "count" }, { def: odometer, label: "Odometer", key: "odometer" }]),
   marquee,
   cycle: logoCycle,
   curtain,

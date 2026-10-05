@@ -32,8 +32,10 @@ export type Play = { destroy: () => void };
 export type StageDef = {
   /** Interactive stages have no loop, so no pause or scrub. They show a hint instead. */
   hint?: string;
-  /** Per-variation hints, for a stage merged from several. */
+  /** Per-variation hints, knobs, and knob specs, for a stage merged from several. */
   hints?: Record<string, string>;
+  knobsBy?: Record<string, Knob[]>;
+  specsBy?: Record<string, StageDef["specs"]>;
   /** Tab labels, one per variation, in order. */
   labels: string[];
   /** Variation keys, matching labels. */
@@ -145,28 +147,28 @@ export const play = (
 
 /**
  * One exhibit from several stages, one tab each. Each tab builds its stage as it was, with that stage's
- * own variation and hint.
+ * own variation, hint, and knobs. `all` brings every tab of a stage that has several.
  */
-export function merge(parts: Array<{ label: string; key: string; def: StageDef; variation?: string }>): StageDef {
-  const by = new Map(parts.map((part) => [part.key, part]));
-  const inner = (key: string) => {
-    const part = by.get(key) ?? parts[0]!;
-    return { part, variation: part.variation ?? part.def.variations[0]! };
-  };
+type MergePart = { def: StageDef; label?: string; key?: string; variation?: string; all?: boolean };
+export function merge(parts: MergePart[]): StageDef {
+  const tabs = parts.flatMap(({ def, label, key, variation, all }) =>
+    all
+      ? def.variations.map((v, i) => ({ def, label: def.labels[i]!, key: v, variation: v }))
+      : [{ def, label: label ?? def.labels[0]!, key: key ?? def.variations[0]!, variation: variation ?? def.variations[0]! }],
+  );
+  const by = new Map(tabs.map((tab) => [tab.key, tab]));
+  const tab = (key: string) => by.get(key) ?? tabs[0]!;
+  const each = <T,>(read: (t: (typeof tabs)[number]) => T) => Object.fromEntries(tabs.map((t) => [t.key, read(t)]));
   return {
-    labels: parts.map((part) => part.label),
-    variations: parts.map((part) => part.key),
-    knobs: [],
-    hint: parts[0]!.def.hint,
-    hints: Object.fromEntries(parts.map((part) => [part.key, part.def.hint ?? ""])),
-    defaults: (key) => {
-      const { part, variation } = inner(key);
-      return { ...part.def.defaults(variation), variation: key };
-    },
-    build: (text, p) => {
-      const { part, variation } = inner(p.variation);
-      return part.def.build(text, { ...p, variation });
-    },
+    labels: tabs.map((t) => t.label),
+    variations: tabs.map((t) => t.key),
+    knobs: tabs[0]!.def.knobs,
+    hint: tabs[0]!.def.hint,
+    hints: tabs.some((t) => t.def.hint) ? each((t) => t.def.hint ?? "") : undefined,
+    knobsBy: each((t) => t.def.knobs),
+    specsBy: each((t) => t.def.specs),
+    defaults: (key) => ({ ...tab(key).def.defaults(tab(key).variation), variation: key }),
+    build: (text, p) => tab(p.variation).def.build(text, { ...p, variation: tab(p.variation).variation }),
   };
 }
 
