@@ -512,6 +512,100 @@ export function scrollDirection(
   });
 }
 
+export type HeaderShrinkOptions = {
+  /** Height of the slim bar, in px. */
+  compact?: number;
+  /** Scroll distance over which the header condenses, in px. */
+  distance?: number;
+  /** Scale of the wordmark in the slim bar. */
+  mark?: number;
+  /** The wordmark's width axis in the slim bar; omit to leave it. */
+  stretch?: string;
+  scrub?: number | boolean;
+  scroller?: Scroller;
+};
+
+export function headerShrink(
+  header: HTMLElement,
+  { compact = 56, distance = 160, mark = 0.5, stretch, scrub = true, scroller }: HeaderShrinkOptions = {},
+): Teardown {
+  return own((_dispose, after) => {
+    const bg = header.querySelector<HTMLElement>("[data-header-bg]");
+    const wordmark = header.querySelector<HTMLElement>("[data-header-mark]");
+    const nav = header.querySelector<HTMLElement>("[data-header-nav]");
+    const parts = [bg, wordmark, nav].filter((el): el is HTMLElement => !!el);
+    after(snapshotStyles(parts, ["transform", "translate", "scale", "font-stretch"]));
+    // The slim bar's middle sits `compact / 2` from the top; contents rise from the tall header's middle to there.
+    const lift = () => compact / 2 - header.offsetHeight / 2;
+    const tl = gsap.timeline({ paused: true, defaults: { ease: "none" } });
+    if (bg) tl.to(bg, { scaleY: () => compact / header.offsetHeight }, 0);
+    if (wordmark) tl.to(wordmark, { scale: mark, y: lift, ...(stretch ? { fontStretch: stretch } : {}) }, 0);
+    if (nav) tl.to(nav, { y: lift }, 0);
+    if (prefersReducedMotion()) {
+      // No scrub: the header is tall near the top and slim anywhere past `distance`, with no motion between.
+      ScrollTrigger.create({ start: distance, end: "max", scroller, onToggle: (self) => tl.progress(self.isActive ? 1 : 0) });
+    } else {
+      ScrollTrigger.create({ start: 0, end: distance, scrub, scroller, animation: tl, invalidateOnRefresh: true });
+    }
+  });
+}
+
+export type HeaderSectionOptions = {
+  sections?: string;
+  /** Where the header's bottom edge sits, in px from the top; a section is current once its top passes it. */
+  line?: number | (() => number);
+  duration?: number;
+  scroller?: Scroller;
+};
+
+export function headerSection(
+  label: HTMLElement,
+  { sections = "[data-header-section]", line = () => label.closest("header")?.offsetHeight ?? 64, duration = 0.45, scroller }: HeaderSectionOptions = {},
+): Teardown {
+  return own((dispose, after) => {
+    const original = label.innerHTML;
+    after(() => {
+      label.innerHTML = original;
+    });
+    const reduced = prefersReducedMotion();
+    const make = (text: string) => {
+      const span = document.createElement("span");
+      span.textContent = text;
+      return span;
+    };
+    let current = make(label.textContent ?? "");
+    label.replaceChildren(current);
+    dispose(() => gsap.killTweensOf(label.children));
+    const swap = (text: string, direction: number) => {
+      if (current.textContent === text) return;
+      const outgoing = current;
+      // A swap in flight lands at once: only the newest pair is ever moving.
+      gsap.killTweensOf(label.children);
+      Array.from(label.children).forEach((child) => child !== outgoing && child.remove());
+      current = make(text);
+      label.append(current);
+      if (reduced) {
+        outgoing.remove();
+        return;
+      }
+      gsap.to(outgoing, { yPercent: -100 * direction, duration: duration * 0.6, ease: "power2.in", onComplete: () => outgoing.remove() });
+      gsap.fromTo(current, { yPercent: 100 * direction }, { yPercent: 0, duration, ease: "back.out(1.6)", delay: duration * 0.15 });
+    };
+    const at = () => (typeof line === "function" ? line() : line);
+    gsap.utils.toArray<HTMLElement>(sections).forEach((section) => {
+      ScrollTrigger.create({
+        trigger: section,
+        start: () => `top ${at()}`,
+        end: () => `bottom ${at()}`,
+        scroller,
+        onToggle: (self) => {
+          if (self.isActive) swap(section.dataset.headerSection ?? "", self.direction);
+        },
+      });
+    });
+  });
+}
+
 export type StackOptions = {
   /** Px from the viewport top where the first card pins. */
   top?: number;

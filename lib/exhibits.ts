@@ -313,12 +313,14 @@ const DATA: Exhibit[] = [
   {
     name: "Header",
     group: "scroll",
-    builders: "navTheme, scrollDirection",
+    builders: "navTheme, scrollDirection, headerShrink, headerSection",
     src: "scroll-effects",
-    desc: "The header follows the page. It takes the theme of the section beneath it, hides going down, and returns going up.",
+    desc: "The header follows the page. It takes the theme of the section beneath it, hides going down, shrinks to a slim bar, or names the section you are in.",
     vars: [
       "Hide",
-      "Both"
+      "Both",
+      "Shrink",
+      "Section"
     ]
   },
 

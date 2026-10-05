@@ -1,6 +1,6 @@
 # Recipe: scroll effects
 
-Twelve scroll-linked effects: reveals, a scrubbed statement, parallax, a pinned scene, cards that stack as they pin, a zoom through to the next layer, a horizontal run with optional item drift, an element that travels between waypoints, a progress rule, a velocity skew, a header theme that follows the section beneath it, and a scroll direction state.
+Fourteen scroll-linked effects: reveals, a scrubbed statement, parallax, a pinned scene, cards that stack as they pin, a zoom through to the next layer, a horizontal run with optional item drift, an element that travels between waypoints, a progress rule, a velocity skew, a header theme that follows the section beneath it, a scroll direction state, a header that shrinks to a slim bar, and a header label that names the current section.
 
 Lifecycle: the framework controller builds these once the owner is measurable, refreshes ScrollTrigger when fonts, media, data, or scroll restoration change layout, and calls each idempotent teardown on unmount. Builders never kill triggers they did not create. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -692,6 +692,144 @@ export function scrollDirection(
 
 Runs under reduced motion: the header still hides and returns, without a transition. Pair it with smooth scroll freely; the trigger reads the eased position.
 
+## headerShrink
+
+A tall header condenses into a slim bar over the first stretch of scroll: its backdrop shortens, the wordmark scales down and condenses, and the nav rises to meet it. Every move is a transform or a font axis, scrubbed to the scroll, so it reverses exactly. The header's own box never changes height, so nothing below it reflows.
+
+```html
+<header class="site-header" data-header-shrink>
+  <i data-header-bg></i>
+  <a data-header-mark href="/">Museum of Motion</a>
+  <nav data-header-nav>…</nav>
+</header>
+```
+
+```css
+/* A fixed, tall box; only its parts move. The empty part below the slim bar lets clicks through. */
+.site-header { position: sticky; top: 0; height: 140px; display: flex; align-items: center; justify-content: space-between; pointer-events: none; }
+.site-header > * { pointer-events: auto; }
+[data-header-bg] { position: absolute; inset: 0; z-index: -1; background: white; transform-origin: 50% 0; }
+[data-header-mark] { transform-origin: 0 50%; }
+```
+
+```ts
+export type HeaderShrinkOptions = {
+  /** Height of the slim bar, in px. */
+  compact?: number;
+  /** Scroll distance over which the header condenses, in px. */
+  distance?: number;
+  /** Scale of the wordmark in the slim bar. */
+  mark?: number;
+  /** The wordmark's width axis in the slim bar; omit to leave it. */
+  stretch?: string;
+  scrub?: number | boolean;
+  scroller?: Scroller;
+};
+
+export function headerShrink(
+  header: HTMLElement,
+  { compact = 56, distance = 160, mark = 0.5, stretch, scrub = true, scroller }: HeaderShrinkOptions = {},
+): Teardown {
+  return own((_dispose, after) => {
+    const bg = header.querySelector<HTMLElement>("[data-header-bg]");
+    const wordmark = header.querySelector<HTMLElement>("[data-header-mark]");
+    const nav = header.querySelector<HTMLElement>("[data-header-nav]");
+    const parts = [bg, wordmark, nav].filter((el): el is HTMLElement => !!el);
+    after(snapshotStyles(parts, ["transform", "translate", "scale", "font-stretch"]));
+    // The slim bar's middle sits `compact / 2` from the top; contents rise from the tall header's middle to there.
+    const lift = () => compact / 2 - header.offsetHeight / 2;
+    const tl = gsap.timeline({ paused: true, defaults: { ease: "none" } });
+    if (bg) tl.to(bg, { scaleY: () => compact / header.offsetHeight }, 0);
+    if (wordmark) tl.to(wordmark, { scale: mark, y: lift, ...(stretch ? { fontStretch: stretch } : {}) }, 0);
+    if (nav) tl.to(nav, { y: lift }, 0);
+    if (prefersReducedMotion()) {
+      // No scrub: the header is tall near the top and slim anywhere past `distance`, with no motion between.
+      ScrollTrigger.create({ start: distance, end: "max", scroller, onToggle: (self) => tl.progress(self.isActive ? 1 : 0) });
+    } else {
+      ScrollTrigger.create({ start: 0, end: distance, scrub, scroller, animation: tl, invalidateOnRefresh: true });
+    }
+  });
+}
+```
+
+The slim bar covers `compact` px; the rest of the header's box is transparent and click-through, so content scrolls up beneath it. Pair with `scrollDirection` to hide the slim bar going down, or with `navTheme`.
+
+## headerSection
+
+The header names the section beneath it. As a new `[data-header-section]` passes under the header, the label rolls to that section's name: up when scrolling down, down when scrolling up. The label is one element holding text; the builder swaps a copy in and the old one out.
+
+```html
+<header class="site-header">… <span class="lab" data-header-label aria-hidden="true">Intro</span></header>
+<section data-header-section="Intro">…</section>
+<section data-header-section="Work">…</section>
+```
+
+```css
+/* Both names share one cell while they cross, clipped to the line. */
+[data-header-label] { display: inline-grid; overflow: clip; }
+[data-header-label] > * { grid-area: 1 / 1; }
+```
+
+```ts
+export type HeaderSectionOptions = {
+  sections?: string;
+  /** Where the header's bottom edge sits, in px from the top; a section is current once its top passes it. */
+  line?: number | (() => number);
+  duration?: number;
+  scroller?: Scroller;
+};
+
+export function headerSection(
+  label: HTMLElement,
+  { sections = "[data-header-section]", line = () => label.closest("header")?.offsetHeight ?? 64, duration = 0.45, scroller }: HeaderSectionOptions = {},
+): Teardown {
+  return own((dispose, after) => {
+    const original = label.innerHTML;
+    after(() => {
+      label.innerHTML = original;
+    });
+    const reduced = prefersReducedMotion();
+    const make = (text: string) => {
+      const span = document.createElement("span");
+      span.textContent = text;
+      return span;
+    };
+    let current = make(label.textContent ?? "");
+    label.replaceChildren(current);
+    dispose(() => gsap.killTweensOf(label.children));
+    const swap = (text: string, direction: number) => {
+      if (current.textContent === text) return;
+      const outgoing = current;
+      // A swap in flight lands at once: only the newest pair is ever moving.
+      gsap.killTweensOf(label.children);
+      Array.from(label.children).forEach((child) => child !== outgoing && child.remove());
+      current = make(text);
+      label.append(current);
+      if (reduced) {
+        outgoing.remove();
+        return;
+      }
+      gsap.to(outgoing, { yPercent: -100 * direction, duration: duration * 0.6, ease: "power2.in", onComplete: () => outgoing.remove() });
+      gsap.fromTo(current, { yPercent: 100 * direction }, { yPercent: 0, duration, ease: "back.out(1.6)", delay: duration * 0.15 });
+    };
+    const at = () => (typeof line === "function" ? line() : line);
+    gsap.utils.toArray<HTMLElement>(sections).forEach((section) => {
+      ScrollTrigger.create({
+        trigger: section,
+        start: () => `top ${at()}`,
+        end: () => `bottom ${at()}`,
+        scroller,
+        onToggle: (self) => {
+          if (self.isActive) swap(section.dataset.headerSection ?? "", self.direction);
+        },
+      });
+    });
+  });
+}
+```
+
+The label is decorative, so keep it `aria-hidden` and let real headings name the sections. Under reduced motion the name changes with no roll.
+
 ## stackCards
 
 Cards pin one below another as the page scrolls, each sliding over the last, and the cards beneath shrink a little so the pile reads as a deck. When the last card arrives the whole deck scrolls away together. Each card pins on its own trigger, so cards may differ in height.
@@ -834,6 +972,8 @@ Under reduced motion and without JavaScript, the section shows both layers at re
 | `scrollProgress` | Settled | teardown | Runs, unsmoothed |
 | `navTheme` | Settled, once section heights are final; the header persists, so rebuild per page | teardown | Runs; CSS drops the transition |
 | `scrollDirection` | Once per document, from the persistent shell | teardown | Runs; CSS drops the transition |
+| `headerShrink` | Once per document, after fonts load, from the persistent shell | teardown | Tall near the top, slim past `distance`; no motion between |
+| `headerSection` | Settled, once section heights are final; rebuild per page | teardown | The name changes with no roll |
 
 - Create triggers in document order, pins included, so later starts account for earlier pin spacing. Build on a fresh visit; refresh a re-shown preserved page instead.
 - Keep scenes and runs alive through outro and end state; reverting a pin mid-outro jumps the page. Revert on unmount, inner `containerAnimation` effects first.

@@ -6,6 +6,8 @@ import { gsap, prefersReducedMotion, ScrollTrigger, SplitText } from "../gsap";
 import { live, play, type Play, type StageDef } from "../stage-core";
 import {
   horizontalRun,
+  headerSection,
+  headerShrink,
   navTheme,
   parallax,
   pinnedScene,
@@ -94,7 +96,7 @@ const reveal = play(["Rise", "Plop", "Zoom", "Tilt", "Words", "Letters"], ["rise
         `${CUE}<section class="w-statement"><p>Every way a page can move, from the first frame to the last, read at the speed you scroll.</p></section>${END}`,
         (win) => [scrubStatement(one(win, ".w-statement p"), { by: p.variation as "words", scroller: win })],
       )
-    : windowed(text, `${CUE}<div class="w-grid">${Array.from({ length: 12 }, (_, i) => `<div class="w-card">${poster(22 + i, i)}</div>`).join("")}</div>${END}`, (win) => [
+    : windowed(text, `${CUE}<div class="w-grid">${Array.from({ length: 24 }, (_, i) => `<div class="w-card">${poster(10 + i, i)}</div>`).join("")}</div>${END}`, (win) => [
         revealOnScroll(all(win, ".w-card"), { scroller: win, start: "top 70%", repeat: true, ...CARD_REVEALS[p.variation] }),
       ]),
 );
@@ -178,20 +180,39 @@ const waypoints = play(["Waypoints"], ["waypoints"], SCROLL_HINT, (text) =>
 /* ---------- Header ---------- */
 
 const HEAD = `<header class="w-head"><b>Museum of Motion</b><span class="lab">Collection · About</span></header>`;
+const ROOMS = ["Time", "Scroll", "Pointer", "Drag", "Type", "Paths", "Covers", "Exit"];
 const BANDS = (n: number) =>
-  Array.from({ length: n }, (_, i) => `<section class="w-band ${i % 2 ? "dark" : "light"}" data-nav-theme="${i % 2 ? "dark" : "light"}"><h3>${i % 2 ? "Dark section" : "Light section"}</h3></section>`).join("");
+  Array.from(
+    { length: n },
+    (_, i) =>
+      `<section class="w-band ${i % 2 ? "dark" : "light"}" data-nav-theme="${i % 2 ? "dark" : "light"}" data-header-section="${ROOMS[i % ROOMS.length]}"><h3>${i % 2 ? "Dark section" : "Light section"}</h3></section>`,
+  ).join("");
+// Shrink: a tall header whose backdrop, wide wordmark, and nav condense into a slim bar.
+const TALL_HEAD = `<header class="w-head w-tallhead" data-header-shrink><i data-header-bg></i><b data-header-mark>Museum of Motion</b><span class="lab" data-header-nav>Collection · About</span></header>`;
+// Section: the header names the room beneath it.
+const ROOM_HEAD = `<header class="w-head"><b>Museum of Motion</b><span class="w-room" data-header-label aria-hidden="true">${ROOMS[0]}</span></header>`;
 
 // Theme and Hide are the skill's navTheme and scrollDirection; Both runs them together, as most sites would.
-const header = play(["Theme", "Hide", "Both"], ["theme", "hide", "both"], "Scroll down, then back up.", (text, p) =>
-  windowed(
-    text,
-    `${HEAD}${BANDS(8)}`,
-    (win) => [
-      ...(p.variation === "hide" ? [] : [navTheme(one(win, ".w-head"), { scroller: win })]),
-      ...(p.variation === "theme" ? [] : [scrollDirection(win, { scroller: win })]),
-    ],
-    p.variation === "theme" ? "" : "hiding",
-  ),
+// Shrink is headerShrink, and Section is headerSection.
+const header = play(
+  ["Theme", "Hide", "Both", "Shrink", "Section"],
+  ["theme", "hide", "both", "shrink", "section"],
+  "Scroll down, then back up.",
+  (text, p) =>
+    windowed(
+      text,
+      `${p.variation === "shrink" ? TALL_HEAD : p.variation === "section" ? ROOM_HEAD : HEAD}${BANDS(8)}`,
+      (win) => {
+        const head = one(win, ".w-head");
+        if (p.variation === "shrink") return [headerShrink(head, { compact: 56, distance: 200, mark: 0.42, stretch: "75%", scroller: win })];
+        if (p.variation === "section") return [navTheme(head, { scroller: win }), headerSection(one(win, "[data-header-label]"), { scroller: win })];
+        return [
+          ...(p.variation === "hide" ? [] : [navTheme(head, { scroller: win })]),
+          ...(p.variation === "theme" ? [] : [scrollDirection(win, { scroller: win })]),
+        ];
+      },
+      p.variation === "hide" || p.variation === "both" ? "hiding" : "",
+    ),
 );
 
 /* ---------- Section pager ---------- */
