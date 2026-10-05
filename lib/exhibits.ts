@@ -227,13 +227,7 @@ const DATA: Exhibit[] = [
     desc: "An image wipes in or out on the GPU.",
     gl: true
   },
-  {
-    name: "Sound cues",
-    group: "time",
-    builders: "soundCues",
-    src: "sound-cues",
-    desc: "Short sounds tied to motion, off until the visitor turns them on."
-  },
+
   {
     name: "Scroll reveal",
     group: "scroll",

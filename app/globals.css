@@ -127,8 +127,6 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .sample { margin: 0; font-weight: 400; font-size: clamp(40px, 6.4vw, 116px); line-height: 1.0; letter-spacing: -0.03em; justify-self: start; align-self: center; }
 .ex .stage-art .sample .ln { display: block; overflow: hidden; }
 .ex .stage-art .sample .ln > span { display: block; }
-.ex .stage-art .sound { position: absolute; top: 16px; right: 0; }
-.ex .stage-art .sound[aria-pressed="true"] { background: #fff; color: var(--blue); border-color: #fff; }
 /* Interactive stages: real controls on the stage, styled like the site's pills and type. */
 .ex .controls .hint { grid-column: 1 / -1; margin: 0; }
 .ex .stage-art.live { padding: 0 var(--gut); }

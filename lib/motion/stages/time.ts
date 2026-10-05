@@ -1,7 +1,7 @@
 // Live stages for the Time exhibits. Each builds its
 // own art inside the stage and plays it on the loop engine, so pause, scrub, and knobs work the same.
 // Moves and values come from the animaxxing recipes: media effects, SVG effects, counters and marquees,
-// page covers, physics effects, and sound cues.
+// page covers, and physics effects.
 import { gsap } from "../gsap";
 import { art, assemble, def, EXIT, rnd, type StageDef } from "../stage-core";
 import { EXHIBITS } from "../../exhibits";
@@ -480,73 +480,6 @@ const rain = def(
   },
 );
 
-/* ---------- Sound cues ---------- */
-
-/** A short synthesized tick, ±40 cents of variety, so each line sounds a little different. */
-function tick(ctx: AudioContext, base: number, volume = 0.18) {
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = "triangle";
-  osc.frequency.value = base * Math.pow(2, rnd(-40, 40) / 1200);
-  gain.gain.setValueAtTime(volume, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
-  osc.connect(gain).connect(ctx.destination);
-  osc.start();
-  osc.stop(ctx.currentTime + 0.13);
-}
-
-const soundCues = def(["Sound cues"], ["sound"], ["duration", "stagger", "hold", "ease"], { duration: 0.8, stagger: 0.12, hold: 1.6, ease: "signature" }, (text, p) => {
-  // Off until the visitor opts in. Audio only starts from that click.
-  const { layer, remove } = art(
-    text,
-    `<p class="sample">Every way a page<br>can move.</p><button type="button" class="lab ctl sound" aria-pressed="false">Sound off</button>`,
-    "live",
-  );
-  const sample = layer.querySelector<HTMLElement>(".sample")!;
-  const button = layer.querySelector<HTMLButtonElement>(".sound")!;
-  let ctx: AudioContext | null = null;
-  let tlRef: gsap.core.Timeline | null = null;
-  const toggle = () => {
-    if (!ctx) ctx = new AudioContext();
-    const on = button.getAttribute("aria-pressed") !== "true";
-    if (on) ctx.resume();
-    else ctx.suspend();
-    button.setAttribute("aria-pressed", String(on));
-    button.textContent = on ? "Sound on" : "Sound off";
-  };
-  button.addEventListener("click", toggle);
-  // Cues sound only while the loop plays, never while scrubbing.
-  const cue = (freq: number) => () => {
-    if (ctx && ctx.state === "running" && tlRef && !tlRef.paused()) tick(ctx, freq);
-  };
-  // The sample's two lines, each its own mask, as in Line mask.
-  sample.innerHTML = `<span class="ln"><span>Every way a page</span></span><span class="ln"><span>can move.</span></span>`;
-  const lines = Array.from(sample.querySelectorAll<HTMLElement>(".ln > span"));
-  const loop = assemble(
-    text,
-    p,
-    [],
-    {
-      enter: (tl) => {
-        tl.fromTo(lines, { yPercent: 110 }, { yPercent: 0, duration: p.duration, ease: p.ease, stagger: p.stagger }, 0);
-        lines.forEach((_, i) => tl.call(cue(660 + i * 220), undefined, i * p.stagger + 0.05));
-        return p.duration + p.stagger * (lines.length - 1);
-      },
-      exit: (tl, at) => {
-        tl.to(lines, { yPercent: -110, duration: Math.max(0.2, p.duration * 0.4), ease: EXIT, stagger: p.stagger * 0.5 }, at);
-        tl.call(cue(330), undefined, at);
-      },
-    },
-    () => {
-      button.removeEventListener("click", toggle);
-      ctx?.close();
-      remove();
-    },
-  );
-  tlRef = loop.timeline;
-  return loop;
-});
-
 export const TIME_STAGES: Record<string, StageDef> = {
   reveal: imageReveal,
   "line-draw": lineDraw,
@@ -557,5 +490,4 @@ export const TIME_STAGES: Record<string, StageDef> = {
   cycle: logoCycle,
   curtain,
   rain,
-  "sound-cues": soundCues,
 };

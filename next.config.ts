@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
       { source: "/exhibits/enter-and-exit", destination: "/exhibits/interruptible", permanent: true },
       { source: "/exhibits/curve-cover", destination: "/exhibits/curtain", permanent: true },
       { source: "/exhibits/preloader", destination: "/exhibits/count-up", permanent: true },
+      { source: "/exhibits/sound-cues", destination: "/", permanent: true },
     ];
   },
 };
