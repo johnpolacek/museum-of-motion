@@ -106,7 +106,7 @@ function snapshotStyles(elements: HTMLElement[], props = SCENE_PROPS): () => voi
 
 ## revealOnScroll
 
-Items rise in batches as they cross into view, once. Items already past `start` (reload, restored scroll) reveal at once. Waiting items are transparent, not hidden, so they stay in the accessibility tree and tab order; focus reveals one at once.
+Items rise in batches as they cross into view, once by default. With `repeat`, scrolling back up past an item sends it out again, quick and straight, and it rises again on the way back down. Items already past `start` (reload, restored scroll) reveal at once. Waiting items are transparent, not hidden, so they stay in the accessibility tree and tab order; focus reveals one at once.
 
 ```ts
 export type RevealOptions = {
@@ -121,12 +121,14 @@ export type RevealOptions = {
   stagger?: number;
   /** Accepts a registered CustomEase name. */
   ease?: string;
+  /** Hide again when scrolled back above `start`, and reveal again on the way down. */
+  repeat?: boolean;
   scroller?: Scroller;
 };
 
 export function revealOnScroll(
   targets: gsap.DOMTarget,
-  { start = REVEAL_START, y = 16, scale, rotation, duration = 0.42, stagger = 0.09, ease = "power3.out", scroller }: RevealOptions = {},
+  { start = REVEAL_START, y = 16, scale, rotation, duration = 0.42, stagger = 0.09, ease = "power3.out", repeat = false, scroller }: RevealOptions = {},
 ): Teardown {
   const items = gsap.utils.toArray<HTMLElement>(targets);
   if (!items.length || prefersReducedMotion()) return () => {};
@@ -148,8 +150,22 @@ export function revealOnScroll(
     gsap.set(items, from);
     ScrollTrigger.batch(items, {
       start,
-      once: true,
+      once: !repeat,
       scroller,
+      // Leaving is quicker than arriving, straight, with no overshoot.
+      onLeaveBack: repeat
+        ? (batch) => {
+            const tween = gsap.to(batch, {
+              ...from,
+              duration: duration * 0.6,
+              stagger: { each: stagger * 0.4, from: "end" },
+              ease: "power2.in",
+              overwrite: "auto",
+              onComplete: () => live.delete(tween),
+            });
+            live.add(tween);
+          }
+        : undefined,
       onEnter: (batch) => {
         const tween = gsap.to(batch, {
           ...to,

@@ -46,6 +46,7 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - Reveal targets waiting below the fold stay in the accessibility tree and tab order; tabbing into one shows it at once.
 - Scroll down and back through every scrubbed effect; each returns exactly to its start values.
 - Pinned scenes and runs: no jump entering or leaving the pin; content below lands in place.
+- `revealOnScroll` with `repeat`: scrolling back above the start hides an item, and scrolling down reveals it again; without `repeat` it stays revealed.
 - `stackCards`: each card pins `offset` px below the last, buried cards shrink by `shrink` per card above, the deck leaves together with its spacing, and teardown leaves no pin spacer or inline style.
 - `zoomThrough`: in `scale` mode the focus point holds still while the target grows, the target ends hidden and the back at scale 1; in `clip` mode the window opens to `inset(0)`; teardown restores every child's style.
 - `scrollWaypoints`: the traveller rests in place at the top, covers each marker's box exactly when that marker is centered, and lands again after a resize or a moved marker plus refresh; revert leaves no trigger or inline transform.

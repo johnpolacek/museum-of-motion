@@ -200,7 +200,7 @@ Scroll effects follow reading position, not page phase. Use at most one scrubbed
 
 | Effect | Move | Role |
 |---|---|---|
-| `revealOnScroll` | `opacity 0, y 16 → 0`, 0.42s, `power3.out`, stagger 0.09, batched, once | The workhorse below the fold: sections, cards, figures. |
+| `revealOnScroll` | `opacity 0, y 16 → 0`, 0.42s, `power3.out`, stagger 0.09, batched, once; with `repeat`, leaves in 0.25s `power2.in` when scrolled back above | The workhorse below the fold: sections, cards, figures. |
 | `scrubStatement` | words `opacity 0.15 → 1`, scrubbed through the reading zone | One display statement filling in as it is read. |
 | `parallax` | `y ∓ data-parallax` px, scrubbed across the section | Depth between media and captions. Small travel. |
 | `pinnedScene` | caller's timeline, pinned for `length` section heights | Steps, a product reveal, a diagram assembling. The loudest; one per page. |
