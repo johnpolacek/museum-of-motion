@@ -22,6 +22,8 @@ export type Loop = {
   /** One full cycle, in seconds. */
   cycle: number;
   destroy: () => void;
+  /** Settles once the stage can draw its first frame. Until then the loop holds at its start. */
+  ready?: Promise<unknown>;
 };
 
 export type KnobSpec = { label: string; min: number; max: number; step: number; unit: string };

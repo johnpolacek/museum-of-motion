@@ -44,11 +44,12 @@ export function ExhibitStage({ slug, desc }: Props) {
   const playingRef = useRef(true);
   const scrubbing = useRef(false);
   const offscreen = useRef(false);
+  const waiting = useRef(false);
 
   const sync = () => {
     const l = loop.current;
     if (!l) return;
-    if (playingRef.current && !scrubbing.current && !offscreen.current) l.timeline.play();
+    if (playingRef.current && !scrubbing.current && !offscreen.current && !waiting.current) l.timeline.play();
     else l.timeline.pause();
   };
 
@@ -81,6 +82,13 @@ export function ExhibitStage({ slug, desc }: Props) {
       const t = l.timeline.time();
       if (now.current) now.current.textContent = secs(t);
       if (rail.current && !scrubbing.current) rail.current.value = String(t / l.cycle);
+    });
+    // A stage that needs a first frame, such as a WebGL plane, holds at its start until it can draw.
+    waiting.current = !!l.ready;
+    l.ready?.then(() => {
+      if (loop.current !== l) return;
+      waiting.current = false;
+      sync();
     });
     sync();
     const stop = () => {

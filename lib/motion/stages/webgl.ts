@@ -87,23 +87,34 @@ const shader = def(
   (text, p) => {
     const n = EXHIBITS.find((e) => e.slug === "shader")?.no ?? 0;
     const { layer, remove } = art(text, `<figure class="gl-frame"><img alt="A poster that a shader brings in and out" src="${posterUrl(n, 0)}"></figure>`);
+    // Until the plane draws, the <img> shows the whole poster: a flash before the move brings it in.
+    // The recipe's gate: hide the wrapper, await `ready`, then show it. The plane still prepares while hidden.
+    layer.style.visibility = "hidden";
     const [plane] = planes([layer.querySelector("img")!]);
     const move = SHADER_MOVES[p.variation] ?? SHADER_MOVES.wipe;
     const u = plane.uniforms;
     const saved = { uProgress: u.uProgress.value, uDissolve: u.uDissolve.value, uPixelate: u.uPixelate.value, uRipple: u.uRipple.value, uGlitch: u.uGlitch.value };
     move.start(u);
-    return assemble(
+    // Without WebGL, ready settles false at once and the plain poster shows. A slow device waits two seconds at most.
+    let deadline: ReturnType<typeof setTimeout> | undefined;
+    const ready = Promise.race([plane.ready, new Promise((resolve) => (deadline = setTimeout(resolve, 2000)))]).then(() => {
+      clearTimeout(deadline);
+      layer.style.removeProperty("visibility");
+    });
+    const loop = assemble(
       text,
       p,
       [],
       { enter: (tl) => move.enter(tl, u, p), exit: (tl, at) => move.exit(tl, u, p, at) },
       () => {
+        clearTimeout(deadline);
         gsap.killTweensOf(Object.values(u));
         Object.entries(saved).forEach(([k, v]) => ((u as unknown as Record<string, { value: number }>)[k].value = v));
         plane.revert();
         remove();
       },
     );
+    return { ...loop, ready };
   },
   { dissolve: { duration: 1.1 }, pixelate: { duration: 1 }, ripple: { duration: 1.4 }, glitch: { duration: 0.6 } },
 );
