@@ -97,22 +97,18 @@ const DATA: Exhibit[] = [
     ]
   },
   {
-    name: "Typewriter",
+    name: "Type and speak",
     group: "type",
-    builders: "typeIn, typeOut, retype",
+    builders: "typeIn, typeOut, retype, speakIn",
     src: "typewriter",
-    desc: "Typed one character at a time behind a caret, at a person's uneven pace.",
+    desc: "Text written out over time: typed one character at a time behind a caret at a person's uneven pace, or spoken in word by word.",
     vars: [
-      "Retype"
+      "Retype",
+      "Speak"
     ]
   },
-  {
-    name: "Speak-in",
-    group: "type",
-    builders: "speakIn",
-    src: "speak-in",
-    desc: "Display copy arrives word by word, at speaking pace."
-  },
+
+
   {
     name: "Wave",
     group: "type",

@@ -26,6 +26,8 @@ const nextConfig: NextConfig = {
       { source: "/exhibits/frame-sequence", destination: "/exhibits/timeline", permanent: true },
       { source: "/exhibits/shape-scrub", destination: "/exhibits/icon-morph", permanent: true },
       { source: "/exhibits/weight-wave", destination: "/exhibits/wave", permanent: true },
+      { source: "/exhibits/typewriter", destination: "/exhibits/type-and-speak", permanent: true },
+      { source: "/exhibits/speak-in", destination: "/exhibits/type-and-speak#speak", permanent: true },
       { source: "/exhibits/letter-wave", destination: "/exhibits/wave#all", permanent: true },
       { source: "/exhibits/count-up", destination: "/exhibits/count", permanent: true },
       { source: "/exhibits/odometer", destination: "/exhibits/count#odometer", permanent: true },

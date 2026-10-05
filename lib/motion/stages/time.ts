@@ -2,9 +2,11 @@
 // own art inside the stage and plays it on the loop engine, so pause, scrub, and knobs work the same.
 // Moves and values come from the animaxxing recipes: media effects, SVG effects, counters and marquees,
 // and page covers.
-import { gsap, prefersReducedMotion, SplitText } from "../gsap";
+import { gsap, prefersReducedMotion, ScrollTrigger, SplitText } from "../gsap";
 import { art, assemble, def, EXIT, live, merge, pinWidths, play, type StageDef } from "../stage-core";
 import { drawIn, pathLoop } from "../recipes/svg-effects";
+import { pinnedScene } from "../recipes/scroll-effects";
+import { lenisScroll } from "../recipes/smooth/lenis-scroll";
 import { EXHIBITS } from "../../exhibits";
 
 const OPEN = "inset(0% 0% 0% 0%)";
@@ -484,10 +486,12 @@ const PARTS = ["draw", "type", "count", "blocks", "settle"] as const;
 const one = <T extends Element = HTMLElement>(root: ParentNode, sel: string) => root.querySelector(sel) as T;
 const fmt = (s: number) => s.toFixed(2);
 
-const timeline = play(["Timeline"], ["timeline"], "Play, scrub, change speed, or jump to a label.", (text) =>
-  live(
-    text,
-    `<div class="tl">
+// Clock plays the master on its own, with transport controls. Scroll scrubs the same master through the
+// skill's pinnedScene in a scrolling window, the way a page would: scrolling is the control.
+const TL_HINTS = { clock: "Play, scrub, change speed, or jump to a label.", scroll: "Scroll inside the window, or jump to a label." };
+const timeline = play(["Clock", "Scroll"], ["clock", "scroll"], TL_HINTS.clock, (text, p) => {
+  const scrolled = p.variation === "scroll";
+  const machine = `<div class="tl">
       <div class="tl-scene" aria-hidden="true">
         <span class="tl-count">000</span>
         <b class="tl-word">Timeline</b>
@@ -496,13 +500,22 @@ const timeline = play(["Timeline"], ["timeline"], "Play, scrub, change speed, or
         <svg class="tl-ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44"/><line x1="50" y1="50" x2="50" y2="14"/></svg>
       </div>
       <div class="tl-lanes" aria-hidden="true">${PARTS.map((n) => `<span class="lab">${n}</span><span class="tl-track"><i></i></span>`).join("")}<span></span><span class="tl-head-track"><i class="tl-head"></i></span></div>
-      <input class="tl-scrub" type="range" min="0" max="1000" value="0" aria-label="Timeline position">
+      ${
+        scrolled
+          ? ""
+          : `<input class="tl-scrub" type="range" min="0" max="1000" value="0" aria-label="Timeline position">
       <div class="tl-ctrls">
         <button type="button" class="pill" data-play>Pause</button><button type="button" class="pill" data-reverse>Reverse</button><button type="button" class="pill" data-restart>Restart</button>
         <span class="tl-speed" role="group" aria-label="Speed">${[0.5, 1, 2].map((s) => `<button type="button" class="pill" data-speed="${s}" aria-pressed="${s === 1}">${s}×</button>`).join("")}</span>
-      </div>
+      </div>`
+      }
       <div class="tl-ctrls" role="group" aria-label="Jump to a label">${PARTS.map((n) => `<button type="button" class="pill" data-label="${n}">${n}</button>`).join("")}<span class="lab tl-read" aria-live="off">0.00 s</span></div>
-    </div>`,
+    </div>`;
+  return live(
+    text,
+    scrolled
+      ? `<div class="win tl-win" tabindex="0" role="region" aria-label="A scrolling sample page"><section class="w-pad"><p class="lab">Scroll ↓</p></section><section class="tl-pin">${machine}</section><section class="w-pad"><p class="lab">End</p></section></div>`
+      : machine,
     (layer) => {
       const scene = one(layer, ".tl-scene");
       const word = one(scene, ".tl-word");
@@ -568,15 +581,15 @@ const timeline = play(["Timeline"], ["timeline"], "Play, scrub, change speed, or
       });
 
       const head = one(layer, ".tl-head");
-      const scrub = one<HTMLInputElement>(layer, ".tl-scrub");
+      const scrub = layer.querySelector<HTMLInputElement>(".tl-scrub");
       const read = one(layer, ".tl-read");
-      const playBtn = one(layer, "[data-play]");
+      const playBtn = layer.querySelector<HTMLElement>("[data-play]");
       const sync = () => {
-        const p = master.progress();
-        gsap.set(head, { xPercent: p * 100 });
-        scrub.value = String(Math.round(p * 1000));
+        const at = master.progress();
+        gsap.set(head, { xPercent: at * 100 });
+        if (scrub) scrub.value = String(Math.round(at * 1000));
         read.textContent = `${fmt(master.time())} s · ${master.currentLabel() ?? "draw"}`;
-        playBtn.textContent = master.isActive() ? "Pause" : "Play";
+        if (playBtn) playBtn.textContent = master.isActive() ? "Pause" : "Play";
       };
       master.eventCallback("onUpdate", sync);
       master.eventCallback("onComplete", sync);
@@ -586,8 +599,40 @@ const timeline = play(["Timeline"], ["timeline"], "Play, scrub, change speed, or
         el.addEventListener(type, fn);
         return () => el.removeEventListener(type, fn);
       };
+      if (scrolled) {
+        // The skill's pinnedScene holds the scene while the window scrolls three screens' worth, and its
+        // scrub drives the master. Unpaused before nesting: a paused child stays paused in its parent.
+        const win = one(layer, ".win");
+        const smooth = lenisScroll({ wrapper: win, content: win });
+        const section = one(layer, ".tl-pin");
+        const scene = pinnedScene(section, (tl) => void tl.add(master.paused(false)), { length: 3, scrub: 0.4, scroller: win });
+        if (prefersReducedMotion()) master.progress(1);
+        // A label jump scrolls the window to where that label sits in the pinned stretch.
+        const jumps = Array.from(layer.querySelectorAll<HTMLElement>("[data-label]")).map((b) =>
+          on(b, "click", () => {
+            const st = ScrollTrigger.getAll().find((t) => t.trigger === section);
+            if (!st) return;
+            smooth.scrollTo(st.start + (master.labels[b.dataset.label!]! / master.duration()) * (st.end - st.start));
+          }),
+        );
+        const frame = requestAnimationFrame(() => ScrollTrigger.refresh());
+        sync();
+        return [
+          ...jumps,
+          () => cancelAnimationFrame(frame),
+          scene,
+          smooth.destroy,
+          () => {
+            master.kill();
+            draw.revert();
+            gsap.set([count, ring, ...blocks, ...split.masks], { clearProps: "all" });
+            split.revert();
+          },
+        ];
+      }
+
       const offs = [
-        on(playBtn, "click", () => {
+        on(playBtn!, "click", () => {
           if (master.isActive()) master.pause();
           else if (master.progress() === 1 && !master.reversed()) master.restart();
           else master.play();
@@ -598,8 +643,8 @@ const timeline = play(["Timeline"], ["timeline"], "Play, scrub, change speed, or
           sync();
         }),
         on(one(layer, "[data-restart]"), "click", () => master.reversed(false).restart()),
-        on(scrub, "input", () => {
-          master.pause().progress(+scrub.value / 1000);
+        on(scrub!, "input", () => {
+          master.pause().progress(+scrub!.value / 1000);
           sync();
         }),
         ...Array.from(layer.querySelectorAll<HTMLElement>("[data-speed]")).map((b) =>
@@ -633,13 +678,14 @@ const timeline = play(["Timeline"], ["timeline"], "Play, scrub, change speed, or
         },
       ];
     },
-    "timeline",
-  ),
-);
+    `timeline${scrolled ? " scrolled" : ""}`,
+  );
+});
+const timelineStage: StageDef = { ...timeline, hints: TL_HINTS };
 
 export const TIME_STAGES: Record<string, StageDef> = {
   "text-on-path": textOnPath,
-  timeline,
+  timeline: timelineStage,
   reveal: imageReveal,
   path: merge([{ def: lineDraw, label: "Draw", key: "draw" }, { def: pathFollow, all: true }]),
   count: merge([{ def: countUp, label: "Count-up", key: "count" }, { def: odometer, label: "Odometer", key: "odometer" }]),

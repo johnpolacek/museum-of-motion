@@ -429,6 +429,9 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 }
 /* Timeline: scene, lanes drawn from the master's children, and controls. */
 .ex .stage:has(.stage-art.timeline) { min-height: 680px; }
+.ex .stage-art.timeline.scrolled { padding: 0; }
+.ex .stage-art .tl-win .tl-pin { height: 100cqh; display: grid; place-items: center; padding: 16px var(--gut); }
+.ex .stage-art .tl-win .tl { width: min(100%, 820px); }
 .ex .stage-art.timeline { padding: 24px 0; }
 .ex .stage-art .tl { display: grid; gap: 14px; width: min(100%, 820px); }
 .ex .stage-art .tl-scene { position: relative; height: clamp(180px, 26vw, 260px); overflow: clip; }
