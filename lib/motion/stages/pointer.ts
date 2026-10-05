@@ -2,7 +2,7 @@
 // Each mounts real controls inside the stage and wires the animaxxing recipe to them, unchanged, from
 // lib/motion/recipes. Nothing loops: the stage waits for the visitor, so it shows a hint instead of a scrub.
 import { gsap, SplitText } from "../gsap";
-import { live, play, type StageDef } from "../stage-core";
+import { live, merge, play, type StageDef } from "../stage-core";
 import { directionalFill, imageZoom, textRoll, underlineSweep } from "../recipes/hover-effects";
 import { hoverPreview } from "../recipes/media-effects";
 import { cursorFollower, dragTrack, imageTrail, magnetic, momentumHover, proximity, spotlight, swipeDismiss, tilt } from "../recipes/pointer-effects";
@@ -709,30 +709,61 @@ const deck = play(["Card stack"], ["deck"], "Drag or flick the front card, or us
   ),
 );
 
+// Link hover: one exhibit, one tab per stage it gathers.
+const linkHoverMerged = merge([
+  { label: "Roll", key: "roll", def: labelRoll },
+  { label: "Underline", key: "underline", def: underline },
+  { label: "Fill", key: "fill", def: fillTiles },
+  { label: "Zoom", key: "zoom", def: zoom },
+]);
+
+// Feedback: one exhibit, one tab per stage it gathers.
+const feedbackMerged = merge([
+  { label: "Press", key: "press", def: press },
+  { label: "Shake", key: "shake", def: shakeForm },
+  { label: "Success", key: "success", def: stateBtn, variation: "success" },
+  { label: "Error", key: "error", def: stateBtn, variation: "error" },
+]);
+
+// Cursor: one exhibit, one tab per stage it gathers.
+const cursorMerged = merge([
+  { label: "Follower", key: "follower", def: follower },
+  { label: "Preview", key: "preview", def: preview },
+  { label: "Trail", key: "trail", def: trail },
+  { label: "Spotlight", key: "spotlight", def: spot },
+]);
+
+// Attract: one exhibit, one tab per stage it gathers.
+const attractMerged = merge([
+  { label: "Magnetic", key: "magnetic", def: magnet },
+  { label: "Tilt", key: "tilt", def: tiltCards },
+  { label: "Proximity", key: "proximity", def: dock },
+  { label: "Momentum", key: "momentum", def: momentum },
+]);
+
+// Open and close: one exhibit, one tab per stage it gathers.
+const openAndCloseMerged = merge([
+  { label: "Menu", key: "menu", def: menu },
+  { label: "Dialog", key: "dialog", def: dialog },
+  { label: "Disclosure", key: "disclosure", def: accordion },
+  { label: "Interruptible", key: "interruptible", def: enterAndExit },
+]);
+
+// Flip: one exhibit, one tab per stage it gathers.
+const flipMerged = merge([
+  { label: "Layout", key: "layout", def: layoutFlip },
+  { label: "Shared", key: "shared", def: shared },
+]);
+
 export const POINTER_STAGES: Record<string, StageDef> = {
-  "label-roll": labelRoll,
-  "underline-sweep": underline,
-  zoom,
-  "directional-fill": fillTiles,
-  "press-feedback": press,
-  shake: shakeForm,
-  "hover-preview": preview,
-  magnetic: magnet,
-  tilt: tiltCards,
-  spotlight: spot,
-  "cursor-follower": follower,
-  "momentum-hover": momentum,
-  proximity: dock,
-  "image-trail": trail,
+  "link-hover": linkHoverMerged,
+  "feedback": feedbackMerged,
+  "cursor": cursorMerged,
+  "attract": attractMerged,
+  "open-and-close": openAndCloseMerged,
+  "flip": flipMerged,
   "icon-morph": iconMorph,
-  "menu-overlay": menu,
-  interruptible: enterAndExit,
-  dialog,
-  disclosure: accordion,
   "tab-indicator": tabs,
-  "state-button": stateBtn,
-  "layout-flip": layoutFlip,
-  "shared-element": shared,
   particles,
   physics: confetti,
   "blast-off": blast,

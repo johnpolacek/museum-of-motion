@@ -54,7 +54,7 @@ for (const e of EXHIBITS) {
 }
 
 test("leaving through the masthead keeps the art until the page goes", async ({ page }) => {
-  const from = "/exhibits/press-feedback";
+  const from = "/exhibits/feedback";
   await page.goto(from);
   await settled(page, from);
   await record(page);

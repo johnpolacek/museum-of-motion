@@ -52,6 +52,14 @@ export function ExhibitStage({ slug, desc }: Props) {
     else l.timeline.pause();
   };
 
+  // An address naming a tab, such as #underline, opens on it. Read after hydration, so the server's
+  // first tab and the client's agree; the stage builds later, on cue, with the chosen tab.
+  useEffect(() => {
+    const named = decodeURIComponent(location.hash.slice(1));
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the hash exists only in the browser
+    if (named && def.variations.includes(named)) setParams(def.defaults(named));
+  }, [def]);
+
   // Build the loop when the page intro cues the stage, and rebuild it whenever a knob changes.
   useEffect(() => {
     if (!cued || !text.current || (reduced && !interactive)) return;
@@ -144,7 +152,7 @@ export function ExhibitStage({ slug, desc }: Props) {
       </div>
       <div className="controls lab" data-intro hidden={reduced && !interactive}>
         {interactive ? (
-          <p className="hint">{def.hint}</p>
+          <p className="hint">{def.hints?.[params.variation] ?? def.hint}</p>
         ) : (
           <>
         <button type="button" className="ctl" onClick={toggle} aria-pressed={!playing}>
@@ -209,7 +217,11 @@ export function ExhibitStage({ slug, desc }: Props) {
                   className={on ? "on" : undefined}
                   aria-pressed={on}
                   disabled={!live}
-                  onClick={() => setParams(def.defaults(variation))}
+                  onClick={() => {
+                    setParams(def.defaults(variation));
+                    // The address names the tab, so it can be shared, and old exhibit addresses can land on it.
+                    history.replaceState(history.state, "", i === 0 ? location.pathname : `#${variation}`);
+                  }}
                 >
                   {label}
                 </button>

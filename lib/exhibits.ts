@@ -347,103 +347,67 @@ const DATA: Exhibit[] = [
     gl: true
   },
   {
-    name: "Label roll",
+    name: "Link hover",
     group: "pointer",
-    builders: "textRoll",
+    builders: "textRoll, underlineSweep, directionalFill, imageZoom",
     src: "hover-effects",
-    desc: "The label rolls up while a copy rolls in from below."
+    desc: "Links and cards answer the pointer: a label rolls, a line sweeps, a fill follows the side you came from, or the picture leans in.",
+    vars: [
+      "Underline",
+      "Fill",
+      "Zoom"
+    ]
   },
+
+
+
+
   {
-    name: "Underline sweep",
+    name: "Feedback",
     group: "pointer",
-    builders: "underlineSweep",
-    src: "hover-effects",
-    desc: "A line sweeps in from the start and out toward the end."
+    builders: "pressFeedback, shake, stateButton",
+    src: "component-motion",
+    desc: "A control answers what you did: it squashes and ripples under the press, shakes at a wrong answer, or spins, then shows how a request went.",
+    vars: [
+      "Shake",
+      "Success",
+      "Error"
+    ]
   },
+
+
   {
-    name: "Zoom",
+    name: "Cursor",
     group: "pointer",
-    builders: "imageZoom",
-    src: "hover-effects",
-    desc: "What sits in a card's frame scales up slightly while the card is hot."
-  },
-  {
-    name: "Directional fill",
-    group: "pointer",
-    builders: "directionalFill",
-    src: "hover-effects",
-    desc: "A fill slides in from the side the mouse came from and out the side it leaves."
-  },
-  {
-    name: "Press feedback",
-    group: "pointer",
-    builders: "pressFeedback",
-    src: "press-feedback",
-    desc: "A button squashes under the press, springs back, and ripples from the spot pressed."
-  },
-  {
-    name: "Shake",
-    group: "pointer",
-    builders: "shake",
-    src: "motion-vocabulary",
-    desc: "A wrong answer shakes its head, with the error spelled out beside it."
-  },
-  {
-    name: "Hover preview",
-    group: "pointer",
-    builders: "hoverPreview",
-    src: "media-effects",
-    desc: "One floating image follows the mouse over a list."
-  },
-  {
-    name: "Magnetic",
-    group: "pointer",
-    builders: "magnetic",
+    builders: "cursorFollower, hoverPreview, imageTrail, spotlight",
     src: "pointer-effects",
-    desc: "The target leans toward the mouse and settles back."
+    desc: "Something follows the mouse: an accent beside the cursor, a preview over a list, a trail of images, or a light that uncovers a second layer.",
+    vars: [
+      "Preview",
+      "Trail",
+      "Spotlight"
+    ]
   },
+
   {
-    name: "Tilt",
+    name: "Attract",
     group: "pointer",
-    builders: "tilt",
+    builders: "magnetic, tilt, proximity, momentumHover",
     src: "pointer-effects",
-    desc: "A card tilts toward the mouse in 3D."
+    desc: "Things answer the mouse's nearness: a button leans in, a card tilts, a dock swells, or stickers get knocked along its path.",
+    vars: [
+      "Tilt",
+      "Proximity",
+      "Momentum"
+    ]
   },
-  {
-    name: "Spotlight",
-    group: "pointer",
-    builders: "spotlight",
-    src: "pointer-effects",
-    desc: "A circle follows the mouse and uncovers a second layer."
-  },
-  {
-    name: "Cursor follower",
-    group: "pointer",
-    builders: "cursorFollower",
-    src: "pointer-effects",
-    desc: "An accent trails the mouse beside the native cursor."
-  },
-  {
-    name: "Momentum hover",
-    group: "pointer",
-    builders: "momentumHover",
-    src: "pointer-effects",
-    desc: "Items get knocked along the pointer’s path, then settle."
-  },
-  {
-    name: "Proximity",
-    group: "pointer",
-    builders: "proximity",
-    src: "pointer-effects",
-    desc: "Items swell as the mouse nears them."
-  },
-  {
-    name: "Image trail",
-    group: "pointer",
-    builders: "imageTrail",
-    src: "pointer-effects",
-    desc: "Images spill out along the mouse’s path."
-  },
+
+
+
+
+
+
+
   {
     name: "Icon morph",
     group: "pointer",
@@ -452,33 +416,21 @@ const DATA: Exhibit[] = [
     desc: "An icon morphs between two shapes, such as menu and close."
   },
   {
-    name: "Menu overlay",
+    name: "Open and close",
     group: "pointer",
-    builders: "menuOverlay",
+    builders: "menuOverlay, dialogMotion, disclosure, enterExit",
     src: "component-motion",
-    desc: "A full-screen panel wipes in, then its links stagger in."
+    desc: "Panels come and go: a full-screen menu, a dialog, an accordion, and an open that turns back if you change your mind halfway.",
+    vars: [
+      "Dialog",
+      "Disclosure",
+      "Interruptible"
+    ]
   },
-  {
-    name: "Interruptible",
-    group: "pointer",
-    builders: "enterExit",
-    src: "component-motion",
-    desc: "Open and close with different moves, and change your mind halfway: it turns back from where it is."
-  },
-  {
-    name: "Dialog",
-    group: "pointer",
-    builders: "dialogMotion",
-    src: "component-motion",
-    desc: "A modal scales in over a fading backdrop."
-  },
-  {
-    name: "Disclosure",
-    group: "pointer",
-    builders: "disclosure",
-    src: "component-motion",
-    desc: "An accordion panel grows to its content height."
-  },
+
+
+
+
   {
     name: "Tab indicator",
     group: "pointer",
@@ -486,30 +438,19 @@ const DATA: Exhibit[] = [
     src: "component-motion",
     desc: "An underline slides onto the selected tab."
   },
+
   {
-    name: "State button",
+    name: "Flip",
     group: "pointer",
-    builders: "stateButton",
-    src: "component-motion",
-    desc: "A button spins while it waits, then draws a check, or shakes and tries again.",
+    builders: "captureLayout, captureShared, playShared",
+    src: "layout-flip",
+    desc: "Flip records where things were and animates them to where they are: tiles sliding as a layout filters, or a thumbnail morphing into the hero it opens.",
     vars: [
-      "Error"
+      "Shared"
     ]
   },
-  {
-    name: "Layout Flip",
-    group: "pointer",
-    builders: "captureLayout",
-    src: "layout-flip",
-    desc: "Items slide and resize as a layout filters or reorders."
-  },
-  {
-    name: "Shared element",
-    group: "pointer",
-    builders: "captureShared, playShared",
-    src: "layout-flip",
-    desc: "A thumbnail morphs into the hero it opens."
-  },
+
+
   {
     name: "Particles",
     group: "pointer",

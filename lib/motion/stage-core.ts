@@ -32,6 +32,8 @@ export type Play = { destroy: () => void };
 export type StageDef = {
   /** Interactive stages have no loop, so no pause or scrub. They show a hint instead. */
   hint?: string;
+  /** Per-variation hints, for a stage merged from several. */
+  hints?: Record<string, string>;
   /** Tab labels, one per variation, in order. */
   labels: string[];
   /** Variation keys, matching labels. */
@@ -140,6 +142,33 @@ export const play = (
     return build(text, p);
   },
 });
+
+/**
+ * One exhibit from several stages, one tab each. Each tab builds its stage as it was, with that stage's
+ * own variation and hint.
+ */
+export function merge(parts: Array<{ label: string; key: string; def: StageDef; variation?: string }>): StageDef {
+  const by = new Map(parts.map((part) => [part.key, part]));
+  const inner = (key: string) => {
+    const part = by.get(key) ?? parts[0]!;
+    return { part, variation: part.variation ?? part.def.variations[0]! };
+  };
+  return {
+    labels: parts.map((part) => part.label),
+    variations: parts.map((part) => part.key),
+    knobs: [],
+    hint: parts[0]!.def.hint,
+    hints: Object.fromEntries(parts.map((part) => [part.key, part.def.hint ?? ""])),
+    defaults: (key) => {
+      const { part, variation } = inner(key);
+      return { ...part.def.defaults(variation), variation: key };
+    },
+    build: (text, p) => {
+      const { part, variation } = inner(p.variation);
+      return part.def.build(text, { ...p, variation });
+    },
+  };
+}
 
 /** Mounts interactive art, then wires recipes to it. Each wiring returns its teardown; all run in reverse. */
 export function live(text: HTMLElement, html: string, wire: (layer: HTMLElement) => Array<() => void>, className = ""): Play {
