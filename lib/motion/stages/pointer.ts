@@ -13,7 +13,7 @@ import { pressFeedback } from "../recipes/press-feedback";
 import { shake } from "../recipes/accents";
 import { dialogMotion, disclosure, enterExit, menuOverlay, stateButton, tabIndicator } from "../recipes/component-motion";
 import { captureLayout, captureShared, playShared } from "../recipes/layout-flip";
-import { burstFrom } from "../recipes/physics-effects";
+import { burstFrom, rain } from "../recipes/physics-effects";
 import { blastOff } from "../recipes/blast-off";
 import { dragGrid, dragLoop, flickCards } from "../recipes/endless-drag";
 import { attachParticleEffect, type ParticleEffectDefinition } from "../recipes/particles/attach";
@@ -531,11 +531,27 @@ const particles = play(
 );
 
 const confetti = play(
-  ["Confetti", "Emoji"],
-  ["confetti", "emoji"],
+  ["Confetti", "Emoji", "Rain"],
+  ["confetti", "emoji", "rain"],
   "Press the button.",
   (text, p) =>
-    live(text, `<button type="button" class="pill big burst-btn">Celebrate</button>`, (layer) => {
+    p.variation === "rain"
+      ? live(text, `<div class="rain-layer" aria-hidden="true"></div><button type="button" class="pill big rain-btn">Make it rain</button>`, (layer) => {
+          // Rain falls inside the stage: the skill's rain, from above its top edge to below its bottom.
+          const sky = one(layer, ".rain-layer");
+          const button = one(layer, ".rain-btn");
+          const pieces = ["#ffffff", "#0b0b0b", "#9aa2ff"].map((c) => {
+            const s = document.createElement("span");
+            s.className = "confetto";
+            s.style.background = c;
+            return s;
+          });
+          let runs: Array<{ stop: () => void }> = [];
+          const click = () => runs.push(rain(sky, { pieces: [...pieces, "✨", "★"], count: 48, period: 1.4 }));
+          button.addEventListener("click", click);
+          return [() => button.removeEventListener("click", click), () => (runs.forEach((r) => r.stop()), (runs = []))];
+        })
+      : live(text, `<button type="button" class="pill big burst-btn">Celebrate</button>`, (layer) => {
       // The recipe's layer is fixed to the viewport, so pieces can fly past the stage.
       const physics = document.createElement("div");
       physics.className = "physics-layer";
@@ -554,7 +570,7 @@ const confetti = play(
       const click = () => burstFrom(physics, button, { pieces, count: 36 });
       button.addEventListener("click", click);
       return [() => button.removeEventListener("click", click), () => physics.remove()];
-    }),
+        }),
 );
 
 const blast = play(["Blast-off"], ["blast"], "Press a button. Reset brings the hero back.", (text) =>
@@ -718,7 +734,7 @@ export const POINTER_STAGES: Record<string, StageDef> = {
   "layout-flip": layoutFlip,
   "shared-element": shared,
   particles,
-  confetti,
+  physics: confetti,
   "blast-off": blast,
   "drag-track": track,
   "endless-loop": loop,

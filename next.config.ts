@@ -14,6 +14,8 @@ const nextConfig: NextConfig = {
       { source: "/exhibits/sound-cues", destination: "/", permanent: true },
       { source: "/exhibits/shader-wipe", destination: "/exhibits/shader", permanent: true },
       { source: "/exhibits/scrubbed-statement", destination: "/exhibits/scroll-reveal", permanent: true },
+      { source: "/exhibits/confetti", destination: "/exhibits/physics", permanent: true },
+      { source: "/exhibits/rain", destination: "/exhibits/physics", permanent: true },
     ];
   },
 };

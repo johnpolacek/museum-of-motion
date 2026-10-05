@@ -211,13 +211,7 @@ const DATA: Exhibit[] = [
     ]
   },
 
-  {
-    name: "Rain",
-    group: "time",
-    builders: "rain",
-    src: "physics-effects",
-    desc: "Pieces fall from above under gravity."
-  },
+
   {
     name: "Shader",
     group: "time",
@@ -561,11 +555,15 @@ const DATA: Exhibit[] = [
     ]
   },
   {
-    name: "Confetti",
+    name: "Physics",
     group: "pointer",
-    builders: "burst, burstFrom",
+    builders: "burst, burstFrom, rain",
     src: "physics-effects",
-    desc: "A cone of pieces arcs up and falls away."
+    desc: "Pieces thrown under gravity: a cone of confetti arcs up and falls away, or it rains from above.",
+    vars: [
+      "Emoji",
+      "Rain"
+    ]
   },
   {
     name: "Blast-off",

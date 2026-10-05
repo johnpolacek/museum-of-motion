@@ -1,9 +1,9 @@
 // Live stages for the Time exhibits. Each builds its
 // own art inside the stage and plays it on the loop engine, so pause, scrub, and knobs work the same.
 // Moves and values come from the animaxxing recipes: media effects, SVG effects, counters and marquees,
-// page covers, and physics effects.
+// and page covers.
 import { gsap } from "../gsap";
-import { art, assemble, def, EXIT, rnd, type StageDef } from "../stage-core";
+import { art, assemble, def, EXIT, type StageDef } from "../stage-core";
 import { EXHIBITS } from "../../exhibits";
 
 const OPEN = "inset(0% 0% 0% 0%)";
@@ -430,56 +430,6 @@ const curtain = def(
 );
 
 
-/* ---------- Rain ---------- */
-
-const RAIN_SETS: Record<string, string[]> = {
-  shapes: ["●", "▲", "■", "◆", "✳"],
-  letters: ["M", "O", "T", "I", "O", "N"],
-  emoji: ["🎉", "✨", "💫", "⭐", "🌀"],
-};
-const GRAVITY = 900;
-
-const rain = def(
-  ["Shapes", "Letters", "Emoji"],
-  ["shapes", "letters", "emoji"],
-  ["hold"],
-  { duration: 1.2, stagger: 0, hold: 0.6, ease: "none" },
-  (text, p) => {
-    const set = RAIN_SETS[p.variation] ?? RAIN_SETS.shapes;
-    const COUNT = window.matchMedia("(pointer: coarse)").matches ? 24 : 40;
-    const { layer, remove } = art(text, Array.from({ length: COUNT }, (_, i) => `<span class="drop">${set[i % set.length]}</span>`).join(""), "rain");
-    const drops = Array.from(layer.querySelectorAll<HTMLElement>(".drop"));
-    const { width: W, height: H } = layer.getBoundingClientRect();
-    return assemble(
-      text,
-      p,
-      [],
-      {
-        enter: (tl) => {
-          let last = 0;
-          drops.forEach((drop) => {
-            // Drops from above the layer at 80 to 240 px/s under 900 px/s², spread over 1.2 s.
-            const v = rnd(80, 240);
-            const D = H + 120;
-            const T = (-v + Math.sqrt(v * v + 2 * GRAVITY * D)) / GRAVITY;
-            const at = rnd(0, p.duration);
-            const fall = (x: number) => (v * T * x + 0.5 * GRAVITY * T * T * x * x) / D;
-            tl.fromTo(
-              drop,
-              { x: rnd(0, W - 30), y: -60, rotation: rnd(-30, 30), autoAlpha: 1 },
-              { y: D - 60, rotation: `+=${rnd(-240, 240)}`, duration: T, ease: fall, immediateRender: true },
-              at,
-            );
-            last = Math.max(last, at + T);
-          });
-          return last;
-        },
-      },
-      remove,
-    );
-  },
-);
-
 export const TIME_STAGES: Record<string, StageDef> = {
   reveal: imageReveal,
   "line-draw": lineDraw,
@@ -489,5 +439,4 @@ export const TIME_STAGES: Record<string, StageDef> = {
   marquee,
   cycle: logoCycle,
   curtain,
-  rain,
 };
