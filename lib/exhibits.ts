@@ -80,7 +80,7 @@ const DATA: Exhibit[] = [
   {
     name: "Glitch",
     group: "time",
-    builders: "glitchIn, glitchOut, glitch",
+    builders: "glitchIn, glitchOut",
     src: "split-entrances",
     desc: "The signal drops: bands, blocks, and letters jump, then snap clean.",
     vars: [
@@ -88,8 +88,7 @@ const DATA: Exhibit[] = [
       "Skew",
       "Ghost",
       "Weight",
-      "Scanline",
-      "Image"
+      "Scanline"
     ]
   },
   {
@@ -220,13 +219,20 @@ const DATA: Exhibit[] = [
     desc: "Pieces fall from above under gravity."
   },
   {
-    name: "Shader wipe",
+    name: "Shader",
     group: "time",
-    builders: "wipe",
+    builders: "wipe, dissolve, pixelate, ripple, glitch",
     src: "uniform-effects",
-    desc: "An image wipes in or out on the GPU.",
+    desc: "An image comes and goes on the GPU: wiped, dissolved, pixelated, rippled, or glitched.",
+    vars: [
+      "Dissolve",
+      "Pixelate",
+      "Ripple",
+      "Glitch"
+    ],
     gl: true
   },
+
 
   {
     name: "Scroll reveal",

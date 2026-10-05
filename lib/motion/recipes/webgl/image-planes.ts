@@ -24,6 +24,12 @@ export type PlaneUniforms = {
   uProgress: Uniform<number>;
   /** Glitch strength: bands and blocks jump sideways; 0 at rest. */
   uGlitch: Uniform<number>;
+  /** Pixelation: 1 is coarse blocks, 0 is the sharp image. */
+  uPixelate: Uniform<number>;
+  /** Ripple progress: 0 to 1 sends one ring out from the center; flat at both ends. */
+  uRipple: Uniform<number>;
+  /** Dissolve: 0 hides the image in fine noise, 1 shows it whole. */
+  uDissolve: Uniform<number>;
   /** Seconds, from GSAP's ticker. */
   uTime: Uniform<number>;
 };
@@ -82,6 +88,10 @@ uniform float uHover;
 uniform float uProgress;
 uniform float uGlitch;
 uniform float uTime;
+uniform float uPixelate;
+uniform float uRipple;
+uniform float uDissolve;
+uniform vec4 uRect;
 varying vec2 vUv;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
@@ -99,6 +109,19 @@ void main() {
   float block = hash(floor(vUv * vec2(6.0, 10.0)) + tick);
   float jump = (step(0.7, band) * (band - 0.85) * 0.6 + step(0.85, block) * (block - 0.925) * 0.8) * uGlitch;
   vec2 at = vUv + vec2(jump, 0.0);
+  float aspect = uRect.z / max(uRect.w, 1.0);
+  // Ripple: one ring travels out from the center; its strength rises and falls, so rest is flat.
+  vec2 fromCenter = (at - 0.5) * vec2(aspect, 1.0);
+  float reach = length(fromCenter);
+  float ring = uRipple * 1.3 - reach;
+  float swell = sin(ring * 26.0) * exp(-abs(ring) * 6.0) * uRipple * (1.0 - uRipple) * 0.45;
+  at += fromCenter / max(reach, 0.0001) * swell / vec2(aspect, 1.0);
+  // Pixelate: snap to square cells, coarser as uPixelate rises.
+  if (uPixelate > 0.001) {
+    float cells = mix(400.0, 10.0, uPixelate);
+    vec2 grid = vec2(cells * aspect, cells);
+    at = (floor(at * grid) + 0.5) / grid;
+  }
   // Hover: a lens that magnifies toward the pointer.
   vec2 toMouse = at - uMouse;
   float lens = (1.0 - smoothstep(0.0, 0.45, length(toMouse))) * uHover;
@@ -110,6 +133,8 @@ void main() {
   float front = uProgress * (1.0 + edge);
   float depth = (1.0 - vUv.y) * (1.0 - edge) + noise(vUv * 6.0) * edge;
   float alpha = color.a * inside * (1.0 - smoothstep(front - edge, front, depth));
+  // Dissolve: fine noise decides which pixels show first.
+  alpha *= smoothstep(0.0, 0.08, uDissolve * 1.08 - noise(vUv * 48.0));
   gl_FragColor = vec4(color.rgb * alpha, alpha);
 }
 `;
@@ -169,6 +194,9 @@ export function imagePlane(
     uVelocity: { value: 0 },
     uProgress: { value: 1 },
     uGlitch: { value: 0 },
+    uPixelate: { value: 0 },
+    uRipple: { value: 0 },
+    uDissolve: { value: 1 },
     uTime: { value: 0 },
     ...extra,
   };

@@ -219,3 +219,87 @@ export function glitch(plane: ImagePlane, { duration = 0.6, hidden = true }: Gli
     },
   };
 }
+
+export type ShaderEffectOptions = {
+  duration?: number;
+  /** Starts with the plane hidden, ready for `enter`. False starts it shown. */
+  hidden?: boolean;
+};
+export type ShaderEffect = { enter(): gsap.core.Timeline; exit(): gsap.core.Timeline; revert: Teardown };
+
+/** Runs one timeline at a time on a plane, finishing at once when the plane has no WebGL. */
+function shaderRunner(plane: ImagePlane) {
+  let running: gsap.core.Timeline | undefined;
+  return {
+    run(build: (tl: gsap.core.Timeline) => void) {
+      running?.kill();
+      running = gsap.timeline();
+      if (plane.webgl) build(running);
+      else running.to({}, { duration: 0 });
+      return running;
+    },
+    kill: () => running?.kill(),
+  };
+}
+
+/** The image appears grain by grain in fine noise, and leaves the same way. */
+export function dissolve(plane: ImagePlane, { duration = 1.1, hidden = true }: ShaderEffectOptions = {}): ShaderEffect {
+  const { uDissolve } = plane.uniforms;
+  const start = uDissolve.value;
+  const runner = shaderRunner(plane);
+  if (plane.webgl) uDissolve.value = hidden ? 0 : 1;
+  return {
+    enter: () => runner.run((tl) => tl.fromTo(uDissolve, { value: 0 }, { value: 1, duration, ease: "power2.out" })),
+    exit: () => runner.run((tl) => tl.to(uDissolve, { value: 0, duration: duration * 0.6, ease: "power2.in" })),
+    revert() {
+      runner.kill();
+      gsap.killTweensOf(uDissolve);
+      uDissolve.value = start;
+    },
+  };
+}
+
+/** The image resolves from coarse blocks to sharp, and breaks back into blocks to leave. */
+export function pixelate(plane: ImagePlane, { duration = 1, hidden = true }: ShaderEffectOptions = {}): ShaderEffect {
+  const { uPixelate, uProgress } = plane.uniforms;
+  const start = [uPixelate.value, uProgress.value] as const;
+  const runner = shaderRunner(plane);
+  if (plane.webgl) uProgress.value = hidden ? 0 : 1;
+  return {
+    // Stepped, so the blocks halve in size in clear jumps rather than sliding.
+    enter: () =>
+      runner.run((tl) => tl.set(uProgress, { value: 1 }, 0).fromTo(uPixelate, { value: 1 }, { value: 0, duration, ease: "steps(8)" }, 0)),
+    exit: () =>
+      runner.run((tl) =>
+        tl.fromTo(uPixelate, { value: 0 }, { value: 1, duration: duration * 0.6, ease: "steps(6)" }).set(uProgress, { value: 0 }).set(uPixelate, { value: 0 }),
+      ),
+    revert() {
+      runner.kill();
+      gsap.killTweensOf([uPixelate, uProgress]);
+      [uPixelate.value, uProgress.value] = start;
+    },
+  };
+}
+
+export type Ripple = ShaderEffect & { burst(): gsap.core.Timeline };
+
+/** One ring rolls out from the center across the image: on arrival, on leaving, or as a burst. */
+export function ripple(plane: ImagePlane, { duration = 1.2, hidden = true }: ShaderEffectOptions = {}): Ripple {
+  const { uRipple, uProgress } = plane.uniforms;
+  const start = [uRipple.value, uProgress.value] as const;
+  const runner = shaderRunner(plane);
+  if (plane.webgl) uProgress.value = hidden ? 0 : 1;
+  // The ring runs 0 to 1 and the uniform returns to 0, so a plane at rest always reads 0.
+  const ring = (tl: gsap.core.Timeline, at = 0) =>
+    tl.fromTo(uRipple, { value: 0 }, { value: 1, duration, ease: "power2.out" }, at).set(uRipple, { value: 0 }, at + duration);
+  return {
+    enter: () => runner.run((tl) => ring(tl.set(uProgress, { value: 1 }, 0))),
+    exit: () => runner.run((tl) => ring(tl).set(uProgress, { value: 0 }, duration * 0.5)),
+    burst: () => runner.run((tl) => ring(tl)),
+    revert() {
+      runner.kill();
+      gsap.killTweensOf([uRipple, uProgress]);
+      [uRipple.value, uProgress.value] = start;
+    },
+  };
+}

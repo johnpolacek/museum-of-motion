@@ -1,10 +1,11 @@
-// WebGL stages: Shader wipe, Scroll wave, Hover lens. Each draws real <img> posters as planes on
+// WebGL stages: Shader, Scroll wave, Hover lens. Each draws real <img> posters as planes on
 // the animaxxing-webgl skill's one shared canvas (OGL), and GSAP tweens the planes' uniforms. The <img>
 // stays the page: without WebGL, under reduced motion, or after a lost context, the poster shows as is.
 import { gsap } from "../gsap";
-import { art, assemble, def, live, play, type StageDef } from "../stage-core";
+import { art, assemble, def, live, play, type LoopParams, type StageDef } from "../stage-core";
+import { EXHIBITS } from "../../exhibits";
 import { imagePlane, type ImagePlane } from "../recipes/webgl/image-planes";
-import { hoverDistortion, scrollWave, wipe } from "../recipes/webgl/uniform-effects";
+import { hoverDistortion, scrollWave } from "../recipes/webgl/uniform-effects";
 
 const TONES: [string, string][] = [
   ["#0b0b0b", "#2130ff"],
@@ -27,34 +28,84 @@ export function posterUrl(n: number, i: number) {
 /** Builds a plane per image; the planes hold the shared stage while they live. */
 const planes = (images: HTMLImageElement[]) => images.map((img) => imagePlane(img));
 
-/* ---------- Shader wipe ---------- */
+/* ---------- Shader ---------- */
 
-const shaderWipe = def(
-  ["Shader wipe"],
-  ["wipe"],
+// One poster plane, five shader moves from the animaxxing-webgl skill, each on its own uniform. Each recipe
+// sets its plane up; the loop tweens the same uniforms, so pause, scrub, and the knobs work as on every stage.
+type ShaderMove = {
+  start: (u: ImagePlane["uniforms"]) => void;
+  enter: (tl: gsap.core.Timeline, u: ImagePlane["uniforms"], p: LoopParams) => number;
+  exit: (tl: gsap.core.Timeline, u: ImagePlane["uniforms"], p: LoopParams, at: number) => void;
+};
+const SHADER_MOVES: Record<string, ShaderMove> = {
+  wipe: {
+    start: (u) => (u.uProgress.value = 0),
+    enter: (tl, u, p) => (tl.fromTo(u.uProgress, { value: 0 }, { value: 1, duration: p.duration, ease: p.ease }, 0), p.duration),
+    exit: (tl, u, p, at) => tl.to(u.uProgress, { value: 0, duration: p.duration * 0.7, ease: "power2.in" }, at),
+  },
+  dissolve: {
+    start: (u) => (u.uDissolve.value = 0),
+    enter: (tl, u, p) => (tl.fromTo(u.uDissolve, { value: 0 }, { value: 1, duration: p.duration, ease: "power2.out" }, 0), p.duration),
+    exit: (tl, u, p, at) => tl.to(u.uDissolve, { value: 0, duration: p.duration * 0.6, ease: "power2.in" }, at),
+  },
+  pixelate: {
+    start: (u) => (u.uProgress.value = 0),
+    enter: (tl, u, p) => (
+      tl.set(u.uProgress, { value: 1 }, 0).fromTo(u.uPixelate, { value: 1 }, { value: 0, duration: p.duration, ease: "steps(8)" }, 0), p.duration
+    ),
+    exit: (tl, u, p, at) =>
+      tl.fromTo(u.uPixelate, { value: 0 }, { value: 1, duration: p.duration * 0.6, ease: "steps(6)", immediateRender: false }, at)
+        .set(u.uProgress, { value: 0 }, at + p.duration * 0.6)
+        .set(u.uPixelate, { value: 0 }, at + p.duration * 0.6),
+  },
+  ripple: {
+    start: (u) => (u.uProgress.value = 0),
+    enter: (tl, u, p) => (
+      tl.set(u.uProgress, { value: 1 }, 0).fromTo(u.uRipple, { value: 0 }, { value: 1, duration: p.duration, ease: "power2.out" }, 0).set(u.uRipple, { value: 0 }, p.duration),
+      p.duration
+    ),
+    exit: (tl, u, p, at) =>
+      tl.fromTo(u.uRipple, { value: 0 }, { value: 1, duration: p.duration, ease: "power2.out", immediateRender: false }, at)
+        .set(u.uProgress, { value: 0 }, at + p.duration * 0.5)
+        .set(u.uRipple, { value: 0 }, at + p.duration),
+  },
+  glitch: {
+    start: (u) => (u.uProgress.value = 0),
+    enter: (tl, u, p) => (tl.set(u.uProgress, { value: 1 }, 0).fromTo(u.uGlitch, { value: 1 }, { value: 0, duration: p.duration, ease: "power2.in" }, 0), p.duration),
+    exit: (tl, u, p, at) =>
+      tl.fromTo(u.uGlitch, { value: 0 }, { value: 1, duration: p.duration * 0.6, ease: "power2.out", immediateRender: false }, at)
+        .set(u.uProgress, { value: 0 }, at + p.duration * 0.6)
+        .set(u.uGlitch, { value: 0 }, at + p.duration * 0.6),
+  },
+};
+
+const shader = def(
+  ["Wipe", "Dissolve", "Pixelate", "Ripple", "Glitch"],
+  ["wipe", "dissolve", "pixelate", "ripple", "glitch"],
   ["duration", "hold", "ease"],
   { duration: 1.2, stagger: 0, hold: 1.4, ease: "power2.inOut" },
   (text, p) => {
-    const { layer, remove } = art(text, `<figure class="gl-frame"><img alt="Poster 20, wiped in and out by a shader" src="${posterUrl(20, 0)}"></figure>`);
+    const n = EXHIBITS.find((e) => e.slug === "shader")?.no ?? 0;
+    const { layer, remove } = art(text, `<figure class="gl-frame"><img alt="A poster that a shader brings in and out" src="${posterUrl(n, 0)}"></figure>`);
     const [plane] = planes([layer.querySelector("img")!]);
-    // The recipe sets the plane hidden and owns the uniform; the loop tweens the same uniform so it scrubs.
-    const w = wipe(plane, { hidden: true });
-    const { uProgress } = plane.uniforms;
+    const move = SHADER_MOVES[p.variation] ?? SHADER_MOVES.wipe;
+    const u = plane.uniforms;
+    const saved = { uProgress: u.uProgress.value, uDissolve: u.uDissolve.value, uPixelate: u.uPixelate.value, uRipple: u.uRipple.value, uGlitch: u.uGlitch.value };
+    move.start(u);
     return assemble(
       text,
       p,
       [],
-      {
-        enter: (tl) => (tl.fromTo(uProgress, { value: 0 }, { value: 1, duration: p.duration, ease: p.ease }, 0), p.duration),
-        exit: (tl, at) => tl.to(uProgress, { value: 0, duration: p.duration * 0.7, ease: "power2.in" }, at),
-      },
+      { enter: (tl) => move.enter(tl, u, p), exit: (tl, at) => move.exit(tl, u, p, at) },
       () => {
-        w.revert();
+        gsap.killTweensOf(Object.values(u));
+        Object.entries(saved).forEach(([k, v]) => ((u as unknown as Record<string, { value: number }>)[k].value = v));
         plane.revert();
         remove();
       },
     );
   },
+  { dissolve: { duration: 1.1 }, pixelate: { duration: 1 }, ripple: { duration: 1.4 }, glitch: { duration: 0.6 } },
 );
 
 /* ---------- Scroll wave ---------- */
@@ -92,7 +143,7 @@ const hoverLens = play(["Hover lens"], ["lens"], "Move the mouse over a poster. 
 );
 
 export const WEBGL_STAGES: Record<string, StageDef> = {
-  "shader-wipe": shaderWipe,
+  shader,
   "scroll-wave": scrollWaveStage,
   "hover-lens": hoverLens,
 };

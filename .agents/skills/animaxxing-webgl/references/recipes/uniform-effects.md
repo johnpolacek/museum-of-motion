@@ -1,6 +1,6 @@
 # Recipe: uniform effects
 
-Four effects that drive an [image plane](image-planes.md)'s uniforms with GSAP: a hover lens, a scroll-velocity wave, a wipe for reveals and exits, and a glitch. Each owns only its uniforms, so the lens and wave share a plane with either the wipe or the glitch; the wipe and the glitch both show and hide the plane through `uProgress`, so use one of them per plane. With no WebGL or reduced motion, the plane's `webgl` is false: hover and wave build nothing, and the wipe's timelines finish at once on the plain image with their callbacks. `webgl` also turns false when the image proves unreadable or the plane reverts; from then on wipe timelines finish at once.
+Seven effects that drive an [image plane](image-planes.md)'s uniforms with GSAP: a hover lens, a scroll-velocity wave, a wipe for reveals and exits, a glitch, a dissolve, a pixelation, and a ripple. Each owns only its uniforms, so the lens and wave share a plane with either the wipe or the glitch; the wipe and the glitch both show and hide the plane through `uProgress`, so use one of them per plane. With no WebGL or reduced motion, the plane's `webgl` is false: hover and wave build nothing, and the wipe's timelines finish at once on the plain image with their callbacks. `webgl` also turns false when the image proves unreadable or the plane reverts; from then on wipe timelines finish at once.
 
 Lifecycle: the framework controller attaches effects after building the plane, calls the wipe's `enter` and `exit` in its intro and outro, and reverts effects before the plane on unmount.
 
@@ -231,6 +231,98 @@ export function glitch(plane: ImagePlane, { duration = 0.6, hidden = true }: Gli
 
 The glitch moves pixels sideways only: no color split, and the plane shows and hides once, well under three flashes a second. For a glitch on text, use the `animaxxing` skill's split-entrances `glitchIn` and `glitchOut`.
 
+## Dissolve, pixelate, and ripple
+
+Three more uniform effects with the same shape as the glitch. `dissolve` shows the image grain by grain on its own uniform, so it can share a plane with the wipe or the glitch. `pixelate` resolves the image from coarse blocks to sharp, and `ripple` sends one ring out from the center; both show and hide the plane through `uProgress`, like the wipe. Without WebGL or under reduced motion, every timeline finishes at once.
+
+```ts
+export type ShaderEffectOptions = {
+  duration?: number;
+  /** Starts with the plane hidden, ready for `enter`. False starts it shown. */
+  hidden?: boolean;
+};
+export type ShaderEffect = { enter(): gsap.core.Timeline; exit(): gsap.core.Timeline; revert: Teardown };
+
+/** Runs one timeline at a time on a plane, finishing at once when the plane has no WebGL. */
+function shaderRunner(plane: ImagePlane) {
+  let running: gsap.core.Timeline | undefined;
+  return {
+    run(build: (tl: gsap.core.Timeline) => void) {
+      running?.kill();
+      running = gsap.timeline();
+      if (plane.webgl) build(running);
+      else running.to({}, { duration: 0 });
+      return running;
+    },
+    kill: () => running?.kill(),
+  };
+}
+
+/** The image appears grain by grain in fine noise, and leaves the same way. */
+export function dissolve(plane: ImagePlane, { duration = 1.1, hidden = true }: ShaderEffectOptions = {}): ShaderEffect {
+  const { uDissolve } = plane.uniforms;
+  const start = uDissolve.value;
+  const runner = shaderRunner(plane);
+  if (plane.webgl) uDissolve.value = hidden ? 0 : 1;
+  return {
+    enter: () => runner.run((tl) => tl.fromTo(uDissolve, { value: 0 }, { value: 1, duration, ease: "power2.out" })),
+    exit: () => runner.run((tl) => tl.to(uDissolve, { value: 0, duration: duration * 0.6, ease: "power2.in" })),
+    revert() {
+      runner.kill();
+      gsap.killTweensOf(uDissolve);
+      uDissolve.value = start;
+    },
+  };
+}
+
+/** The image resolves from coarse blocks to sharp, and breaks back into blocks to leave. */
+export function pixelate(plane: ImagePlane, { duration = 1, hidden = true }: ShaderEffectOptions = {}): ShaderEffect {
+  const { uPixelate, uProgress } = plane.uniforms;
+  const start = [uPixelate.value, uProgress.value] as const;
+  const runner = shaderRunner(plane);
+  if (plane.webgl) uProgress.value = hidden ? 0 : 1;
+  return {
+    // Stepped, so the blocks halve in size in clear jumps rather than sliding.
+    enter: () =>
+      runner.run((tl) => tl.set(uProgress, { value: 1 }, 0).fromTo(uPixelate, { value: 1 }, { value: 0, duration, ease: "steps(8)" }, 0)),
+    exit: () =>
+      runner.run((tl) =>
+        tl.fromTo(uPixelate, { value: 0 }, { value: 1, duration: duration * 0.6, ease: "steps(6)" }).set(uProgress, { value: 0 }).set(uPixelate, { value: 0 }),
+      ),
+    revert() {
+      runner.kill();
+      gsap.killTweensOf([uPixelate, uProgress]);
+      [uPixelate.value, uProgress.value] = start;
+    },
+  };
+}
+
+export type Ripple = ShaderEffect & { burst(): gsap.core.Timeline };
+
+/** One ring rolls out from the center across the image: on arrival, on leaving, or as a burst. */
+export function ripple(plane: ImagePlane, { duration = 1.2, hidden = true }: ShaderEffectOptions = {}): Ripple {
+  const { uRipple, uProgress } = plane.uniforms;
+  const start = [uRipple.value, uProgress.value] as const;
+  const runner = shaderRunner(plane);
+  if (plane.webgl) uProgress.value = hidden ? 0 : 1;
+  // The ring runs 0 to 1 and the uniform returns to 0, so a plane at rest always reads 0.
+  const ring = (tl: gsap.core.Timeline, at = 0) =>
+    tl.fromTo(uRipple, { value: 0 }, { value: 1, duration, ease: "power2.out" }, at).set(uRipple, { value: 0 }, at + duration);
+  return {
+    enter: () => runner.run((tl) => ring(tl.set(uProgress, { value: 1 }, 0))),
+    exit: () => runner.run((tl) => ring(tl).set(uProgress, { value: 0 }, duration * 0.5)),
+    burst: () => runner.run((tl) => ring(tl)),
+    revert() {
+      runner.kill();
+      gsap.killTweensOf([uRipple, uProgress]);
+      [uRipple.value, uProgress.value] = start;
+    },
+  };
+}
+```
+
+Pixelate steps through block sizes rather than sliding, which reads as a resolution change. The ripple is flat at both ends of its run, so a plane at rest draws the plain image.
+
 A hidden wipe needs care above the fold: the `<img>` shows until the plane draws, then the plane starts hidden. Hold the image in the framework's initial state, through a wrapper or class rather than the image's own inline `opacity`, and await the plane's `ready` within the deadline in the framework skill's `references/initialization.md`; on `false` or timeout, reveal the `<img>` without WebGL, such as with the `animaxxing` skill's `media-effects` reveal. Below the fold, build the plane early and call `enter` from a ScrollTrigger; the swap happens off screen. A lost context during a hidden wipe shows the whole `<img>`, which keeps the content readable.
 
 ## Wiring
@@ -258,4 +350,4 @@ plane.revert();
 | outro | Stop hover and wave by reverting them, then `exit()`. A glitch's `burst()` can run any time the image is shown. |
 | unmount | Each teardown kills its tweens, trigger, and listeners and restores its uniforms; then the plane reverts. |
 
-Reduced motion builds no plane, so hover and wave do nothing and the wipe's and glitch's timelines complete at once with their callbacks.
+Reduced motion builds no plane, so hover and wave do nothing and every reveal effect's timelines complete at once with their callbacks.

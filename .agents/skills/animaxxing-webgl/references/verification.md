@@ -36,6 +36,7 @@ Reference demo: none yet. Check visual quality, shader tuning, and frame pacing 
 - The lens changes sampled image pixels and returns to the original rendering at zero strength. Constant `smoothstep` edges in submitted shaders are increasing, as required by GLSL; a permissive software driver alone cannot validate this constraint.
 - Wave: scrolling bends the plane within `max` and it straightens to 0 at rest. After revert no ScrollTrigger remains and scrolling changes nothing.
 - Wipe: builds hidden at 0, `enter()` ends at 1, an `exit()` mid-way turns back from where it is, and revert restores the starting value.
+- Dissolve, pixelate, ripple: each builds hidden, changes sampled pixels early in `enter()`, ends with every sample inked and its uniform at rest, hides on `exit()`, and revert restores its uniforms. Without WebGL all timelines finish at once.
 - Glitch: builds hidden, `enter()` shows the plane and settles `uGlitch` at 0, sampled rows jump while it is high and match the clean frame at 0, `exit()` ends hidden, and revert restores both uniforms.
 
 ## Manual checks

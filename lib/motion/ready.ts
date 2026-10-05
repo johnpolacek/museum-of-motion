@@ -21,7 +21,7 @@ export const LIVE_STAGES = new Set([
   "cycle",
   "curtain",
   "rain",
-  "shader-wipe",
+  "shader",
   "scroll-wave",
   "hover-lens",
   "scroll-reveal",

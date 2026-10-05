@@ -1,6 +1,6 @@
 ---
 name: animaxxing-webgl
-description: "Add GSAP-driven WebGL effects to existing images without restyling: DOM-synced image planes that track each img through scroll and resize, a hover distortion lens, a scroll-velocity wave, a reveal or exit wipe, and an image glitch, all tweened on shader uniforms, on one shared OGL renderer and canvas per document. The real img stays as the accessible content and the fallback when WebGL is missing, the context is lost, the image lacks CORS, or motion is reduced. Use for WebGL image effects, shader hover, uniform tweens, or keeping a canvas alive across routes. Pair with the matching GSAP framework skill for lifecycle timing. Not for 3D scenes, models, or particle systems, DOM-only effects (use animaxxing), branding, or GSAP API questions."
+description: "Add GSAP-driven WebGL effects to existing images without restyling: DOM-synced image planes that track each img through scroll and resize, a hover distortion lens, a scroll-velocity wave, a reveal or exit wipe, an image glitch, dissolve, pixelation, and ripple, all tweened on shader uniforms, on one shared OGL renderer and canvas per document. The real img stays as the accessible content and the fallback when WebGL is missing, the context is lost, the image lacks CORS, or motion is reduced. Use for WebGL image effects, shader hover, uniform tweens, or keeping a canvas alive across routes. Pair with the matching GSAP framework skill for lifecycle timing. Not for 3D scenes, models, or particle systems, DOM-only effects (use animaxxing), branding, or GSAP API questions."
 license: MIT
 metadata:
   short-description: GSAP-tweened WebGL image planes and shader effects with a DOM fallback
@@ -32,7 +32,7 @@ If the project already ships three.js, port the recipes rather than add OGL: `Sh
 |---|---|
 | The shared renderer and canvas, budgets, context loss, pausing, persistence across routes | [WebGL stage](references/recipes/webgl-stage.md) |
 | A WebGL plane that tracks an `<img>`; CORS; replacement shaders | [Image planes](references/recipes/image-planes.md) |
-| Hover lens, scroll-velocity wave, reveal and exit wipe, image glitch | [Uniform effects](references/recipes/uniform-effects.md) |
+| Hover lens, scroll-velocity wave, reveal and exit wipe, image glitch, dissolve, pixelate, ripple | [Uniform effects](references/recipes/uniform-effects.md) |
 | Keep one canvas across client-side navigation | Matching installed framework skill's `references/transition-archetypes.md`, **Persistent WebGL canvas** |
 | Planes an intro depends on; deadlines and recovery | Matching installed framework skill's `references/initialization.md` |
 | Phone tiers and pixel budgets | Matching installed framework skill's `references/devices.md` |
@@ -45,7 +45,7 @@ The DOM is the page. A canvas is never required to read, navigate, or operate it
 | Condition | Result |
 |---|---|
 | JavaScript disabled | Nothing runs; the images are the page. |
-| No WebGL | `holdStage` returns `null`; no canvas; planes resolve `ready` false; hover and wave build nothing; wipe and glitch timelines finish at once. |
+| No WebGL | `holdStage` returns `null`; no canvas; planes resolve `ready` false; hover and wave build nothing; wipe, glitch, dissolve, pixelate, and ripple timelines finish at once. |
 | Reduced motion | The same as no WebGL. On a preference change, the controller tears down and rebuilds. |
 | Image not CORS-readable, or fails to load | That image keeps its DOM rendering; other planes are unaffected. |
 | Context lost | Every image shows at once; drawing stops. The restore rebuilds each plane from its retained source with its uniform values. |

@@ -2,9 +2,6 @@
 // speak-in, wave, route letters, and the motion vocabulary's shelf.
 import { gsap, SplitText } from "../gsap";
 import { art, assemble, def, end, EXIT, pinWidths, rnd, split, type Act, type LoopParams, type StageDef } from "../stage-core";
-import { imagePlane } from "../recipes/webgl/image-planes";
-import { glitch as glitchImage } from "../recipes/webgl/uniform-effects";
-import { posterUrl } from "./webgl";
 import { EXHIBITS } from "../../exhibits";
 
 /* ---------- Line mask ---------- */
@@ -640,7 +637,7 @@ export const typewriter = def(
 
 /* ---------- Glitch ---------- */
 
-// From split-entrances' glitchIn and glitchOut, and the webgl skill's glitch. Jumps are stepped at twelve a
+// From split-entrances' glitchIn and glitchOut. Jumps are stepped at twelve a
 // second. Random offsets are drawn once at build, so every pass and every scrub position is the same frame.
 const GLITCH_RATE = 12;
 type Cell = [number, number, number, number];
@@ -684,8 +681,8 @@ function glitchLayers(text: HTMLElement, cells: Cell[]) {
 }
 
 export const glitch = def(
-  ["Slice", "Blocks", "Skew", "Ghost", "Weight", "Scanline", "Image"],
-  ["slice", "blocks", "skew", "ghost", "weight", "scanline", "image"],
+  ["Slice", "Blocks", "Skew", "Ghost", "Weight", "Scanline"],
+  ["slice", "blocks", "skew", "ghost", "weight", "scanline"],
   ["duration", "hold"],
   { duration: 0.6, stagger: 0, hold: 1.6, ease: "none" },
   (text, p) => {
@@ -698,30 +695,6 @@ export const glitch = def(
     const fade = (i: number) => 1 - i / steps;
     const grow = (i: number) => (i + 1) / outSteps;
     const still = { x: 0, y: 0 };
-
-    if (kind === "image") {
-      const { layer, remove } = art(text, `<figure class="gl-frame"><img alt="A poster that glitches in and out" src="${posterUrl(EXHIBITS.find((e) => e.slug === "glitch")?.no ?? 0, 0)}"></figure>`);
-      const plane = imagePlane(layer.querySelector("img")!);
-      const g = glitchImage(plane, { hidden: true });
-      const { uGlitch, uProgress } = plane.uniforms;
-      return assemble(
-        text,
-        p,
-        [],
-        {
-          enter: (tl) => (tl.set(uProgress, { value: 1 }, 0).fromTo(uGlitch, { value: 1 }, { value: 0, duration: p.duration, ease: "power2.in" }, 0), p.duration),
-          exit: (tl, at0) =>
-            tl.fromTo(uGlitch, { value: 0 }, { value: 1, duration: p.duration * 0.6, ease: "power2.out", immediateRender: false }, at0)
-              .set(uProgress, { value: 0 }, at0 + p.duration * 0.6)
-              .set(uGlitch, { value: 0 }, at0 + p.duration * 0.6),
-        },
-        () => {
-          g.revert();
-          plane.revert();
-          remove();
-        },
-      );
-    }
 
     if (kind === "weight") {
       const splits: SplitText[] = [];
