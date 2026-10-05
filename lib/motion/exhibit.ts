@@ -59,13 +59,19 @@ export function exhibitIntro(root: HTMLElement, shared: SharedState | null, cueS
     return { timeline: tl, finish };
   }
   try {
-    tl.set(p.name, { autoAlpha: 1 }, 0);
     if (shared) {
       // Visible before Flip reads it: Flip carries opacity too, and would fade the title to its hidden start.
       gsap.set(p.name, { autoAlpha: 1 });
       tl.add(playShared(shared, p.name, { duration: 0.85 }), 0);
+    } else {
+      // The controller has already hidden the name, so a from() would fade it from 0 to 0. The fade is
+      // explicit; the width stretch is a from(), resting at whatever the stylesheet sets.
+      tl.fromTo(p.name, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, ease: "power1.out" }, 0).from(
+        p.name,
+        { fontStretch: "62%", duration: 0.9, ease: ENTER, immediateRender: true },
+        0,
+      );
     }
-    else tl.from(p.name, { fontStretch: "62%", autoAlpha: 0, duration: 0.9, ease: ENTER, immediateRender: true }, 0);
     tl.fromTo(p.bar, { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.4, ease: ENTER, stagger: 0.04 }, 0.15)
       .fromTo(p.num, { autoAlpha: 0, yPercent: 40 }, { autoAlpha: 1, yPercent: 0, duration: 0.45, ease: ENTER }, 0.55);
     // A live stage performs its own exhibit from here; a static one simply rises.
