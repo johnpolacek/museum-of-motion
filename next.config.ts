@@ -21,6 +21,8 @@ const nextConfig: NextConfig = {
       { source: "/exhibits/velocity-skew", destination: "/exhibits/word-slide", permanent: true },
       { source: "/exhibits/header-theme", destination: "/exhibits/header", permanent: true },
       { source: "/exhibits/hide-on-scroll", destination: "/exhibits/header", permanent: true },
+      { source: "/exhibits/smooth-scroll", destination: "/", permanent: true },
+      { source: "/exhibits/scrubbed-video", destination: "/exhibits/frame-sequence", permanent: true },
     ];
   },
 };

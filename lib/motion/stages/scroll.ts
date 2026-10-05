@@ -2,7 +2,7 @@
 // page, and the animaxxing recipe runs against it with `scroller` set to that window. Nothing loops:
 // scrolling is the control. Recipes are copied unchanged into lib/motion/recipes, apart from the
 // section pager's `embedded` option, marked where it is defined.
-import { ScrollTrigger } from "../gsap";
+import { gsap, prefersReducedMotion, ScrollTrigger, SplitText } from "../gsap";
 import { live, play, type Play, type StageDef } from "../stage-core";
 import {
   horizontalRun,
@@ -17,7 +17,7 @@ import {
   stackCards,
   zoomThrough,
 } from "../recipes/scroll-effects";
-import { frameSequence, scrubVideo } from "../recipes/media-effects";
+import { frameSequence } from "../recipes/media-effects";
 import { morphScrub, pathLoop, pathScrub } from "../recipes/svg-effects";
 import { sectionPager } from "../recipes/section-pager";
 import { lenisScroll } from "../recipes/smooth/lenis-scroll";
@@ -44,15 +44,13 @@ const END = `<section class="w-pad"><p class="lab">End</p></section>`;
 
 /**
  * A scrolling window filling the stage. `wire` gets the window and returns teardowns. Triggers are
- * measured once the window has its size, and again after fonts load. Lenis drives the window unless
- * `smoothed` is false, as on the Smooth scroll exhibit, which compares Lenis with native scrolling.
+ * measured once the window has its size, and again after fonts load. Lenis drives the window.
  */
 function windowed(
   text: HTMLElement,
   inner: string,
   wire: (win: HTMLElement, layer: HTMLElement) => Array<() => void>,
   className = "",
-  smoothed = true,
 ): Play {
   return live(
     text,
@@ -62,7 +60,7 @@ function windowed(
       // The skill's Lenis drives the window's scroll from GSAP's ticker, so pins and scrubbed transforms
       // land in the same frame as the scroll. Left native, the browser scrolls first and a pinned
       // section shakes a frame behind.
-      const smooth = smoothed ? lenisScroll({ wrapper: win, content: win }) : undefined;
+      const smooth = lenisScroll({ wrapper: win, content: win });
       const offs = wire(win, layer);
       const frame = requestAnimationFrame(() => ScrollTrigger.refresh());
       let alive = true;
@@ -73,7 +71,7 @@ function windowed(
           cancelAnimationFrame(frame);
         },
         ...offs,
-        () => smooth?.destroy(),
+        smooth.destroy,
       ];
     },
     "scroll",
@@ -198,28 +196,51 @@ const header = play(["Theme", "Hide", "Both"], ["theme", "hide", "both"], "Scrol
   ),
 );
 
-/* ---------- Smooth scroll ---------- */
-
-const NAMES = ["Line mask", "Characters", "Word slide", "Scramble", "Speak-in", "Weight wave", "Letter wave", "Route letters", "Entrances and exits", "Reveal", "Line draw", "Path follow", "Count-up", "Marquee"];
-
-const smooth = play(["Lenis", "Native"], ["lenis", "native"], "Wheel inside the window. Switch tabs to feel the difference.", (text, p) =>
-  windowed(text, `<div class="w-content">${NAMES.map((n, i) => `<p class="w-name"><span class="num">${two(i + 1)}</span> ${n}</p>`).join("")}</div>`, (win) => {
-    if (p.variation !== "lenis") return [];
-    // Lenis on the window element instead of the page, stepped by GSAP's ticker as the recipe does.
-    const s = lenisScroll({ wrapper: win, content: one(win, ".w-content"), lerp: 0.08 });
-    return [s.destroy];
-  }, "", false),
-);
-
 /* ---------- Section pager ---------- */
 
-const pager = play(["Section pager"], ["pager"], "Wheel, swipe, or use the arrow keys inside the box.", (text) =>
+const CHAPTERS = ["Arrive", "Hold", "Turn", "Leave"];
+
+// The skill's sectionPager does the cover; its onChange nests each chapter's entrance on the move's
+// timeline. The title's letters rise out of a mask as the word widens, the numeral slides in, and the
+// ticks and counter follow. Stack shrinks the outgoing chapter back; Loop wraps past the ends.
+const pager = play(["Cover", "Stack", "Loop"], ["cover", "stack", "loop"], "Wheel, swipe, or use the arrow keys inside the box.", (text, p) =>
   live(
     text,
-    `<div class="w-pagerbox"><div class="w-pager" tabindex="0" aria-label="Sample chapters">${["One", "Two", "Three", "Four"].map((t, i) => `<section class="w-chapter c${i}"><span class="lab">Chapter ${i + 1}</span><b>${t}</b></section>`).join("")}</div>
+    `<div class="w-pagerbox"><div class="w-pager" tabindex="0" aria-label="Sample chapters">${CHAPTERS.map(
+      (t, i) => `<section class="w-chapter c${i}"><b class="w-cnum" aria-hidden="true">${two(i + 1)}</b><span class="lab">Chapter ${i + 1}</span><b class="w-ctitle">${t}</b></section>`,
+    ).join("")}</div>
+     <div class="w-pagerbar"><span class="w-ticks" aria-hidden="true">${CHAPTERS.map(() => "<i></i>").join("")}</span><span class="lab w-count" aria-live="polite">01 / ${two(CHAPTERS.length)}</span></div>
      <div class="w-pagerbtns"><button type="button" class="pill" data-prev>Previous</button><button type="button" class="pill" data-next>Next</button></div></div>`,
     (layer) => {
-      const pg = sectionPager(one(layer, ".w-pager"), { embedded: true });
+      const reduced = prefersReducedMotion();
+      const sections = all(layer, ".w-chapter");
+      const ticks = all(layer, ".w-ticks i");
+      const count = one(layer, ".w-count");
+      const splits = sections.map((s) => SplitText.create(one(s, ".w-ctitle"), { type: "chars", mask: "chars", aria: "auto" }));
+      const mark = (index: number) => {
+        ticks.forEach((tick, i) => tick.classList.toggle("on", i === index));
+        count.textContent = `${two(index + 1)} / ${two(CHAPTERS.length)}`;
+      };
+      mark(0);
+      const pg = sectionPager(one(layer, ".w-pager"), {
+        embedded: true,
+        loop: p.variation === "loop",
+        drift: p.variation === "stack" ? 0 : 30,
+        onChange(index, previous, tl) {
+          mark(index);
+          if (reduced) return;
+          const to = sections[index]!;
+          const from = sections[previous]!;
+          const forward = index > previous !== (p.variation === "loop" && Math.abs(index - previous) > 1);
+          tl.fromTo(splits[index]!.chars, { yPercent: forward ? 110 : -110 }, { yPercent: 0, duration: 0.7, ease: "signature", stagger: 0.035 }, 0.3)
+            .fromTo(one(to, ".w-ctitle"), { fontStretch: "62%" }, { fontStretch: "75%", duration: 0.9, ease: "signature" }, 0.3)
+            // The numeral rests faint, as the stylesheet sets it.
+            .fromTo(one(to, ".w-cnum"), { xPercent: 40, opacity: 0 }, { xPercent: 0, opacity: 0.16, duration: 0.8, ease: "signature" }, 0.35)
+            .fromTo(one(to, ".lab"), { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4, ease: "signature" }, 0.45);
+          // Stack: the outgoing chapter sinks back under the cover instead of drifting.
+          if (p.variation === "stack") tl.to(from, { scale: 0.86, duration: 0.9, ease: "power3.inOut" }, 0).set(from, { scale: 1 });
+        },
+      });
       const prev = () => pg.previous();
       const next = () => pg.next();
       one(layer, "[data-prev]").addEventListener("click", prev);
@@ -230,27 +251,19 @@ const pager = play(["Section pager"], ["pager"], "Wheel, swipe, or use the arrow
           one(layer, "[data-next]").removeEventListener("click", next);
         },
         pg.revert,
+        () => {
+          gsap.set(sections.flatMap((s) => [s, one(s, ".w-ctitle"), one(s, ".w-cnum"), one(s, ".lab")]), { clearProps: "transform,opacity,visibility,fontStretch" });
+          splits.forEach((s) => s.revert());
+        },
       ];
     },
   ),
 );
 
-/* ---------- Scrubbed video, 35 Frame sequence ---------- */
+/* ---------- Frame sequence ---------- */
 
 /** Sticky media fills the window's height while its section scrolls three windows' worth. */
 const holdHeight = (win: HTMLElement, media: HTMLElement) => (media.style.height = `${win.clientHeight}px`);
-
-const video = play(["Scrubbed video"], ["video"], SCROLL_HINT, (text) =>
-  windowed(
-    text,
-    `<section class="w-tall"><video class="w-sticky" muted playsinline preload="auto" src="/media/scrub.mp4" aria-label="A counter and a square, scrubbed by scroll"></video></section>${END}`,
-    (win) => {
-      const v = one<HTMLVideoElement>(win, "video");
-      holdHeight(win, v);
-      return [scrubVideo(v, { section: one<HTMLElement>(win, ".w-tall"), scroller: win })];
-    },
-  ),
-);
 
 /** Frames drawn as images: a ring turns while a numeral counts, one frame per step. */
 const FRAME_COUNT = 48;
@@ -352,9 +365,7 @@ export const SCROLL_STAGES: Record<string, StageDef> = {
   "horizontal-run": run,
   waypoints,
   header,
-  "smooth-scroll": smooth,
   "section-pager": pager,
-  "scrubbed-video": video,
   "frame-sequence": frames,
   "shape-scrub": shape,
   "text-on-path": textOnPath,

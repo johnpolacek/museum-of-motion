@@ -310,9 +310,6 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win .w-band { min-height: 70%; display: grid; place-items: center; padding: 40px var(--gut); }
 .ex .win .w-band.light { background: #fff; color: var(--ink); }
 .ex .win .w-band.dark { background: var(--ink); color: #fff; }
-.ex .win .w-content { padding: 24px var(--gut); }
-.ex .win .w-name { margin: 0; font-weight: 600; font-stretch: 82%; font-size: clamp(32px, 5vw, 76px); line-height: 1.05; letter-spacing: -0.02em; }
-.ex .win .w-name .num { font-size: 0.35em; vertical-align: 1.4em; font-weight: 600; }
 .ex .stage-art .w-pagerbox { display: grid; gap: 14px; justify-items: center; width: min(92%, 680px); }
 .ex .stage-art .w-pager { position: relative; width: 100%; aspect-ratio: 21 / 9; overflow: clip; }
 .ex .stage-art .w-pager:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
@@ -324,7 +321,15 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .w-chapter.c1 { background: var(--ink); color: #fff; }
 .ex .stage-art .w-chapter.c2 { background: #1a27d9; color: #fff; }
 .ex .stage-art .w-chapter.c3 { background: #fff; color: var(--blue); }
-.ex .stage-art .w-pagerbtns { display: flex; gap: 10px; }
+.ex .stage-art .w-pagerbar, .ex .stage-art .w-pagerbtns { display: flex; align-items: center; gap: 16px; }
+.ex .stage-art .w-ticks { display: flex; gap: 14px; }
+.ex .stage-art .w-ticks i { display: block; width: 18px; height: 3px; background: rgba(255,255,255,0.35); transform-origin: 0 50%; transition: transform 0.35s cubic-bezier(0.2, 1.5, 0.35, 1), background-color 0s; }
+.ex .stage-art .w-ticks i.on { background: #fff; transform: scaleX(1.6); }
+.ex .stage-art .w-count { min-width: 6ch; font-variant-numeric: tabular-nums; }
+.ex .stage-art .w-chapter { overflow: clip; }
+.ex .stage-art .w-chapter .w-cnum { position: absolute; right: 4%; bottom: -6%; font-weight: 800; font-stretch: 62%; font-size: clamp(120px, 22vw, 320px); line-height: 0.8; opacity: 0.16; }
+.ex .stage-art .w-chapter .lab, .ex .stage-art .w-ctitle { position: relative; }
+@media (prefers-reduced-motion: reduce) { .ex .stage-art .w-ticks i { transition: none; } }
 .ex .win .w-tall { height: 300%; min-height: 900px; }
 .ex .win .w-sticky { position: sticky; top: 0; display: block; width: 100%; object-fit: cover; background: var(--ink); }
 .ex .win .w-bowl { position: relative; min-height: 80%; display: grid; place-items: center; background: var(--ink); color: #fff; padding: 40px var(--gut); }

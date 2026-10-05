@@ -305,31 +305,19 @@ const DATA: Exhibit[] = [
     ]
   },
 
-  {
-    name: "Smooth scroll",
-    group: "scroll",
-    builders: "lenisScroll, smootherScroll",
-    src: "smooth-scroll",
-    desc: "Eased page scrolling with Lenis or ScrollSmoother.",
-    vars: [
-      "Lenis",
-      "ScrollSmoother"
-    ]
-  },
+
   {
     name: "Section pager",
     group: "scroll",
     builders: "sectionPager",
     src: "section-pager",
-    desc: "Full-screen sections change one at a time on a flick, swipe, or key."
+    desc: "Full-screen sections change one at a time on a flick, swipe, or key, each chapter performing its entrance as it covers the last.",
+    vars: [
+      "Stack",
+      "Loop"
+    ]
   },
-  {
-    name: "Scrubbed video",
-    group: "scroll",
-    builders: "scrubVideo",
-    src: "media-effects",
-    desc: "A video follows the scroll, both ways."
-  },
+
   {
     name: "Frame sequence",
     group: "scroll",
