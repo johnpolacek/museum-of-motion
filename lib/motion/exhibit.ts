@@ -31,17 +31,38 @@ export const exhibitTargets = (root: HTMLElement) => {
 export type Run = { timeline: gsap.core.Timeline; finish: () => void };
 
 /**
- * Holds each word of a title at its resting width, so a width move never changes where the lines
- * break: on a phone the condensed title fits fewer lines, and words would jump lines mid-move.
+ * Holds each piece of a title at its resting width, so a width move never changes where the lines
+ * break: on a phone the condensed title fits fewer lines, and pieces would jump lines mid-move.
+ * A piece is a word, or the part of a hyphenated word up to its hyphen, since a line may break there:
+ * "Zoom-through" is "Zoom-" and "through", side by side, still free to break between them.
  * Reads every width first, then writes. Exact widths: GSAP rounds pixels by default, and half a
- * pixel can tip a line. Returns the words and the undo.
+ * pixel can tip a line. Returns the pieces and the undo, which puts the plain text back.
  */
 function pinWords(title: HTMLElement): { words: HTMLElement[]; unpin: () => void } {
-  const split = SplitText.create(title, { type: "words", aria: "auto" });
-  const words = split.words as HTMLElement[];
+  const text = title.textContent ?? "";
+  const label = title.getAttribute("aria-label");
+  const words: HTMLElement[] = [];
+  title.replaceChildren(
+    ...(text.match(/[^\s-]+-?|-|\s+/g) ?? []).map((part) => {
+      if (/^\s+$/.test(part)) return document.createTextNode(part);
+      const span = document.createElement("span");
+      span.textContent = part;
+      span.setAttribute("aria-hidden", "true");
+      words.push(span);
+      return span;
+    }),
+  );
+  title.setAttribute("aria-label", text);
   const widths = words.map((w) => w.getBoundingClientRect().width);
   words.forEach((w, i) => gsap.set(w, { display: "inline-block", width: `${widths[i]}px`, autoRound: false }));
-  return { words, unpin: () => split.revert() };
+  return {
+    words,
+    unpin: () => {
+      title.textContent = text;
+      if (label === null) title.removeAttribute("aria-label");
+      else title.setAttribute("aria-label", label);
+    },
+  };
 }
 
 /* ---------- Stage exit, shared by every exhibit ---------- */
