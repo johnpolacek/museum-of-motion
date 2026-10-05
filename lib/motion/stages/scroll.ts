@@ -77,8 +77,8 @@ const reveal = play(["Rise", "Plop"], ["rise", "plop"], SCROLL_HINT, (text, p) =
     revealOnScroll(
       all(win, ".w-card"),
       p.variation === "plop"
-        ? { scroller: win, start: "top 92%", y: -32, scale: 0, rotation: -20, duration: 0.7, stagger: 0.12, ease: "elastic.out(1, 0.72)", repeat: true }
-        : { scroller: win, start: "top 92%", ease: "signature", repeat: true },
+        ? { scroller: win, start: "top 70%", y: -32, scale: 0, rotation: -20, duration: 0.7, stagger: 0.12, ease: "elastic.out(1, 0.72)", repeat: true }
+        : { scroller: win, start: "top 70%", ease: "signature", repeat: true },
     ),
   ]),
 );
