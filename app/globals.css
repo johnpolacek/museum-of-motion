@@ -338,13 +338,12 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win .w-zoomback, .ex .win .w-zoomclip { width: 100%; height: 100%; }
 .ex .win .w-zoomback svg, .ex .win .w-zoomclip svg { display: block; width: 100%; height: 100%; }
 .ex .win .w-zoomplate { display: block; width: 100%; height: 100%; }
-.ex .win .w-path { min-height: 120%; display: grid; place-items: center; padding: 0 var(--gut); }
-.ex .win .w-path svg { width: min(100%, 900px); overflow: visible; }
-.ex .win .w-path text { fill: currentColor; font-weight: 800; font-stretch: 75%; font-size: 56px; letter-spacing: -0.01em; }
+.ex .stage-art .path-ride { display: grid; justify-items: center; gap: 16px; width: min(92%, 900px); }
+.ex .stage-art .path-ride svg { width: 100%; overflow: visible; }
+.ex .stage-art .path-ride text { fill: currentColor; font-weight: 800; font-stretch: 75%; font-size: 56px; letter-spacing: -0.01em; }
 .ex .stage-art .path-badge { display: grid; justify-items: center; gap: 16px; }
 .ex .stage-art .path-badge svg { width: min(52vw, 340px); overflow: visible; }
 .ex .stage-art .path-badge text { fill: currentColor; font-weight: 700; font-size: 15.5px; letter-spacing: 0.2em; text-transform: uppercase; }
-.ex .win .w-edge { position: absolute; left: 0; bottom: 100%; width: 100%; height: 6vw; min-height: 40px; fill: var(--ink); }
 /* WebGL stages: the <img> is the page; a plane on the shared canvas draws it while WebGL can. */
 .ex .stage-art .gl-frame { margin: 0; height: min(calc(46svh - 110px), 420px); aspect-ratio: 4 / 3; max-width: 92%; }
 .ex .stage-art .gl-column .gl-frame { height: auto; }

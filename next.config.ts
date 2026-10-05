@@ -24,6 +24,7 @@ const nextConfig: NextConfig = {
       { source: "/exhibits/smooth-scroll", destination: "/", permanent: true },
       { source: "/exhibits/scrubbed-video", destination: "/exhibits/timeline", permanent: true },
       { source: "/exhibits/frame-sequence", destination: "/exhibits/timeline", permanent: true },
+      { source: "/exhibits/shape-scrub", destination: "/exhibits/icon-morph", permanent: true },
     ];
   },
 };

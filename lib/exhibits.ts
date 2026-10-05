@@ -169,7 +169,17 @@ const DATA: Exhibit[] = [
     builders: "followPath",
     src: "svg-effects",
     desc: "A small mark loops along a path."
+  },  {
+    name: "Text on path",
+    group: "time",
+    builders: "pathLoop",
+    src: "svg-effects",
+    desc: "A line of text rides a curve into place, or turns around a badge.",
+    vars: [
+      "Badge"
+    ]
   },
+
   {
     name: "Count-up",
     group: "time",
@@ -326,23 +336,8 @@ const DATA: Exhibit[] = [
   },
 
 
-  {
-    name: "Shape scrub",
-    group: "scroll",
-    builders: "morphScrub",
-    src: "svg-effects",
-    desc: "A path morphs toward another shape as the page scrolls."
-  },
-  {
-    name: "Text on path",
-    group: "scroll",
-    builders: "pathScrub, pathLoop",
-    src: "svg-effects",
-    desc: "A line of text rides a curve into place, or turns around a badge.",
-    vars: [
-      "Badge"
-    ]
-  },
+
+
   {
     name: "Scroll wave",
     group: "scroll",

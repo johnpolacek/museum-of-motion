@@ -17,6 +17,7 @@ function parts(root: HTMLElement) {
     num: one("h1 .n"),
     name: one("h1 .t"),
     stage: one(".stage p"),
+    art: root.querySelector<HTMLElement>(".stage[data-art] > .stage-art"),
     rest: all(".controls:not([hidden]), .row > *, .specs > div"),
   };
 }
@@ -91,8 +92,12 @@ export function exhibitOutro(root: HTMLElement): Run {
   const p = parts(root);
   const tl = gsap.timeline({ defaults: { overwrite: "auto" } });
   const ui = [...p.bar, ...p.rest];
-  if (prefersReducedMotion()) return { timeline: tl.set([...ui, p.h1, p.stage], { autoAlpha: 0 }), finish: () => {} };
-  const stage = stageOut(p.stage);
+  const leaving = p.art ?? p.stage;
+  if (prefersReducedMotion()) return { timeline: tl.set([...ui, p.h1, leaving], { autoAlpha: 0 }), finish: () => {} };
+  // Art drops and fades, quick and straight; sample text drops behind its line masks.
+  const stage: Run = p.art
+    ? { timeline: gsap.timeline({ paused: true }).to(p.art, { autoAlpha: 0, y: 24, duration: 0.3, ease: EXIT }), finish: () => {} }
+    : stageOut(p.stage);
   tl.to(ui, { autoAlpha: 0, y: -8, duration: 0.25, ease: EXIT, stagger: 0.012 }, 0)
     .add(stage.timeline.play(), 0)
     // Clip just under the title's baseline so the drop disappears behind it.

@@ -4,7 +4,7 @@
 // and page covers.
 import { gsap, prefersReducedMotion, SplitText } from "../gsap";
 import { art, assemble, def, EXIT, live, pinWidths, play, type StageDef } from "../stage-core";
-import { drawIn } from "../recipes/svg-effects";
+import { drawIn, pathLoop } from "../recipes/svg-effects";
 import { EXHIBITS } from "../../exhibits";
 
 const OPEN = "inset(0% 0% 0% 0%)";
@@ -431,6 +431,50 @@ const curtain = def(
 );
 
 
+/* ---------- Text on path ---------- */
+
+const RING = "M100 20 a80 80 0 1 1 0 160 a80 80 0 1 1 0 -160 a80 80 0 1 1 0 160 a80 80 0 1 1 0 -160";
+
+// Ride: the line travels along the curve from its far end and lands with the signature bounce.
+// Badge: the skill's pathLoop turns text around a ring, past five seconds, so it has a pause.
+const textOnPath = play(["Ride", "Badge"], ["ride", "badge"], "Replay the ride, or pause the badge.", (text, p) =>
+  p.variation === "badge"
+    ? live(
+        text,
+        `<div class="path-badge"><svg viewBox="0 0 200 200"><path id="tp-ring" d="${RING}" fill="none"/><text><textPath href="#tp-ring">Every way a page can move · Every way ·</textPath></text></svg><button type="button" class="ctl lab" aria-pressed="false">Pause</button></div>`,
+        (layer) => {
+          const loop = pathLoop(layer.querySelector<SVGTextPathElement>("textPath")!, { duration: 16 });
+          const button = layer.querySelector<HTMLButtonElement>("button")!;
+          const toggle = () => {
+            const paused = button.getAttribute("aria-pressed") !== "true";
+            button.setAttribute("aria-pressed", String(paused));
+            button.textContent = paused ? "Play" : "Pause";
+            if (paused) loop.pause();
+            else loop.play();
+          };
+          button.addEventListener("click", toggle);
+          return [() => button.removeEventListener("click", toggle), loop.revert];
+        },
+      )
+    : live(
+        text,
+        `<div class="path-ride"><svg viewBox="0 0 600 220" aria-label="Every way a page can move."><path id="tp-curve" d="M10 190 C170 10 430 10 590 190" fill="none"/><text aria-hidden="true"><textPath href="#tp-curve" startOffset="0%">Every way a page can move.</textPath></text></svg><button type="button" class="ctl lab">Replay</button></div>`,
+        (layer) => {
+          const path = layer.querySelector<SVGTextPathElement>("textPath")!;
+          const button = layer.querySelector<HTMLButtonElement>("button")!;
+          const ride = gsap.fromTo(
+            path,
+            { attr: { startOffset: "100%" } },
+            { attr: { startOffset: "0%" }, duration: 1.6, ease: "signature", paused: prefersReducedMotion() },
+          );
+          if (prefersReducedMotion()) ride.progress(1);
+          const replay = () => ride.restart();
+          button.addEventListener("click", replay);
+          return [() => button.removeEventListener("click", replay), () => ride.revert()];
+        },
+      ),
+);
+
 /* ---------- Timeline ---------- */
 
 // One master timeline built from five nested ones, each a small function that returns its own
@@ -594,6 +638,7 @@ const timeline = play(["Timeline"], ["timeline"], "Play, scrub, change speed, or
 );
 
 export const TIME_STAGES: Record<string, StageDef> = {
+  "text-on-path": textOnPath,
   timeline,
   reveal: imageReveal,
   "line-draw": lineDraw,

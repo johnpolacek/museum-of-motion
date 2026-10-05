@@ -33,7 +33,6 @@ export const LIVE_STAGES = new Set([
   "waypoints",
   "header",
   "section-pager",
-  "shape-scrub",
   "text-on-path",
   "label-roll",
   "underline-sweep",

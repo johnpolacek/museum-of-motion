@@ -17,7 +17,6 @@ import {
   stackCards,
   zoomThrough,
 } from "../recipes/scroll-effects";
-import { morphScrub, pathLoop, pathScrub } from "../recipes/svg-effects";
 import { sectionPager } from "../recipes/section-pager";
 import { lenisScroll } from "../recipes/smooth/lenis-scroll";
 
@@ -259,16 +258,6 @@ const pager = play(["Cover", "Stack", "Loop"], ["cover", "stack", "loop"], "Whee
   ),
 );
 
-/* ---------- Shape scrub ---------- */
-
-const shape = play(["Shape scrub"], ["shape"], SCROLL_HINT, (text) =>
-  windowed(
-    text,
-    `${CUE}<section class="w-bowl"><svg class="w-edge" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path d="M0 10 C30 0 70 0 100 10 Z"/></svg><h3>The edge flattens as this arrives.</h3></section><section class="w-pad dark"></section>`,
-    (win) => [morphScrub(one<SVGPathElement>(win, ".w-edge path"), "M0 10 C30 10 70 10 100 10 Z", { trigger: one<HTMLElement>(win, ".w-bowl"), scroller: win })],
-  ),
-);
-
 /* ---------- Stacking cards ---------- */
 
 const stacking = play(["Stacking cards"], ["stack"], SCROLL_HINT, (text) =>
@@ -303,36 +292,6 @@ const zoom = play(["Scale", "Clip"], ["scale", "clip"], SCROLL_HINT, (text, p) =
   ),
 );
 
-/* ---------- Text on path ---------- */
-
-const RING = "M100 20 a80 80 0 1 1 0 160 a80 80 0 1 1 0 -160 a80 80 0 1 1 0 160 a80 80 0 1 1 0 -160";
-
-const textOnPath = play(["Curve", "Badge"], ["curve", "badge"], SCROLL_HINT, (text, p) =>
-  p.variation === "badge"
-    ? live(
-        text,
-        `<div class="path-badge"><svg viewBox="0 0 200 200"><path id="tp-ring" d="${RING}" fill="none"/><text><textPath href="#tp-ring">Every way a page can move · Every way ·</textPath></text></svg><button type="button" class="ctl lab" aria-pressed="false">Pause</button></div>`,
-        (layer) => {
-          const loop = pathLoop(one<SVGTextPathElement>(layer, "textPath"), { duration: 16 });
-          const button = one<HTMLButtonElement>(layer, "button");
-          const toggle = () => {
-            const paused = button.getAttribute("aria-pressed") !== "true";
-            button.setAttribute("aria-pressed", String(paused));
-            button.textContent = paused ? "Play" : "Pause";
-            if (paused) loop.pause();
-            else loop.play();
-          };
-          button.addEventListener("click", toggle);
-          return [() => button.removeEventListener("click", toggle), loop.revert];
-        },
-      )
-    : windowed(
-        text,
-        `${CUE}<section class="w-path"><svg viewBox="0 0 600 220"><path id="tp-curve" d="M10 190 C170 10 430 10 590 190" fill="none"/><text><textPath href="#tp-curve" startOffset="0%">Every way a page can move.</textPath></text></svg></section>${END}`,
-        (win) => [pathScrub(one<SVGTextPathElement>(win, "textPath"), { trigger: one<HTMLElement>(win, ".w-path"), scroller: win })],
-      ),
-);
-
 export const SCROLL_STAGES: Record<string, StageDef> = {
   "scroll-reveal": reveal,
   parallax: parallaxStage,
@@ -343,6 +302,4 @@ export const SCROLL_STAGES: Record<string, StageDef> = {
   waypoints,
   header,
   "section-pager": pager,
-  "shape-scrub": shape,
-  "text-on-path": textOnPath,
 };

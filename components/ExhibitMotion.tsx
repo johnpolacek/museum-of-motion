@@ -51,8 +51,10 @@ export function ExhibitMotion({ slug, children }: { slug: string; children: Reac
       const outro = contextSafe!(() => {
         alive = false;
         intro?.timeline.kill();
-        // The stage's loop owns the sample text: stop it and put the text back before the outro takes it.
-        stops.current.forEach((stop) => stop());
+        // A text stage's loop owns the sample text: stop it and put the text back before the outro takes it.
+        // A stage showing art keeps it: stopping would remove the art and flash the hidden sample text.
+        // The art leaves with the page, and the stage stops when the page unmounts.
+        if (!el.querySelector(".stage[data-art]")) stops.current.forEach((stop) => stop());
         el.dataset.phase = "outro";
         const run = exhibitOutro(el);
         return finished(run.timeline).then(() => {
