@@ -30,6 +30,20 @@ export const exhibitTargets = (root: HTMLElement) => {
 
 export type Run = { timeline: gsap.core.Timeline; finish: () => void };
 
+/**
+ * Holds each word of a title at its resting width, so a width move never changes where the lines
+ * break: on a phone the condensed title fits fewer lines, and words would jump lines mid-move.
+ * Reads every width first, then writes. Exact widths: GSAP rounds pixels by default, and half a
+ * pixel can tip a line. Returns the words and the undo.
+ */
+function pinWords(title: HTMLElement): { words: HTMLElement[]; unpin: () => void } {
+  const split = SplitText.create(title, { type: "words", aria: "auto" });
+  const words = split.words as HTMLElement[];
+  const widths = words.map((w) => w.getBoundingClientRect().width);
+  words.forEach((w, i) => gsap.set(w, { display: "inline-block", width: `${widths[i]}px`, autoRound: false }));
+  return { words, unpin: () => split.revert() };
+}
+
 /* ---------- Stage exit, shared by every exhibit ---------- */
 
 /** And down behind them again, quickly. */
@@ -52,7 +66,9 @@ export function exhibitIntro(root: HTMLElement, shared: SharedState | null, cueS
   const p = parts(root);
   const tl = gsap.timeline({ paused: true, defaults: { overwrite: "auto" } });
   const visible = [...p.bar, p.num, p.name, ...p.rest];
+  let unpin = () => {};
   const finish = () => {
+    unpin();
     gsap.set([...visible, p.stage], { clearProps: CLEAR });
   };
   if (prefersReducedMotion()) {
@@ -66,9 +82,11 @@ export function exhibitIntro(root: HTMLElement, shared: SharedState | null, cueS
       tl.add(playShared(shared, p.name, { duration: 0.85 }), 0);
     } else {
       // The controller has already hidden the name, so a from() would fade it from 0 to 0. The fade is
-      // explicit; the width stretch is a from(), resting at whatever the stylesheet sets.
+      // explicit; the width stretch is a from() on each pinned word, resting at what the stylesheet sets.
+      const pinned = pinWords(p.name);
+      unpin = pinned.unpin;
       tl.fromTo(p.name, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, ease: "power1.out" }, 0).from(
-        p.name,
+        pinned.words,
         { fontStretch: "62%", duration: 0.9, ease: ENTER, immediateRender: true },
         0,
       );
@@ -98,11 +116,22 @@ export function exhibitOutro(root: HTMLElement): Run {
   const stage: Run = p.art
     ? { timeline: gsap.timeline({ paused: true }).to(p.art, { autoAlpha: 0, y: 24, duration: 0.3, ease: EXIT }), finish: () => {} }
     : stageOut(p.stage);
+  // The number and each word keep their boxes while they condense, so the title keeps its lines.
+  const numWidth = p.num.getBoundingClientRect().width;
+  const pinned = pinWords(p.name);
+  gsap.set(p.num, { display: "inline-block", width: `${numWidth}px`, autoRound: false });
   tl.to(ui, { autoAlpha: 0, y: -8, duration: 0.25, ease: EXIT, stagger: 0.012 }, 0)
     .add(stage.timeline.play(), 0)
     // Clip just under the title's baseline so the drop disappears behind it.
     .set(p.h1, { clipPath: "inset(-20% -5% -0.08em -5%)" }, 0)
-    .to([p.num, p.name], { fontStretch: "62%", yPercent: 115, duration: 0.32, ease: EXIT, stagger: 0.03 }, 0.06)
+    .to([p.num, p.name], { yPercent: 115, duration: 0.32, ease: EXIT, stagger: 0.03 }, 0.06)
+    .to([p.num, ...pinned.words], { fontStretch: "62%", duration: 0.32, ease: EXIT }, 0.06)
     .set(p.h1, { autoAlpha: 0 });
-  return { timeline: tl, finish: stage.finish };
+  return {
+    timeline: tl,
+    finish: () => {
+      stage.finish();
+      pinned.unpin();
+    },
+  };
 }
