@@ -4,6 +4,8 @@ Fourteen scroll-linked effects: reveals, a scrubbed statement, parallax, a pinne
 
 Lifecycle: the framework controller builds these once the owner is measurable, refreshes ScrollTrigger when fonts, media, data, or scroll restoration change layout, and calls each idempotent teardown on unmount. Builders never kill triggers they did not create. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
+Route changes and scroll memory: ScrollTrigger remembers the scroll position and puts it back after each refresh. It records that position when a `gsap.matchMedia()` sets up and at the start of a refresh, but not while its triggers are reverted, which is the state between the old page's cleanup and the new page's setup. So after a client route change, the first refresh can put back the previous page's position, clamped to the new page's height: leaving a long page at 1400px for a short one lands the short one at its bottom. The same memory can make Back look right by accident. In an app that changes pages without a reload, keep one position per page or history entry yourself, restore it once the new page is drawn, and reapply it after each `refresh` event until the visitor scrolls; call `ScrollTrigger.clearScrollMemory()` on `popstate`. A link visit starts at the top or its hash target, as the router decides.
+
 Dependencies: `gsap`, `gsap/ScrollTrigger`. `scrubStatement` also needs `gsap/SplitText`; `scrollWaypoints` needs `gsap/Flip`.
 
 Setup: `scrubStatement` with `by: "chars"` needs [stable typography](../text-stability.md#stable-typography-for-character-animation); words keep natural kerning. Verify the revert with the [cleanup checks](../verification.md#splittext-cleanup-stability).
