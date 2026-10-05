@@ -15,7 +15,6 @@ import {
   scrollWaypoints,
   scrubStatement,
   stackCards,
-  velocitySkew,
   zoomThrough,
 } from "../recipes/scroll-effects";
 import { frameSequence, scrubVideo } from "../recipes/media-effects";
@@ -180,26 +179,23 @@ const waypoints = play(["Waypoints"], ["waypoints"], SCROLL_HINT, (text) =>
   ),
 );
 
-/* ---------- Velocity skew ---------- */
-
-const skew = play(["Velocity skew"], ["skew"], "Scroll inside the window, fast and slow.", (text) =>
-  windowed(text, `${CUE}<div class="w-cols">${Array.from({ length: 10 }, (_, i) => `<div class="w-skew">${poster(29 + i, i)}</div>`).join("")}</div>${END}`, (win) => [
-    velocitySkew(all(win, ".w-skew"), { scroller: win }),
-  ]),
-);
-
-/* ---------- Header theme, 31 Hide on scroll ---------- */
+/* ---------- Header ---------- */
 
 const HEAD = `<header class="w-head"><b>Museum of Motion</b><span class="lab">Collection · About</span></header>`;
 const BANDS = (n: number) =>
   Array.from({ length: n }, (_, i) => `<section class="w-band ${i % 2 ? "dark" : "light"}" data-nav-theme="${i % 2 ? "dark" : "light"}"><h3>${i % 2 ? "Dark section" : "Light section"}</h3></section>`).join("");
 
-const headerTheme = play(["Header theme"], ["theme"], SCROLL_HINT, (text) =>
-  windowed(text, `${HEAD}${BANDS(6)}`, (win) => [navTheme(one(win, ".w-head"), { scroller: win })], "themed"),
-);
-
-const hideOnScroll = play(["Hide on scroll"], ["hide"], "Scroll down to hide the header, up to bring it back.", (text) =>
-  windowed(text, `${HEAD}${BANDS(8)}`, (win) => [scrollDirection(win, { scroller: win })], "hiding"),
+// Theme and Hide are the skill's navTheme and scrollDirection; Both runs them together, as most sites would.
+const header = play(["Theme", "Hide", "Both"], ["theme", "hide", "both"], "Scroll down, then back up.", (text, p) =>
+  windowed(
+    text,
+    `${HEAD}${BANDS(8)}`,
+    (win) => [
+      ...(p.variation === "hide" ? [] : [navTheme(one(win, ".w-head"), { scroller: win })]),
+      ...(p.variation === "theme" ? [] : [scrollDirection(win, { scroller: win })]),
+    ],
+    p.variation === "theme" ? "" : "hiding",
+  ),
 );
 
 /* ---------- Smooth scroll ---------- */
@@ -355,9 +351,7 @@ export const SCROLL_STAGES: Record<string, StageDef> = {
   "zoom-through": zoom,
   "horizontal-run": run,
   waypoints,
-  "velocity-skew": skew,
-  "header-theme": headerTheme,
-  "hide-on-scroll": hideOnScroll,
+  header,
   "smooth-scroll": smooth,
   "section-pager": pager,
   "scrubbed-video": video,

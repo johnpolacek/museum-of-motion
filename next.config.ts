@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
       { source: "/exhibits/rain", destination: "/exhibits/physics", permanent: true },
       { source: "/exhibits/pinned-scene", destination: "/exhibits/pinned", permanent: true },
       { source: "/exhibits/progress", destination: "/", permanent: true },
+      { source: "/exhibits/velocity-skew", destination: "/exhibits/word-slide", permanent: true },
+      { source: "/exhibits/header-theme", destination: "/exhibits/header", permanent: true },
+      { source: "/exhibits/hide-on-scroll", destination: "/exhibits/header", permanent: true },
     ];
   },
 };

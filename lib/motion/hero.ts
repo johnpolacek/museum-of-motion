@@ -105,7 +105,7 @@ export function heroIntro(root: HTMLElement): HeroIntro {
     land(pageChars, { fontWeight: 100, autoAlpha: 0, duration: 0.9, ease: ENTER, stagger: 0.08 }, 0.5);
     sup("page", 1.4);
 
-    // 29 Velocity skew on "can": it rushes in leaning hard and springs back to its resting lean. The screen's one elastic.
+    // 03 Word slide on "can": it zips in from the side leaning hard and springs back to its resting lean. The screen's one elastic.
     land(p.leaf("can"), { xPercent: 60, skewX: -40, duration: 1.0, ease: "elastic.out(1, 0.5)" }, 0.72);
     land(p.leaf("can"), { autoAlpha: 0, duration: 0.2, ease: "none" }, 0.72);
     sup("can", 1.45);

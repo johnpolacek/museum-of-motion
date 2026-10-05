@@ -292,27 +292,19 @@ const DATA: Exhibit[] = [
     desc: "One element travels onto a marker in each later section."
   },
 
+
   {
-    name: "Velocity skew",
+    name: "Header",
     group: "scroll",
-    builders: "velocitySkew",
+    builders: "navTheme, scrollDirection",
     src: "scroll-effects",
-    desc: "Things lean with scroll speed and spring back."
+    desc: "The header follows the page. It takes the theme of the section beneath it, hides going down, and returns going up.",
+    vars: [
+      "Hide",
+      "Both"
+    ]
   },
-  {
-    name: "Header theme",
-    group: "scroll",
-    builders: "navTheme",
-    src: "scroll-effects",
-    desc: "The header takes the theme of the section beneath it."
-  },
-  {
-    name: "Hide on scroll",
-    group: "scroll",
-    builders: "scrollDirection",
-    src: "scroll-effects",
-    desc: "The header hides going down and returns going up."
-  },
+
   {
     name: "Smooth scroll",
     group: "scroll",
