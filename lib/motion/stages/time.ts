@@ -330,7 +330,7 @@ const logoCycle = def(["Cycle"], ["cycle"], ["duration", "hold", "ease"], { dura
   );
 }, {}, { hold: { label: "Every" } });
 
-/* ---------- Curtain, 17 Curve cover, 18 Preloader: a small page swaps behind a cover ---------- */
+/* ---------- Curtain (panels or a curve) and Preloader: a small page swaps behind a cover ---------- */
 
 const MINI = (cover: string) => `
 <div class="mini">
@@ -339,52 +339,6 @@ const MINI = (cover: string) => `
   ${cover}
 </div>`;
 
-const curtain = def(
-  ["Panels", "Tilt", "Title"],
-  ["panels", "tilt", "title"],
-  ["duration", "stagger", "hold", "ease"],
-  { duration: 0.7, stagger: 0.04, hold: 1.2, ease: "power4.inOut" },
-  (text, p) => {
-    const { layer, remove } = art(text, MINI(`<div class="panels">${"<i></i>".repeat(5)}</div><div class="cover-title">Line mask</div>`));
-    const panels = Array.from(layer.querySelectorAll<HTMLElement>(".panels i"));
-    // Parked below the page by GSAP, never by a CSS transform: GSAP would read that as an extra offset,
-    // and every panel would land a full height short of covering.
-    gsap.set(panels, { yPercent: 100 });
-    const [a, b] = Array.from(layer.querySelectorAll<HTMLElement>(".pg"));
-    const title = layer.querySelector<HTMLElement>(".cover-title")!;
-    const tilt = p.variation === "tilt" ? 8 : 0;
-    const swap = (tl: gsap.core.Timeline, at: number, show: HTMLElement, hide: HTMLElement) => {
-      tl.fromTo(panels, { yPercent: 100, rotation: tilt }, { yPercent: 0, rotation: 0, duration: p.duration, ease: p.ease, stagger: p.stagger, immediateRender: false }, at);
-      const covered = at + p.duration + p.stagger * (panels.length - 1);
-      tl.set(hide, { autoAlpha: 0 }, covered).set(show, { autoAlpha: 1 }, covered);
-      if (p.variation === "title") {
-        tl.fromTo(title, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.3, ease: "signature", immediateRender: false }, covered - 0.1).to(
-          title,
-          { autoAlpha: 0, y: -8, duration: 0.2, ease: EXIT },
-          covered + 0.45,
-        );
-      }
-      // Hold the cover a beat, so the swap reads as a page change rather than a flicker.
-      const lift = covered + (p.variation === "title" ? 0.6 : 0.25);
-      tl.to(panels, { yPercent: -100, rotation: -tilt, duration: p.duration, ease: p.ease, stagger: p.stagger }, lift);
-      return lift + p.duration + p.stagger * (panels.length - 1);
-    };
-    return assemble(
-      text,
-      p,
-      [],
-      {
-        enter: (tl) => {
-          tl.set(a, { autoAlpha: 1 }, 0).set(b, { autoAlpha: 0 }, 0).set(panels, { yPercent: 100 }, 0).set(title, { autoAlpha: 0 }, 0);
-          const first = swap(tl, p.hold, b, a);
-          return swap(tl, first + p.hold, a, b);
-        },
-      },
-      remove,
-    );
-  },
-  { tilt: { duration: 0.7 } },
-);
 
 const curveCover = def(["Curve cover"], ["curve"], ["duration", "hold", "ease"], { duration: 0.8, stagger: 0, hold: 1.2, ease: "power3.inOut" }, (text, p) => {
   const { layer, remove } = art(text, MINI(`<svg class="curve" viewBox="0 0 100 100" preserveAspectRatio="none"><path fill="#0b0b0b"/></svg>`));
@@ -425,6 +379,55 @@ const curveCover = def(["Curve cover"], ["curve"], ["duration", "hold", "ease"],
     remove,
   );
 });
+
+const curtain = def(
+  ["Panels", "Tilt", "Title", "Curve"],
+  ["panels", "tilt", "title", "curve"],
+  ["duration", "stagger", "hold", "ease"],
+  { duration: 0.7, stagger: 0.04, hold: 1.2, ease: "power4.inOut" },
+  (text, p) => {
+    // Curve is the same page swap under one bowed shape: the skill's curveCover.
+    if (p.variation === "curve") return curveCover.build(text, p);
+    const { layer, remove } = art(text, MINI(`<div class="panels">${"<i></i>".repeat(5)}</div><div class="cover-title">Line mask</div>`));
+    const panels = Array.from(layer.querySelectorAll<HTMLElement>(".panels i"));
+    // Parked below the page by GSAP, never by a CSS transform: GSAP would read that as an extra offset,
+    // and every panel would land a full height short of covering.
+    gsap.set(panels, { yPercent: 100 });
+    const [a, b] = Array.from(layer.querySelectorAll<HTMLElement>(".pg"));
+    const title = layer.querySelector<HTMLElement>(".cover-title")!;
+    const tilt = p.variation === "tilt" ? 8 : 0;
+    const swap = (tl: gsap.core.Timeline, at: number, show: HTMLElement, hide: HTMLElement) => {
+      tl.fromTo(panels, { yPercent: 100, rotation: tilt }, { yPercent: 0, rotation: 0, duration: p.duration, ease: p.ease, stagger: p.stagger, immediateRender: false }, at);
+      const covered = at + p.duration + p.stagger * (panels.length - 1);
+      tl.set(hide, { autoAlpha: 0 }, covered).set(show, { autoAlpha: 1 }, covered);
+      if (p.variation === "title") {
+        tl.fromTo(title, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.3, ease: "signature", immediateRender: false }, covered - 0.1).to(
+          title,
+          { autoAlpha: 0, y: -8, duration: 0.2, ease: EXIT },
+          covered + 0.45,
+        );
+      }
+      // Hold the cover a beat, so the swap reads as a page change rather than a flicker.
+      const lift = covered + (p.variation === "title" ? 0.6 : 0.25);
+      tl.to(panels, { yPercent: -100, rotation: -tilt, duration: p.duration, ease: p.ease, stagger: p.stagger }, lift);
+      return lift + p.duration + p.stagger * (panels.length - 1);
+    };
+    return assemble(
+      text,
+      p,
+      [],
+      {
+        enter: (tl) => {
+          tl.set(a, { autoAlpha: 1 }, 0).set(b, { autoAlpha: 0 }, 0).set(panels, { yPercent: 100 }, 0).set(title, { autoAlpha: 0 }, 0);
+          const first = swap(tl, p.hold, b, a);
+          return swap(tl, first + p.hold, a, b);
+        },
+      },
+      remove,
+    );
+  },
+  { tilt: { duration: 0.7 }, curve: { duration: 0.8, stagger: 0, ease: "power3.inOut" } },
+);
 
 const preloader = def(["Preloader"], ["preload"], ["duration", "hold"], { duration: 0.7, stagger: 0, hold: 1.6, ease: "power4.inOut" }, (text, p) => {
   const { layer, remove } = art(text, MINI(`<div class="loader"><span class="count num">0</span><span class="bar"><i></i></span></div>`));
@@ -599,7 +602,6 @@ export const TIME_STAGES: Record<string, StageDef> = {
   marquee,
   cycle: logoCycle,
   curtain,
-  "curve-cover": curveCover,
   preloader,
   rain,
   "sound-cues": soundCues,

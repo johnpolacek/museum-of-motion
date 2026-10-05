@@ -20,7 +20,6 @@ export const LIVE_STAGES = new Set([
   "marquee",
   "cycle",
   "curtain",
-  "curve-cover",
   "preloader",
   "rain",
   "sound-cues",

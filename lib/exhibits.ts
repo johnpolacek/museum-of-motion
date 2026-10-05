@@ -202,16 +202,14 @@ const DATA: Exhibit[] = [
   {
     name: "Curtain",
     group: "time",
-    builders: "curtain",
+    builders: "curtain, curveCover",
     src: "page-covers",
-    desc: "Staggered panels cover the page, then sweep out the far edge."
-  },
-  {
-    name: "Curve cover",
-    group: "time",
-    builders: "curveCover",
-    src: "page-covers",
-    desc: "A cover sweeps across with its leading edge bowed."
+    desc: "A cover sweeps over the page while it changes underneath: staggered panels, tilted, titled, or one curved edge.",
+    vars: [
+      "Tilt",
+      "Title",
+      "Curve"
+    ]
   },
   {
     name: "Preloader",
