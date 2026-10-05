@@ -72,25 +72,25 @@ function windowed(text: HTMLElement, inner: string, wire: (win: HTMLElement, lay
 
 /* ---------- Scroll reveal ---------- */
 
-const reveal = play(["Rise", "Plop"], ["rise", "plop"], SCROLL_HINT, (text, p) =>
-  windowed(text, `${CUE}<div class="w-grid">${Array.from({ length: 12 }, (_, i) => `<div class="w-card">${poster(22 + i, i)}</div>`).join("")}</div>${END}`, (win) => [
-    revealOnScroll(
-      all(win, ".w-card"),
-      p.variation === "plop"
-        ? { scroller: win, start: "top 70%", y: -32, scale: 0, rotation: -20, duration: 0.7, stagger: 0.12, ease: "elastic.out(1, 0.72)", repeat: true }
-        : { scroller: win, start: "top 70%", ease: "signature", repeat: true },
-    ),
-  ]),
-);
+// Cards from the skill's revealOnScroll, each tab a different start state; the statement tabs are its
+// scrubStatement, where words or letters fill in at the speed you read. All reverse on the way back up.
+const CARD_REVEALS: Record<string, Parameters<typeof revealOnScroll>[1]> = {
+  rise: { ease: "signature" },
+  plop: { y: -32, scale: 0, rotation: -20, duration: 0.7, stagger: 0.12, ease: "elastic.out(1, 0.72)" },
+  zoom: { y: 0, scale: 0.6, duration: 0.6, stagger: 0.07, ease: "back.out(1.6)" },
+  tilt: { y: 60, rotation: 8, duration: 0.6, stagger: 0.08, ease: "power3.out" },
+};
 
-/* ---------- Scrubbed statement ---------- */
-
-const statement = play(["Words", "Chars"], ["words", "chars"], SCROLL_HINT, (text, p) =>
-  windowed(
-    text,
-    `${CUE}<section class="w-statement"><p>Every way a page can move, from the first frame to the last, read at the speed you scroll.</p></section>${END}`,
-    (win) => [scrubStatement(one(win, ".w-statement p"), { by: p.variation as "words", scroller: win })],
-  ),
+const reveal = play(["Rise", "Plop", "Zoom", "Tilt", "Words", "Letters"], ["rise", "plop", "zoom", "tilt", "words", "chars"], SCROLL_HINT, (text, p) =>
+  p.variation === "words" || p.variation === "chars"
+    ? windowed(
+        text,
+        `${CUE}<section class="w-statement"><p>Every way a page can move, from the first frame to the last, read at the speed you scroll.</p></section>${END}`,
+        (win) => [scrubStatement(one(win, ".w-statement p"), { by: p.variation as "words", scroller: win })],
+      )
+    : windowed(text, `${CUE}<div class="w-grid">${Array.from({ length: 12 }, (_, i) => `<div class="w-card">${poster(22 + i, i)}</div>`).join("")}</div>${END}`, (win) => [
+        revealOnScroll(all(win, ".w-card"), { scroller: win, start: "top 70%", repeat: true, ...CARD_REVEALS[p.variation] }),
+      ]),
 );
 
 /* ---------- Parallax ---------- */
@@ -352,7 +352,6 @@ const textOnPath = play(["Curve", "Badge"], ["curve", "badge"], SCROLL_HINT, (te
 
 export const SCROLL_STAGES: Record<string, StageDef> = {
   "scroll-reveal": reveal,
-  "scrubbed-statement": statement,
   parallax: parallaxStage,
   "pinned-scene": pinned,
   "stacking-cards": stacking,

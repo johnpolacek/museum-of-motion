@@ -237,17 +237,18 @@ const DATA: Exhibit[] = [
   {
     name: "Scroll reveal",
     group: "scroll",
-    builders: "revealOnScroll",
+    builders: "revealOnScroll, scrubStatement",
     src: "scroll-effects",
-    desc: "Items rise in batches as they come into view."
+    desc: "Things arrive as they scroll into view, and leave on the way back: cards rise, pop, zoom, or tilt, and a statement fills in word by word.",
+    vars: [
+      "Plop",
+      "Zoom",
+      "Tilt",
+      "Words",
+      "Letters"
+    ]
   },
-  {
-    name: "Scrubbed statement",
-    group: "scroll",
-    builders: "scrubStatement",
-    src: "scroll-effects",
-    desc: "A statement fills in word by word as it is read."
-  },
+
   {
     name: "Parallax",
     group: "scroll",
@@ -614,7 +615,7 @@ const DATA: Exhibit[] = [
     group: "drag",
     builders: "sortable",
     src: "sortable",
-    desc: "Drag a handle to reorder a list; neighbors slide aside to make room."
+    desc: "Drag a handle to reorder a list, and its neighbors slide aside to make room."
   },
   {
     name: "Swipe to dismiss",
