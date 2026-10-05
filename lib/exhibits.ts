@@ -158,7 +158,7 @@ const DATA: Exhibit[] = [
 
 
   {
-    name: "Entrances and exits",
+    name: "Enter and exit",
     group: "play",
     builders: "fadeIn, riseIn, dropIn, slideIn, scaleIn, popIn, wipeUp, wipeAcross, flipIn, focusIn, weightIn",
     src: "motion-vocabulary",

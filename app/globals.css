@@ -69,9 +69,10 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 
 /* Exhibit */
 .ex { padding-top: 20px; padding-bottom: 28px; display: grid; gap: 24px; }
-.ex .bar { display: flex; justify-content: space-between; }
+.ex .bar { display: flex; justify-content: space-between; white-space: nowrap; }
 .ex .bar nav { display: flex; gap: 22px; }
-.ex h1 { margin: 0; font-weight: 800; font-stretch: 75%; text-transform: uppercase; font-size: clamp(56px, 10vw, 184px); line-height: 0.86; letter-spacing: -0.02em; }
+/* Every title on one line, at one size. On a phone the size fits the longest, "46 Swipe to dismiss", 8.3em wide. */
+.ex h1 { margin: 0; font-weight: 800; font-stretch: 75%; text-transform: uppercase; font-size: min(clamp(56px, 10vw, 184px), calc((100vw - 2 * var(--gut)) / 8.5)); line-height: 0.86; letter-spacing: -0.02em; white-space: nowrap; }
 .ex h1 .n { font-weight: 300; margin-right: 0.12em; }
 /* Boxes so the number can rise and the name can fly in from the collection. */
 .ex h1 .n, .ex h1 .t { display: inline-block; }
@@ -423,6 +424,9 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 }
 @media (max-width: 560px) {
   .mast nav { gap: 16px; }
+  /* The count on its own line, then previous and next at either edge. */
+  .ex .bar { flex-direction: column; gap: 10px; }
+  .ex .bar nav { justify-content: space-between; }
   .hero h1 { font-size: 19.5vw; }
   .names { font-size: 30px; }
   .foot .big { white-space: normal; }

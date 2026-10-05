@@ -10,7 +10,7 @@ export const LIVE_STAGES = new Set([
   "type-and-speak",
   "wave",
   "route-letters",
-  "entrances-and-exits",
+  "enter-and-exit",
   "reveal",
   "path",
   "count",

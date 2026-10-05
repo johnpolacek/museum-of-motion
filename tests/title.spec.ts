@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 
-// On a phone a long exhibit title wraps. Its width move must never change where the lines break:
+// The longest exhibit titles, on a phone. A width move must never change the title's lines:
 // each word, or hyphenated part, is held at its resting width while it widens or condenses.
 test.use({ viewport: { width: 390, height: 844 } });
 
-for (const slug of ["open-and-close", "type-and-speak", "entrances-and-exits", "swipe-to-dismiss", "zoom-through"]) {
+for (const slug of ["open-and-close", "type-and-speak", "enter-and-exit", "swipe-to-dismiss", "zoom-through"]) {
   test(`${slug}: the title keeps its lines while it widens in`, async ({ page }) => {
     await page.addInitScript(() => {
       const w = window as unknown as { __heights: number[] };
