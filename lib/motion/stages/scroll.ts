@@ -17,7 +17,6 @@ import {
   stackCards,
   zoomThrough,
 } from "../recipes/scroll-effects";
-import { frameSequence } from "../recipes/media-effects";
 import { morphScrub, pathLoop, pathScrub } from "../recipes/svg-effects";
 import { sectionPager } from "../recipes/section-pager";
 import { lenisScroll } from "../recipes/smooth/lenis-scroll";
@@ -260,28 +259,6 @@ const pager = play(["Cover", "Stack", "Loop"], ["cover", "stack", "loop"], "Whee
   ),
 );
 
-/* ---------- Frame sequence ---------- */
-
-/** Sticky media fills the window's height while its section scrolls three windows' worth. */
-const holdHeight = (win: HTMLElement, media: HTMLElement) => (media.style.height = `${win.clientHeight}px`);
-
-/** Frames drawn as images: a ring turns while a numeral counts, one frame per step. */
-const FRAME_COUNT = 48;
-const frame = (i: number) => {
-  const t = i / (FRAME_COUNT - 1);
-  const a = t * 360;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450"><rect width="800" height="450" fill="#0b0b0b"/><g transform="rotate(${a} 560 225)" fill="none" stroke="#2130ff" stroke-width="18"><path d="M560 85 A140 140 0 1 1 420 225"/></g><circle cx="${560 + 140 * Math.cos(((a - 90) * Math.PI) / 180)}" cy="${225 + 140 * Math.sin(((a - 90) * Math.PI) / 180)}" r="16" fill="#fff"/><text x="60" y="330" fill="#fff" font-family="Arial, sans-serif" font-weight="700" font-size="200">${two(Math.round(t * 99))}</text></svg>`;
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-};
-
-const frames = play(["Frame sequence"], ["frames"], SCROLL_HINT, (text) =>
-  windowed(text, `<section class="w-tall"><canvas class="w-sticky" role="img" aria-label="A ring turns and a number counts as you scroll"></canvas></section>${END}`, (win) => {
-    const c = one<HTMLCanvasElement>(win, "canvas");
-    holdHeight(win, c);
-    return [frameSequence(c, Array.from({ length: FRAME_COUNT }, (_, i) => frame(i)), { section: one<HTMLElement>(win, ".w-tall"), scroller: win, fit: "contain" })];
-  }),
-);
-
 /* ---------- Shape scrub ---------- */
 
 const shape = play(["Shape scrub"], ["shape"], SCROLL_HINT, (text) =>
@@ -366,7 +343,6 @@ export const SCROLL_STAGES: Record<string, StageDef> = {
   waypoints,
   header,
   "section-pager": pager,
-  "frame-sequence": frames,
   "shape-scrub": shape,
   "text-on-path": textOnPath,
 };

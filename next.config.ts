@@ -22,7 +22,8 @@ const nextConfig: NextConfig = {
       { source: "/exhibits/header-theme", destination: "/exhibits/header", permanent: true },
       { source: "/exhibits/hide-on-scroll", destination: "/exhibits/header", permanent: true },
       { source: "/exhibits/smooth-scroll", destination: "/", permanent: true },
-      { source: "/exhibits/scrubbed-video", destination: "/exhibits/frame-sequence", permanent: true },
+      { source: "/exhibits/scrubbed-video", destination: "/exhibits/timeline", permanent: true },
+      { source: "/exhibits/frame-sequence", destination: "/exhibits/timeline", permanent: true },
     ];
   },
 };

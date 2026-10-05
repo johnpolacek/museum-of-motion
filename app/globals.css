@@ -284,7 +284,6 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win .w-window { margin: 0; display: grid; gap: 10px; align-content: start; }
 .ex .win .w-window:nth-child(2) { margin-top: 18cqh; }
 /* The frame stays put and clips; the picture inside is taller than the frame and slides past it. */
-.ex .win .w-frame { position: relative; aspect-ratio: 3 / 4; overflow: clip; background: var(--ink); }
 .ex .win .w-window-in { position: absolute; left: 0; right: 0; top: -22%; height: 144%; }
 .ex .win .w-sec { min-height: 100%; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: center; gap: var(--gut); padding: 40px var(--gut); }
 .ex .win h3 { margin: 0; font-weight: 800; font-stretch: 75%; text-transform: uppercase; font-size: clamp(28px, 4vw, 60px); line-height: 0.9; }
@@ -330,9 +329,6 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .w-chapter .w-cnum { position: absolute; right: 4%; bottom: -6%; font-weight: 800; font-stretch: 62%; font-size: clamp(120px, 22vw, 320px); line-height: 0.8; opacity: 0.16; }
 .ex .stage-art .w-chapter .lab, .ex .stage-art .w-ctitle { position: relative; }
 @media (prefers-reduced-motion: reduce) { .ex .stage-art .w-ticks i { transition: none; } }
-.ex .win .w-tall { height: 300%; min-height: 900px; }
-.ex .win .w-sticky { position: sticky; top: 0; display: block; width: 100%; object-fit: cover; background: var(--ink); }
-.ex .win .w-bowl { position: relative; min-height: 80%; display: grid; place-items: center; background: var(--ink); color: #fff; padding: 40px var(--gut); }
 .ex .win .w-deck { padding: 0 var(--gut) 40px; }
 .ex .win .w-deckcard { position: relative; display: grid; align-items: start; height: min(240px, 52svh); max-width: 620px; margin: 0 auto 24px; overflow: hidden; background: var(--ink); border: 1px solid rgba(255,255,255,0.35); }
 .ex .win .w-deckcard svg { position: absolute; inset: 0; width: 100%; height: 100%; }
@@ -423,3 +419,31 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
   .names { font-size: 30px; }
   .foot .big { white-space: normal; }
 }
+/* Timeline: scene, lanes drawn from the master's children, and controls. */
+.ex .stage:has(.stage-art.timeline) { min-height: 680px; }
+.ex .stage-art.timeline { padding: 24px 0; }
+.ex .stage-art .tl { display: grid; gap: 14px; width: min(100%, 820px); }
+.ex .stage-art .tl-scene { position: relative; height: clamp(180px, 26vw, 260px); overflow: clip; }
+.ex .stage-art .tl-word { position: absolute; left: 0; top: 18%; font-weight: 900; font-stretch: 75%; text-transform: uppercase; font-size: clamp(48px, 9vw, 128px); line-height: 0.9; letter-spacing: -0.02em; white-space: nowrap; }
+.ex .stage-art .tl-count { position: absolute; left: 0; top: 0; font-weight: 800; font-stretch: 62%; font-size: clamp(22px, 2.6vw, 36px); line-height: 1; font-variant-numeric: tabular-nums; }
+.ex .stage-art .tl-blocks { position: absolute; left: 0; bottom: 14px; display: flex; gap: 10px; }
+.ex .stage-art .tl-blocks i { display: block; width: clamp(18px, 3vw, 34px); aspect-ratio: 1; background: #fff; }
+.ex .stage-art .tl-blocks i:nth-child(2) { background: var(--ink); }
+.ex .stage-art .tl-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.ex .stage-art .tl-svg line, .ex .stage-art .tl-ring circle, .ex .stage-art .tl-ring line { fill: none; stroke: #fff; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.ex .stage-art .tl-ring { position: absolute; right: 2%; top: 6%; width: clamp(70px, 14vw, 170px); height: auto; overflow: visible; }
+.ex .stage-art .tl-ring line { stroke-width: 3; }
+.ex .stage-art .tl-lanes { display: grid; grid-template-columns: 64px 1fr; gap: 4px 10px; align-items: center; position: relative; }
+.ex .stage-art .tl-lanes .lab { font-size: 11px; }
+.ex .stage-art .tl-track { position: relative; height: 8px; background: rgba(255,255,255,0.14); }
+.ex .stage-art .tl-track i { position: absolute; top: 0; bottom: 0; background: #fff; }
+.ex .stage-art .tl-head-track { position: absolute; left: 74px; right: 0; top: -4px; bottom: -4px; pointer-events: none; }
+.ex .stage-art .tl-head { position: absolute; inset: 0; border-left: 2px solid var(--ink); }
+.ex .stage-art .tl-scrub { width: 100%; accent-color: #fff; margin: 0; }
+.ex .stage-art .tl-ctrls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ex .stage-art .tl-ctrls .pill { padding: 9px 14px; font-size: 12px; }
+.ex .stage-art .tl-speed { display: flex; gap: 8px; margin-left: auto; }
+.ex .stage-art .tl-speed .pill[aria-pressed="true"], .ex .stage-art .tl-ctrls .pill:focus-visible { background: #fff; color: var(--blue); }
+.ex .stage-art .tl-read { margin-left: auto; font-variant-numeric: tabular-nums; }
+@media (max-width: 600px) { .ex .stage-art .tl-speed, .ex .stage-art .tl-read { margin-left: 0; } .ex .stage-art .tl { width: 100%; } }
+

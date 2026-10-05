@@ -2,6 +2,7 @@
 // Keep in step with STAGES in ./stage.ts, which holds the builders; this list stays import-free for server code.
 export const LIVE_STAGES = new Set([
   "line-mask",
+  "timeline",
   "characters",
   "word-slide",
   "scramble",
@@ -32,7 +33,6 @@ export const LIVE_STAGES = new Set([
   "waypoints",
   "header",
   "section-pager",
-  "frame-sequence",
   "shape-scrub",
   "text-on-path",
   "label-roll",

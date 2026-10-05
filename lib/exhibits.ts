@@ -225,7 +225,14 @@ const DATA: Exhibit[] = [
       "Glitch"
     ],
     gl: true
+  },  {
+    name: "Timeline",
+    group: "time",
+    builders: "gsap.timeline, drawIn",
+    src: "motion-vocabulary",
+    desc: "One master timeline nests five parts, placed with labels and overlaps. Play it, scrub it, reverse it, or jump to a label."
   },
+
 
 
   {
@@ -318,13 +325,7 @@ const DATA: Exhibit[] = [
     ]
   },
 
-  {
-    name: "Frame sequence",
-    group: "scroll",
-    builders: "frameSequence",
-    src: "media-effects",
-    desc: "An image sequence on a canvas, scrubbed by scroll."
-  },
+
   {
     name: "Shape scrub",
     group: "scroll",

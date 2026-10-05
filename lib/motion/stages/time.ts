@@ -2,8 +2,9 @@
 // own art inside the stage and plays it on the loop engine, so pause, scrub, and knobs work the same.
 // Moves and values come from the animaxxing recipes: media effects, SVG effects, counters and marquees,
 // and page covers.
-import { gsap } from "../gsap";
-import { art, assemble, def, EXIT, type StageDef } from "../stage-core";
+import { gsap, prefersReducedMotion, SplitText } from "../gsap";
+import { art, assemble, def, EXIT, live, pinWidths, play, type StageDef } from "../stage-core";
+import { drawIn } from "../recipes/svg-effects";
 import { EXHIBITS } from "../../exhibits";
 
 const OPEN = "inset(0% 0% 0% 0%)";
@@ -430,7 +431,170 @@ const curtain = def(
 );
 
 
+/* ---------- Timeline ---------- */
+
+// One master timeline built from five nested ones, each a small function that returns its own
+// timeline, placed with labels and overlaps. The lanes below draw each part's span from the master's
+// own children, so the chart is the timeline, not a picture of it.
+const PARTS = ["draw", "type", "count", "blocks", "settle"] as const;
+const one = <T extends Element = HTMLElement>(root: ParentNode, sel: string) => root.querySelector(sel) as T;
+const fmt = (s: number) => s.toFixed(2);
+
+const timeline = play(["Timeline"], ["timeline"], "Play, scrub, change speed, or jump to a label.", (text) =>
+  live(
+    text,
+    `<div class="tl">
+      <div class="tl-scene" aria-hidden="true">
+        <span class="tl-count">000</span>
+        <b class="tl-word">Timeline</b>
+        <span class="tl-blocks"><i></i><i></i><i></i></span>
+        <svg class="tl-svg" viewBox="0 0 800 300" preserveAspectRatio="none"><line class="tl-rule" x1="0" y1="292" x2="800" y2="292"/></svg>
+        <svg class="tl-ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44"/><line x1="50" y1="50" x2="50" y2="14"/></svg>
+      </div>
+      <div class="tl-lanes" aria-hidden="true">${PARTS.map((n) => `<span class="lab">${n}</span><span class="tl-track"><i></i></span>`).join("")}<span></span><span class="tl-head-track"><i class="tl-head"></i></span></div>
+      <input class="tl-scrub" type="range" min="0" max="1000" value="0" aria-label="Timeline position">
+      <div class="tl-ctrls">
+        <button type="button" class="pill" data-play>Pause</button><button type="button" class="pill" data-reverse>Reverse</button><button type="button" class="pill" data-restart>Restart</button>
+        <span class="tl-speed" role="group" aria-label="Speed">${[0.5, 1, 2].map((s) => `<button type="button" class="pill" data-speed="${s}" aria-pressed="${s === 1}">${s}×</button>`).join("")}</span>
+      </div>
+      <div class="tl-ctrls" role="group" aria-label="Jump to a label">${PARTS.map((n) => `<button type="button" class="pill" data-label="${n}">${n}</button>`).join("")}<span class="lab tl-read" aria-live="off">0.00 s</span></div>
+    </div>`,
+    (layer) => {
+      const scene = one(layer, ".tl-scene");
+      const word = one(scene, ".tl-word");
+      const count = one(scene, ".tl-count");
+      const blocks = Array.from(scene.querySelectorAll<HTMLElement>(".tl-blocks i"));
+      const ring = one<SVGSVGElement>(scene, ".tl-ring");
+      const split = SplitText.create(word, { type: "chars", mask: "chars" });
+      pinWidths(split.chars as HTMLElement[], 900);
+      const draw = drawIn([one(scene, ".tl-rule"), ...Array.from(ring.children)], { duration: 0.9, stagger: 0.15 });
+      const tally = { v: 0 };
+
+      // Each part is its own timeline, so it can be placed, labelled, and reasoned about as one piece.
+      const parts: Record<(typeof PARTS)[number], () => gsap.core.Timeline> = {
+        // The builder hands back a running timeline. Unpaused at its start, the master owns its playhead;
+        // a child left paused would stay paused inside its parent.
+        draw: () => draw.timeline.pause(0).paused(false),
+        type: () =>
+          gsap
+            .timeline()
+            // Letters rise light and gain weight as they land, then a lighter wave runs through and back.
+            .from(split.chars, { yPercent: 110, fontWeight: 200, duration: 0.8, ease: "signature", stagger: 0.04 })
+            .to(split.chars, { fontWeight: 300, duration: 0.3, ease: "power2.inOut", stagger: { each: 0.04, yoyo: true, repeat: 1 } }, ">-0.1"),
+        count: () =>
+          gsap.timeline().fromTo(count, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.3, ease: "signature" }).fromTo(
+            tally,
+            { v: 0 },
+            { v: 100, duration: 1.4, ease: "power2.inOut", onUpdate: () => (count.textContent = String(Math.round(tally.v)).padStart(3, "0")) },
+            0,
+          ),
+        blocks: () =>
+          gsap
+            .timeline()
+            .from(blocks, { yPercent: -260, autoAlpha: 0, duration: 0.8, ease: "back.out(1.8)", stagger: { each: 0.1, from: "center" } })
+            .to(blocks, { rotation: 90, duration: 0.5, ease: "power3.inOut", stagger: 0.08 }, "-=0.2"),
+        settle: () =>
+          gsap
+            .timeline()
+            // Letters hop in a ripple from the middle. The masks move, so the letters are not clipped.
+            .to(split.masks, { yPercent: -22, duration: 0.22, ease: "power2.out", stagger: { each: 0.04, from: "center" }, yoyo: true, repeat: 1 })
+            .to(ring, { rotation: 270, duration: 1.1, ease: "power3.inOut", transformOrigin: "50% 50%" }, 0)
+            .to(blocks, { yPercent: -40, duration: 0.25, ease: "power2.out", stagger: 0.06, yoyo: true, repeat: 1 }, 0.2),
+      };
+
+      const master = gsap.timeline({ paused: true, defaults: { overwrite: "auto" } });
+      master
+        .addLabel("draw", 0)
+        .add(parts.draw(), "draw")
+        .addLabel("type", "draw+=0.3")
+        .add(parts.type(), "type")
+        .addLabel("count", "type+=0.5")
+        .add(parts.count(), "count")
+        .addLabel("blocks", "count+=0.6")
+        .add(parts.blocks(), "blocks")
+        .addLabel("settle", ">-0.3")
+        .add(parts.settle(), "settle");
+
+      // Lanes: each nested timeline's start and length, as a share of the whole.
+      const total = master.duration();
+      const kids = master.getChildren(false, false, true);
+      Array.from(layer.querySelectorAll<HTMLElement>(".tl-track i")).forEach((bar, i) => {
+        const kid = kids[i]!;
+        Object.assign(bar.style, { left: `${(kid.startTime() / total) * 100}%`, width: `${(kid.totalDuration() / total) * 100}%` });
+      });
+
+      const head = one(layer, ".tl-head");
+      const scrub = one<HTMLInputElement>(layer, ".tl-scrub");
+      const read = one(layer, ".tl-read");
+      const playBtn = one(layer, "[data-play]");
+      const sync = () => {
+        const p = master.progress();
+        gsap.set(head, { xPercent: p * 100 });
+        scrub.value = String(Math.round(p * 1000));
+        read.textContent = `${fmt(master.time())} s · ${master.currentLabel() ?? "draw"}`;
+        playBtn.textContent = master.isActive() ? "Pause" : "Play";
+      };
+      master.eventCallback("onUpdate", sync);
+      master.eventCallback("onComplete", sync);
+      master.eventCallback("onReverseComplete", sync);
+
+      const on = (el: Element, type: string, fn: (e: Event) => void) => {
+        el.addEventListener(type, fn);
+        return () => el.removeEventListener(type, fn);
+      };
+      const offs = [
+        on(playBtn, "click", () => {
+          if (master.isActive()) master.pause();
+          else if (master.progress() === 1 && !master.reversed()) master.restart();
+          else master.play();
+          sync();
+        }),
+        on(one(layer, "[data-reverse]"), "click", () => {
+          master.reversed(!master.reversed()).resume();
+          sync();
+        }),
+        on(one(layer, "[data-restart]"), "click", () => master.reversed(false).restart()),
+        on(scrub, "input", () => {
+          master.pause().progress(+scrub.value / 1000);
+          sync();
+        }),
+        ...Array.from(layer.querySelectorAll<HTMLElement>("[data-speed]")).map((b) =>
+          on(b, "click", () => {
+            master.timeScale(+b.dataset.speed!);
+            layer.querySelectorAll("[data-speed]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+          }),
+        ),
+        // A label jump tweens the playhead there, so you see the parts rewind or fast-forward.
+        ...Array.from(layer.querySelectorAll<HTMLElement>("[data-label]")).map((b) =>
+          on(b, "click", () => {
+            master.pause();
+            gsap.to(master, { time: master.labels[b.dataset.label!]!, duration: 0.6, ease: "power2.inOut", overwrite: true, onUpdate: sync });
+          }),
+        ),
+      ];
+
+      // Perform once, then rest. Reduced motion lands at the end; the controls still move it by hand.
+      if (prefersReducedMotion()) master.progress(1);
+      else master.play(0);
+      sync();
+
+      return [
+        ...offs,
+        () => {
+          gsap.killTweensOf(master);
+          master.kill();
+          draw.revert();
+          gsap.set([count, ring, ...blocks, ...split.masks], { clearProps: "all" });
+          split.revert();
+        },
+      ];
+    },
+    "timeline",
+  ),
+);
+
 export const TIME_STAGES: Record<string, StageDef> = {
+  timeline,
   reveal: imageReveal,
   "line-draw": lineDraw,
   "path-follow": pathFollow,
