@@ -211,13 +211,7 @@ const DATA: Exhibit[] = [
       "Curve"
     ]
   },
-  {
-    name: "Preloader",
-    group: "time",
-    builders: "preloader",
-    src: "page-covers",
-    desc: "A count that follows real readiness and never runs backward."
-  },
+
   {
     name: "Rain",
     group: "time",

@@ -330,7 +330,7 @@ const logoCycle = def(["Cycle"], ["cycle"], ["duration", "hold", "ease"], { dura
   );
 }, {}, { hold: { label: "Every" } });
 
-/* ---------- Curtain (panels or a curve) and Preloader: a small page swaps behind a cover ---------- */
+/* ---------- Curtain (panels or a curve): a small page swaps behind a cover ---------- */
 
 const MINI = (cover: string) => `
 <div class="mini">
@@ -429,52 +429,6 @@ const curtain = def(
   { tilt: { duration: 0.7 }, curve: { duration: 0.8, stagger: 0, ease: "power3.inOut" } },
 );
 
-const preloader = def(["Preloader"], ["preload"], ["duration", "hold"], { duration: 0.7, stagger: 0, hold: 1.6, ease: "power4.inOut" }, (text, p) => {
-  const { layer, remove } = art(text, MINI(`<div class="loader"><span class="count num">0</span><span class="bar"><i></i></span></div>`));
-  const loader = layer.querySelector<HTMLElement>(".loader")!;
-  const count = layer.querySelector<HTMLElement>(".count")!;
-  const bar = layer.querySelector<HTMLElement>(".bar i")!;
-  const page = layer.querySelectorAll<HTMLElement>(".pg-b > *");
-  const [a, b] = Array.from(layer.querySelectorAll<HTMLElement>(".pg"));
-  // Readiness arrives in steps (fonts, the hero image, data); the count eases to each one.
-  const STEPS = [
-    [0.3, 0.35],
-    [0.7, 0.55],
-    [1, 0.45],
-  ] as const;
-  const show = { v: 0 };
-  const draw = () => {
-    count.textContent = String(Math.round(show.v * 100));
-    gsap.set(bar, { scaleX: show.v });
-  };
-  return assemble(
-    text,
-    p,
-    [],
-    {
-      enter: (tl) => {
-        tl.set(a, { autoAlpha: 0 }, 0).set(b, { autoAlpha: 1 }, 0).fromTo(loader, { yPercent: 0 }, { yPercent: 0, duration: 0.01 }, 0);
-        let t = 0.2;
-        let from = 0;
-        for (const [to, d] of STEPS) {
-          tl.fromTo(show, { v: from }, { v: to, duration: d, ease: "power2.out", onUpdate: draw, immediateRender: false }, t);
-          t += d + 0.12;
-          from = to;
-        }
-        // Lift into the page's intro.
-        tl.to(loader, { yPercent: -100, duration: p.duration, ease: p.ease }, t).fromTo(
-          page,
-          { autoAlpha: 0, y: 14 },
-          { autoAlpha: 1, y: 0, duration: 0.45, ease: "signature", stagger: 0.06 },
-          t + p.duration * 0.6,
-        );
-        return t + p.duration + 0.3;
-      },
-      exit: (tl, at) => tl.to(page, { autoAlpha: 0, duration: 0.2, ease: EXIT }, at),
-    },
-    remove,
-  );
-});
 
 /* ---------- Rain ---------- */
 
@@ -602,7 +556,6 @@ export const TIME_STAGES: Record<string, StageDef> = {
   marquee,
   cycle: logoCycle,
   curtain,
-  preloader,
   rain,
   "sound-cues": soundCues,
 };
