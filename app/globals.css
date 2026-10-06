@@ -5,7 +5,7 @@
   --gut: clamp(16px, 2.4vw, 36px);
 }
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
 body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.5 var(--sans); }
 a { color: inherit; text-decoration: none; }
 a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
@@ -213,10 +213,13 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .acc-btn { display: flex; justify-content: space-between; width: 100%; padding: 16px 0; font: 600 clamp(18px, 2vw, 24px)/1.2 var(--sans); color: inherit; background: none; border: 0; cursor: pointer; text-align: left; }
 .ex .stage-art .acc-panel p { margin: 0; padding: 0 0 16px; max-width: 48ch; opacity: 0.85; }
 .ex .stage-art .tabbed { display: grid; gap: 20px; width: min(100%, 640px); }
-.ex .stage-art .tablist { position: relative; display: flex; gap: 28px; border-bottom: 1px solid rgba(255,255,255,0.35); }
+.ex .stage-art .tablist { position: relative; display: flex; gap: clamp(14px, 3.5vw, 28px); border-bottom: 1px solid rgba(255,255,255,0.35); }
 .ex .stage-art .tablist button { padding: 0 0 12px; font: 600 clamp(16px, 2vw, 22px)/1 var(--sans); color: inherit; background: none; border: 0; cursor: pointer; }
 .ex .stage-art .tab-indicator { position: absolute; inset-inline-start: 0; bottom: -1px; width: 40px; height: 3px; background: #fff; }
-.ex .stage-art .tab-panel { margin: 0; font-size: 20px; }
+.ex .stage-art .tab-panel { margin: 0; font-size: 20px; display: grid; }
+/* Every note sits in the same cell, so the panel is as tall as the longest on any width; only the chosen one shows. */
+.ex .stage-art .tab-panel > span { grid-area: 1 / 1; }
+.ex .stage-art .tab-panel > span:not(.on) { visibility: hidden; }
 .ex .stage-art .filters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 20px; }
 .ex .stage-art.live:has(.tiles) { align-content: center; }
 .ex .stage-art .tiles { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 760px; }

@@ -387,22 +387,29 @@ const accordion = play(["Disclosure"], ["disclosure"], "Open and close the secti
 );
 
 const tabs = play(["Tab indicator"], ["tabs"], "Pick a tab, by click or arrow keys.", (text) => {
-  const TABS = ["Time", "Scroll", "Pointer", "Drag"];
+  // The collection's own groups and notes.
+  const TABS = ["Type", "Play", "Scroll", "Pointer", "Drag"];
+  const notes = [
+    "Letters, words, and numbers perform: they split, scramble, swell, and count.",
+    "Plays once the page starts it: entrances, exits, loops.",
+    "Scroll position or scroll speed drives it.",
+    "Hover, click, or key sets it off.",
+    "The hand moves it directly, and it keeps going when thrown.",
+  ];
   return live(
     text,
-    `<div class="tabbed"><div class="tablist" role="tablist" aria-label="Groups">${TABS.map((t, i) => `<button type="button" role="tab" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${t}</button>`).join("")}<span class="tab-indicator" aria-hidden="true"></span></div><p class="tab-panel" role="tabpanel">Plays once the page starts it: entrances, exits, loops.</p></div>`,
+    `<div class="tabbed"><div class="tablist" role="tablist" aria-label="Groups">${TABS.map((t, i) => `<button type="button" role="tab" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${t}</button>`).join("")}<span class="tab-indicator" aria-hidden="true"></span></div><p class="tab-panel" role="tabpanel">${notes.map((n, i) => `<span${i === 0 ? ' class="on"' : ""}>${n}</span>`).join("")}</p></div>`,
     (layer) => {
       const list = one(layer, ".tablist");
       const buttons = all(list, "[role=tab]");
-      const panel = one(layer, ".tab-panel");
-      const notes = ["Plays once the page starts it: entrances, exits, loops.", "Scroll position or scroll speed drives it.", "Hover, click, or key sets it off.", "The hand moves it directly."];
+      const lines = all(layer, ".tab-panel > span");
       const ind = tabIndicator(one(layer, ".tab-indicator"), list);
       const select = (i: number, focus = false) => {
         buttons.forEach((b, j) => {
           b.setAttribute("aria-selected", String(i === j));
           b.tabIndex = i === j ? 0 : -1;
         });
-        panel.textContent = notes[i];
+        lines.forEach((line, j) => line.classList.toggle("on", i === j));
         ind.moveTo(buttons[i]);
         if (focus) buttons[i].focus();
       };
