@@ -21,6 +21,7 @@ import {
 } from "../recipes/scroll-effects";
 import { sectionPager } from "../recipes/section-pager";
 import { lenisScroll } from "../recipes/smooth/lenis-scroll";
+import type { LenisOptions } from "lenis";
 
 const SCROLL_HINT = "Scroll inside the window.";
 const one = <T extends Element = HTMLElement>(root: ParentNode, sel: string) => root.querySelector(sel) as T;
@@ -51,6 +52,7 @@ export function windowed(
   inner: string,
   wire: (win: HTMLElement, layer: HTMLElement) => Array<() => void>,
   className = "",
+  lenis: Partial<LenisOptions> = {},
 ): Play {
   return live(
     text,
@@ -60,7 +62,7 @@ export function windowed(
       // The skill's Lenis drives the window's scroll from GSAP's ticker, so pins and scrubbed transforms
       // land in the same frame as the scroll. Left native, the browser scrolls first and a pinned
       // section shakes a frame behind.
-      const smooth = lenisScroll({ wrapper: win, content: win });
+      const smooth = lenisScroll({ wrapper: win, content: win, ...lenis });
       const offs = wire(win, layer);
       const frame = requestAnimationFrame(() => ScrollTrigger.refresh());
       let alive = true;

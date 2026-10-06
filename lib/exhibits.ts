@@ -509,37 +509,37 @@ const DATA: Exhibit[] = [
   {
     name: "Calm",
     group: "vibes",
-    builders: "revealOnScroll, scrubStatement, parallax, pressFeedback, imageZoom",
+    builders: "revealOnScroll, scrubStatement, parallax, pressFeedback, imageZoom, cursorFollower, lenisScroll",
     src: "motion-vocabulary",
-    desc: "Slow and soft: long fades on gentle curves, words that drift up a little, a slow read of the statement, and nothing that bounces."
+    desc: "Slow and soft: long fades on gentle curves, a breathing guide and fading color fields with a pause, a heavy slow scroll, and a soft dot that drifts after the pointer."
   },
   {
     name: "Playful",
     group: "vibes",
-    builders: "revealOnScroll, scrubStatement, pressFeedback, tilt, burstFrom",
+    builders: "revealOnScroll, scrubStatement, pressFeedback, tilt, burstFrom, pile, Draggable",
     src: "motion-vocabulary",
-    desc: "Bouncy and loud: letters pop in on elastic curves at odd angles, cards plop, the button squashes and throws confetti, cards tilt under a finger."
+    desc: "Bouncy and loud: letters pop in at odd angles and hop when touched, stickers you can throw, a heap of shapes to shake, and a button that squashes and throws confetti."
   },
   {
     name: "Luxury",
     group: "vibes",
-    builders: "revealOnScroll, scrubStatement, parallax, underlineSweep, imageZoom",
+    builders: "revealOnScroll, scrubStatement, parallax, horizontalRun, spotlight, underlineSweep, imageZoom",
     src: "motion-vocabulary",
-    desc: "Slow and exact: lines rise from behind masks on long curves, pictures drift and zoom slowly, the call to action is an underlined word."
+    desc: "Slow and exact: lines rise from behind masks, a picture opens from a slit as it scrolls in, a pinned gallery moves sideways, and a spotlight finds the detail."
   },
   {
     name: "Snappy",
     group: "vibes",
-    builders: "revealOnScroll, scrubStatement, pressFeedback, textRoll",
+    builders: "revealOnScroll, scrubStatement, pressFeedback, textRoll, tabIndicator, stateButton, sortable",
     src: "motion-vocabulary",
-    desc: "Fast and sure: everything slides a short way in a quarter second, all at once, and labels roll the moment you hover."
+    desc: "Fast and sure: everything slides in a quarter second, plans switch under a sliding indicator, the button answers with a check, tasks reorder, and numbers count up at once."
   },
   {
     name: "Glitchy",
     group: "vibes",
     builders: "scrambleText, revealOnScroll, pressFeedback",
     src: "motion-vocabulary",
-    desc: "Broken on purpose: the headline decodes from noise, things blink on in hard steps, and the statement scrambles as it scrolls in."
+    desc: "Broken on purpose: the headline decodes from noise, a countdown ticks in broken steps, a marquee flickers, pictures tear, and symbols trail the pointer."
   }
 ];
 
