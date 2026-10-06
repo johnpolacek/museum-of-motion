@@ -46,7 +46,7 @@ const END = `<section class="w-pad"><p class="lab">End</p></section>`;
  * A scrolling window filling the stage. `wire` gets the window and returns teardowns. Triggers are
  * measured once the window has its size, and again after fonts load. Lenis drives the window.
  */
-function windowed(
+export function windowed(
   text: HTMLElement,
   inner: string,
   wire: (win: HTMLElement, layer: HTMLElement) => Array<() => void>,

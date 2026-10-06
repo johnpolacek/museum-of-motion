@@ -7,9 +7,11 @@ import { Flip } from "gsap/Flip";
 import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
 import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 import { ScrollToPlugin } from "gsap/ScrollToPlugin";
+import { ScrambleTextPlugin } from "gsap/ScrambleTextPlugin";
+import { TextPlugin } from "gsap/TextPlugin";
 import { useGSAP } from "@gsap/react";
 
-gsap.registerPlugin(useGSAP, SplitText, CustomEase, ScrollTrigger, Flip, DrawSVGPlugin, MotionPathPlugin, ScrollToPlugin);
+gsap.registerPlugin(useGSAP, SplitText, CustomEase, ScrollTrigger, Flip, DrawSVGPlugin, MotionPathPlugin, ScrollToPlugin, ScrambleTextPlugin, TextPlugin);
 
 // MOTION.md: one entrance curve, one exit curve.
 CustomEase.create("signature", "M0,0 C0.2,1.5 0.35,1 1,1");

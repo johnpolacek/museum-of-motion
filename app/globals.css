@@ -476,3 +476,68 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .tl-read { margin-left: auto; font-variant-numeric: tabular-nums; }
 @media (max-width: 600px) { .ex .stage-art .tl-speed, .ex .stage-art .tl-read { margin-left: 0; } .ex .stage-art .tl { width: 100%; } }
 
+
+/* ---------- Vibes: each a small site with its own look. One skeleton; the vibe class sets the rest. ---------- */
+.ex .stage:has(.win.vibe) { min-height: 640px; }
+.ex .stage-art .win.vibe { background: var(--v-bg); color: var(--v-fg); font-family: var(--v-font); font-size: 16px; line-height: 1.4; letter-spacing: 0; text-transform: none; }
+.ex .win.vibe p, .ex .win.vibe h3 { margin: 0; font-size: inherit; font-weight: inherit; line-height: inherit; letter-spacing: inherit; text-transform: none; }
+.ex .win.vibe a { color: inherit; text-decoration: none; }
+.ex .win.vibe .v-nav { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: var(--v-bg); }
+.ex .win.vibe .v-brand { font-weight: 700; }
+.ex .win.vibe .v-links { display: flex; gap: 20px; font-size: 14px; }
+.ex .win.vibe .v-hero { min-height: calc(100cqh - 56px); display: grid; align-content: center; justify-items: start; gap: 18px; padding: 24px; }
+.ex .win.vibe .v-kicker { font-size: 13px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--v-muted); }
+.ex .win.vibe .v-head { font-size: clamp(40px, 9cqw, 104px); line-height: 0.98; max-width: 14ch; }
+.ex .win.vibe .v-sub { font-size: 18px; color: var(--v-muted); max-width: 32ch; }
+.ex .win.vibe .v-btn { font: inherit; font-size: 15px; cursor: pointer; padding: 14px 26px; border: 0; background: var(--v-accent); color: var(--v-on-accent); }
+.ex .win.vibe .v-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 24px; }
+@container (max-width: 560px) { .ex .win.vibe .v-cards { grid-template-columns: 1fr; } }
+.ex .win.vibe .v-card { display: grid; gap: 6px; }
+.ex .win.vibe .v-art { display: block; aspect-ratio: 4 / 3; overflow: hidden; position: relative; }
+.ex .win.vibe .v-art i { position: absolute; inset: -12% 0; display: block; background: var(--v-art); }
+.ex .win.vibe .v-meta { font-size: 13px; color: var(--v-muted); }
+.ex .win.vibe .v-quote { min-height: 80cqh; display: grid; place-items: center; padding: 40px 24px; }
+.ex .win.vibe .v-quote p { font-size: clamp(28px, 5.5cqw, 60px); line-height: 1.1; max-width: 18ch; text-align: center; }
+.ex .win.vibe .v-foot { padding: 28px 24px 40px; font-size: 13px; color: var(--v-muted); }
+.ex .stage-art .v-replay { position: absolute; right: 12px; bottom: 12px; z-index: 3; background: rgb(11 11 11 / 0.72); color: #fff; border-color: transparent; }
+.ex .stage-art .v-burst { position: absolute; inset: 0; z-index: 2; overflow: hidden; pointer-events: none; }
+.ex .stage-art .v-burst > * { position: absolute; left: 0; top: 0; }
+.ex .stage-art .v-burst .confetto { display: block; width: 10px; height: 14px; }
+
+/* Calm: sand, sage, a light sans, round and soft. */
+.ex .win.vibe-calm { --v-bg: #efe9df; --v-fg: #2f3a33; --v-muted: #6b746c; --v-accent: #6f8f74; --v-on-accent: #fff; --v-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; --v-art: radial-gradient(circle at 30% 35%, #c9d8c5 0 28%, transparent 29%), radial-gradient(circle at 70% 70%, #e3d6c3 0 34%, transparent 35%), #dfe6dc; font-weight: 300; }
+.ex .win.vibe-calm .v-head { font-weight: 300; letter-spacing: -0.03em; }
+.ex .win.vibe-calm .v-btn { border-radius: 999px; padding: 14px 34px; }
+.ex .win.vibe-calm .v-art { border-radius: 18px; }
+
+/* Playful: sunny yellow, heavy wide type, thick outlines, hard shadows. */
+.ex .win.vibe-playful { --v-bg: #ffd23f; --v-fg: #1d1145; --v-muted: #4a3d75; --v-accent: #ff4f9a; --v-on-accent: #1d1145; --v-font: var(--font-archivo), system-ui, sans-serif; --v-art: radial-gradient(circle at 30% 40%, #ff4f9a 0 26%, transparent 27%), radial-gradient(circle at 72% 62%, #3a5bff 0 22%, transparent 23%), #fff7d6; }
+.ex .win.vibe-playful .v-head { font-weight: 900; font-stretch: 112%; text-transform: uppercase; letter-spacing: -0.02em; }
+.ex .win.vibe-playful .v-brand { font-weight: 900; font-stretch: 112%; }
+.ex .win.vibe-playful .v-btn { font-weight: 800; border: 3px solid var(--v-fg); border-radius: 999px; box-shadow: 5px 5px 0 var(--v-fg); }
+.ex .win.vibe-playful .v-card { background: #fff; border: 3px solid var(--v-fg); border-radius: 22px; padding: 10px; box-shadow: 6px 6px 0 var(--v-fg); }
+.ex .win.vibe-playful .v-art { border-radius: 14px; }
+.ex .win.vibe-playful .v-quote p { font-weight: 900; font-stretch: 112%; text-transform: uppercase; }
+
+/* Luxury: near black, cream, a gold hairline, a serif set wide and quiet. */
+.ex .win.vibe-luxury { --v-bg: #0f0e0c; --v-fg: #e9dfc9; --v-muted: #a59a84; --v-accent: transparent; --v-on-accent: #e9dfc9; --v-font: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; --v-art: linear-gradient(160deg, #3a3124 0%, #17140f 60%, #0f0e0c 100%); }
+.ex .win.vibe-luxury .v-head { font-weight: 400; letter-spacing: -0.01em; max-width: 12ch; }
+.ex .win.vibe-luxury .v-brand { font-weight: 400; letter-spacing: 0.24em; text-transform: uppercase; font-size: 14px; }
+.ex .win.vibe-luxury .v-kicker { letter-spacing: 0.3em; color: #b89a5e; }
+.ex .win.vibe-luxury .v-btn { padding: 4px 0; letter-spacing: 0.28em; text-transform: uppercase; font-size: 13px; --underline-color: #b89a5e; }
+.ex .win.vibe-luxury .v-art { box-shadow: inset 0 0 0 1px #b89a5e; }
+.ex .win.vibe-luxury .v-art i { box-shadow: inset 0 -40px 60px rgb(184 154 94 / 0.15); }
+
+/* Snappy: white, ink, electric blue, a compact condensed sans, tight corners. */
+.ex .win.vibe-snappy { --v-bg: #ffffff; --v-fg: #0b0b0b; --v-muted: #5c5c66; --v-accent: #0055ff; --v-on-accent: #fff; --v-font: var(--font-archivo), system-ui, sans-serif; --v-art: linear-gradient(90deg, #0055ff 0 62%, #e8ecf7 62%) 0 78% / 100% 10px no-repeat, #f3f5fa; }
+.ex .win.vibe-snappy .v-head { font-weight: 700; font-stretch: 82%; letter-spacing: -0.03em; }
+.ex .win.vibe-snappy .v-btn { font-weight: 700; border-radius: 6px; }
+.ex .win.vibe-snappy .v-card { border: 1px solid #e5e7ee; border-radius: 10px; padding: 10px; }
+.ex .win.vibe-snappy .v-art { border-radius: 6px; }
+
+/* Glitch: black, neon green, magenta, monospace, scanlines, a chromatic split on the type. */
+.ex .win.vibe-glitchy { --v-bg: #0a0a0a; --v-fg: #39ff14; --v-muted: #1f9e0d; --v-accent: transparent; --v-on-accent: #39ff14; --v-font: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; --v-art: repeating-linear-gradient(0deg, rgb(57 255 20 / 0.12) 0 2px, transparent 2px 5px), linear-gradient(90deg, transparent 0 40%, #ff2bd6 40% 46%, transparent 46%), #111; }
+.ex .win.vibe-glitchy .v-head { font-weight: 700; text-transform: uppercase; text-shadow: 2px 0 #ff2bd6, -2px 0 #00e5ff; }
+.ex .win.vibe-glitchy .v-btn { border: 1px solid var(--v-fg); text-transform: uppercase; letter-spacing: 0.12em; }
+.ex .win.vibe-glitchy .v-art { outline: 1px solid rgb(57 255 20 / 0.4); }
+.ex .win.vibe-glitchy .v-quote p { text-shadow: 1px 0 #ff2bd6, -1px 0 #00e5ff; }

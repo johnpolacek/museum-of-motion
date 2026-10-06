@@ -1,7 +1,7 @@
 // Museum of Motion: every exhibit is an effect recipe from the Animaxxing skills.
 // `src` is the recipe file. `gl` marks animaxxing-webgl.
 
-export type GroupKey = "type" | "play" | "scroll" | "pointer" | "drag";
+export type GroupKey = "type" | "play" | "scroll" | "pointer" | "drag" | "vibes";
 
 export type Exhibit = {
   name: string;
@@ -38,6 +38,11 @@ export const GROUPS: { key: GroupKey; name: string; note: string }[] = [
     key: "drag",
     name: "Drag",
     note: "The hand moves it directly, and it keeps going when thrown."
+  },
+  {
+    key: "vibes",
+    name: "Vibes",
+    note: "Effects combined into one feeling: each a small site with its own look and motion."
   }
 ];
 
@@ -500,6 +505,41 @@ const DATA: Exhibit[] = [
     builders: "swipeDismiss",
     src: "pointer-effects",
     desc: "Throw an item sideways and the list closes up behind it."
+  },
+  {
+    name: "Calm",
+    group: "vibes",
+    builders: "revealOnScroll, scrubStatement, parallax, pressFeedback, imageZoom",
+    src: "motion-vocabulary",
+    desc: "Slow and soft: long fades on gentle curves, words that drift up a little, a slow read of the statement, and nothing that bounces."
+  },
+  {
+    name: "Playful",
+    group: "vibes",
+    builders: "revealOnScroll, scrubStatement, pressFeedback, tilt, burstFrom",
+    src: "motion-vocabulary",
+    desc: "Bouncy and loud: letters pop in on elastic curves at odd angles, cards plop, the button squashes and throws confetti, cards tilt under a finger."
+  },
+  {
+    name: "Luxury",
+    group: "vibes",
+    builders: "revealOnScroll, scrubStatement, parallax, underlineSweep, imageZoom",
+    src: "motion-vocabulary",
+    desc: "Slow and exact: lines rise from behind masks on long curves, pictures drift and zoom slowly, the call to action is an underlined word."
+  },
+  {
+    name: "Snappy",
+    group: "vibes",
+    builders: "revealOnScroll, scrubStatement, pressFeedback, textRoll",
+    src: "motion-vocabulary",
+    desc: "Fast and sure: everything slides a short way in a quarter second, all at once, and labels roll the moment you hover."
+  },
+  {
+    name: "Glitchy",
+    group: "vibes",
+    builders: "scrambleText, revealOnScroll, pressFeedback",
+    src: "motion-vocabulary",
+    desc: "Broken on purpose: the headline decodes from noise, things blink on in hard steps, and the statement scrambles as it scrolls in."
   }
 ];
 
@@ -508,6 +548,13 @@ export const EXHIBITS = DATA.map((e, i) => ({
   no: i + 1,
   slug: e.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
 }));
+
+// Two exhibits with one address would share a page and a stage: the later silently replaces the earlier.
+const seen = new Set<string>();
+for (const e of EXHIBITS) {
+  if (seen.has(e.slug)) throw new Error(`Two exhibits share the address /exhibits/${e.slug}`);
+  seen.add(e.slug);
+}
 
 export type NumberedExhibit = (typeof EXHIBITS)[number];
 
