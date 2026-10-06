@@ -14,6 +14,8 @@ Mount and unmount belong to React; animation owns the five phases between them. 
 
 Keep the requested look and existing project conventions. Add GSAP/plugins only as needed; do not replace the chosen animation library unless asked.
 
+This skill decides when motion runs. For what moves, and for a feel such as premium or playful, also load the `animaxxing` skill when it is installed: its recipes and its guide to finding the vibe plug into this lifecycle.
+
 ## Start with the project
 
 Read repository instructions, existing animation, layouts, navigation, CSS, accessibility conventions, and checks. Then:
