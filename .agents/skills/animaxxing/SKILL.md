@@ -17,7 +17,7 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 - **Full treatment.** "We're animaxxing", "animax this", or "full treatment" means every element on every screen animates, keeping the brand. Each element starts from a blank first paint, enters (intro), rests static or ambient (settled), and leaves (outro) on every requested navigation. Content below the fold enters when it is scrolled or tabbed to. Mark every element as a page item ([route letters](references/recipes/route-letters.md)) or give it a pair from [the shelf](references/motion-vocabulary.md#the-shelf-paired-entrances-and-exits); the framework skill keeps the first paint blank. Record the decision in the project's plan or notes so later sessions keep it.
 - **Single effects.** A named effect gets only that effect. A particle button does not imply a page transition, font change, or hero sequence.
 - **A feel, or no effect named.** "Make it feel premium", "add some animation": read [Finding the vibe](references/finding-the-vibe.md) before choosing any effect. Read the feel from the project, then say the plan in a line or two before building.
-- **Unclear.** Ask once before building: "Full treatment on every element, or only <effect>?" When the feel is open too, fold it into this one question.
+- **Unclear.** When the project's own cues settle the feel and how much motion it wants, say the plan in a line or two and build. Ask only when they don't, and then once: "Full treatment on every element, or only <effect>?", folding in the feel if that is open too.
 - The full treatment still follows reduced motion, no-script readability, and the framework skill's initialization and lifecycle.
 
 ## Setup and adaptation

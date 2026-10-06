@@ -10,4 +10,4 @@ Before choosing effects, work out two things.
 
 Then let the feel shape the choices: how long things take, how they settle, how far they travel, whether they arrive together or in turn, how presses and hovers answer, and whether anything moves on its own. Pick a moment or two to carry the feeling and keep the rest quiet. These are questions to weigh, not settings to apply: two calm sites can still move differently.
 
-Ask at most one question, and only when the cues are thin or disagree. If the scope is also unclear, fold both into the one question the skill already asks. Then say what you found and what you plan in a line or two, so the user can redirect before you build.
+Ask at most one question, and only when the cues are thin or disagree. If the scope is also unclear, fold both into the one question the skill already asks. Otherwise say what you found and what you plan in a line or two, then build: the user can redirect from there.
