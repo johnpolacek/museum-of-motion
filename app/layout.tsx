@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Archivo, Cormorant_Garamond, Jost } from "next/font/google";
+import { Archivo, Bricolage_Grotesque, Cormorant_Garamond, Fraunces, Geist, Geist_Mono, JetBrains_Mono, Jost, Manrope, VT323 } from "next/font/google";
 import { Footer } from "@/components/Footer";
 import { Masthead } from "@/components/Masthead";
 import { TransitionProvider } from "@/components/motion/TransitionProvider";
@@ -22,6 +22,13 @@ const cormorant = Cormorant_Garamond({
   preload: false,
 });
 const jost = Jost({ variable: "--font-jost", subsets: ["latin"], weight: ["400", "500"], preload: false });
+const fraunces = Fraunces({ variable: "--font-fraunces", subsets: ["latin"], axes: ["SOFT", "opsz"], style: ["normal", "italic"], preload: false });
+const manrope = Manrope({ variable: "--font-manrope", subsets: ["latin"], preload: false });
+const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: ["latin"], axes: ["wdth", "opsz"], preload: false });
+const geist = Geist({ variable: "--font-geist", subsets: ["latin"], preload: false });
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"], preload: false });
+const vt323 = VT323({ variable: "--font-vt323", subsets: ["latin"], weight: "400", preload: false });
+const jetbrains = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin"], preload: false });
 
 export const metadata: Metadata = {
   title: "Museum of Motion",
@@ -31,7 +38,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${archivo.variable} ${cormorant.variable} ${jost.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${archivo.variable} ${cormorant.variable} ${jost.variable} ${fraunces.variable} ${manrope.variable} ${bricolage.variable} ${geist.variable} ${geistMono.variable} ${vt323.variable} ${jetbrains.variable}`} suppressHydrationWarning>
       <body>
         {/* Sets the motion marker before content paints. The marker itself is never in server HTML. */}
         <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />

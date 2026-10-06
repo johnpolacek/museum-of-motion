@@ -494,7 +494,7 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 @container (max-width: 560px) { .ex .win.vibe .v-cards { grid-template-columns: 1fr; } }
 .ex .win.vibe .v-card { display: grid; gap: 6px; }
 .ex .win.vibe .v-art { display: block; aspect-ratio: 4 / 3; overflow: hidden; position: relative; }
-.ex .win.vibe .v-art i { position: absolute; inset: -12% 0; display: block; background: var(--v-art); }
+.ex .win.vibe .v-art > i { position: absolute; inset: -12% 0; display: block; background: var(--v-art); }
 .ex .win.vibe .v-meta { font-size: 13px; color: var(--v-muted); }
 .ex .win.vibe .v-quote { min-height: 80cqh; display: grid; place-items: center; padding: 40px 24px; }
 .ex .win.vibe .v-quote p { font-size: clamp(28px, 5.5cqw, 60px); line-height: 1.1; max-width: 18ch; text-align: center; }
@@ -503,21 +503,6 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .v-burst { position: absolute; inset: 0; z-index: 2; overflow: hidden; pointer-events: none; }
 .ex .stage-art .v-burst > * { position: absolute; left: 0; top: 0; }
 .ex .stage-art .v-burst .confetto { display: block; width: 10px; height: 14px; }
-
-/* Calm: sand, sage, a light sans, round and soft. */
-.ex .win.vibe-calm { --v-bg: #efe9df; --v-fg: #2f3a33; --v-muted: #6b746c; --v-accent: #6f8f74; --v-on-accent: #fff; --v-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; --v-art: radial-gradient(circle at 30% 35%, #c9d8c5 0 28%, transparent 29%), radial-gradient(circle at 70% 70%, #e3d6c3 0 34%, transparent 35%), #dfe6dc; font-weight: 300; }
-.ex .win.vibe-calm .v-head { font-weight: 300; letter-spacing: -0.03em; }
-.ex .win.vibe-calm .v-btn { border-radius: 999px; padding: 14px 34px; }
-.ex .win.vibe-calm .v-art { border-radius: 18px; }
-
-/* Playful: sunny yellow, heavy wide type, thick outlines, hard shadows. */
-.ex .win.vibe-playful { --v-bg: #ffd23f; --v-fg: #1d1145; --v-muted: #4a3d75; --v-accent: #ff4f9a; --v-on-accent: #1d1145; --v-font: var(--font-archivo), system-ui, sans-serif; --v-art: radial-gradient(circle at 30% 40%, #ff4f9a 0 26%, transparent 27%), radial-gradient(circle at 72% 62%, #3a5bff 0 22%, transparent 23%), #fff7d6; }
-.ex .win.vibe-playful .v-head { font-weight: 900; font-stretch: 112%; text-transform: uppercase; letter-spacing: -0.02em; }
-.ex .win.vibe-playful .v-brand { font-weight: 900; font-stretch: 112%; }
-.ex .win.vibe-playful .v-btn { font-weight: 800; border: 3px solid var(--v-fg); border-radius: 999px; box-shadow: 5px 5px 0 var(--v-fg); }
-.ex .win.vibe-playful .v-card { background: #fff; border: 3px solid var(--v-fg); border-radius: 22px; padding: 10px; box-shadow: 6px 6px 0 var(--v-fg); }
-.ex .win.vibe-playful .v-art { border-radius: 14px; }
-.ex .win.vibe-playful .v-quote p { font-weight: 900; font-stretch: 112%; text-transform: uppercase; }
 
 /* Luxury: a jeweller's page. Warm black, cream, gold hairlines, Cormorant for display, Jost set wide for labels. */
 .ex .win.vibe-luxury { --v-bg: #0e0c0a; --v-fg: #efe6d2; --v-muted: #a69a83; --v-gold: #c9a15a; --v-accent: transparent; --v-on-accent: #efe6d2; --v-font: var(--font-cormorant), "Cormorant Garamond", Georgia, serif; --v-label: var(--font-jost), "Jost", system-ui, sans-serif; --v-art: radial-gradient(ellipse at 50% 40%, #2a2217, #0e0c0a 70%); font-size: 18px; }
@@ -543,53 +528,15 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win.vibe-luxury .v-meta { font-family: var(--v-label); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; }
 .ex .win.vibe-luxury .lx-price { font-size: 17px; font-style: italic; color: var(--v-gold); }
 .ex .win.vibe-luxury .v-art { aspect-ratio: 1; box-shadow: inset 0 0 0 1px rgb(201 161 90 / 0.35); }
-.ex .win.vibe-luxury .v-art i { inset: -10% 0; display: grid; place-items: center; padding: 14%; }
+.ex .win.vibe-luxury .v-art > i { inset: -10% 0; display: grid; place-items: center; padding: 14%; }
 .ex .win.vibe-luxury .v-quote p { font-weight: 300; font-style: italic; }
 .ex .win.vibe-luxury .v-foot { font-family: var(--v-label); font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; text-align: center; border-top: 1px solid rgb(201 161 90 / 0.22); }
 .ex .win.vibe-luxury .v-caption { font-style: italic; font-size: 19px; }
-
-/* Snappy: white, ink, electric blue, a compact condensed sans, tight corners. */
-.ex .win.vibe-snappy { --v-bg: #ffffff; --v-fg: #0b0b0b; --v-muted: #5c5c66; --v-accent: #0055ff; --v-on-accent: #fff; --v-font: var(--font-archivo), system-ui, sans-serif; --v-art: linear-gradient(90deg, #0055ff 0 62%, #e8ecf7 62%) 0 78% / 100% 10px no-repeat, #f3f5fa; }
-.ex .win.vibe-snappy .v-head { font-weight: 700; font-stretch: 82%; letter-spacing: -0.03em; }
-.ex .win.vibe-snappy .v-btn { font-weight: 700; border-radius: 6px; }
-.ex .win.vibe-snappy .v-card { border: 1px solid #e5e7ee; border-radius: 10px; padding: 10px; }
-.ex .win.vibe-snappy .v-art { border-radius: 6px; }
-
-/* Glitch: black, neon green, magenta, monospace, scanlines, a chromatic split on the type. */
-.ex .win.vibe-glitchy { --v-bg: #0a0a0a; --v-fg: #39ff14; --v-muted: #1f9e0d; --v-accent: transparent; --v-on-accent: #39ff14; --v-font: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; --v-art: repeating-linear-gradient(0deg, rgb(57 255 20 / 0.12) 0 2px, transparent 2px 5px), linear-gradient(90deg, transparent 0 40%, #ff2bd6 40% 46%, transparent 46%), #111; }
-.ex .win.vibe-glitchy .v-head { font-weight: 700; text-transform: uppercase; text-shadow: 2px 0 #ff2bd6, -2px 0 #00e5ff; }
-.ex .win.vibe-glitchy .v-btn { border: 1px solid var(--v-fg); text-transform: uppercase; letter-spacing: 0.12em; }
-.ex .win.vibe-glitchy .v-art { outline: 1px solid rgb(57 255 20 / 0.4); }
-.ex .win.vibe-glitchy .v-quote p { text-shadow: 1px 0 #ff2bd6, -1px 0 #00e5ff; }
 
 /* ---------- Vibes: signature sections ---------- */
 .ex .win.vibe .v-ambient { display: flex; justify-content: center; padding: 8px 24px 24px; }
 .ex .win.vibe .v-pause { font: inherit; font-size: 13px; cursor: pointer; padding: 8px 18px; border: 1px solid currentColor; border-radius: 999px; background: none; color: inherit; }
 .ex .win.vibe .v-caption { text-align: center; font-size: 13px; color: var(--v-muted); padding-top: 14px; }
-
-/* Calm */
-.ex .win.vibe-calm .v-breathe { min-height: 70cqh; display: grid; place-items: center; align-content: center; gap: 28px; padding: 40px 24px; }
-.ex .win.vibe-calm .v-orb { width: min(46cqw, 260px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #dbe7d8, #8fa58f 70%); box-shadow: 0 0 80px rgb(111 143 116 / 0.35); }
-.ex .win.vibe-calm .v-orb-say { font-size: 22px; letter-spacing: 0.04em; color: var(--v-muted); }
-.ex .win.vibe-calm .v-fields { position: relative; height: 46cqh; margin: 0 24px; border-radius: 18px; overflow: hidden; }
-.ex .win.vibe-calm .v-fields i { position: absolute; inset: 0; }
-.ex .win.vibe-calm .v-fields i:nth-child(1) { background: linear-gradient(160deg, #dfe6dc, #c9d8c5); }
-.ex .win.vibe-calm .v-fields i:nth-child(2) { background: linear-gradient(160deg, #efe1cf, #e3d6c3); }
-.ex .win.vibe-calm .v-fields i:nth-child(3) { background: linear-gradient(160deg, #d9e2e6, #c3d3d8); }
-.ex .stage-art .v-soft-cursor { position: fixed; left: 0; top: 0; z-index: 4; width: 34px; height: 34px; border-radius: 50%; background: rgb(111 143 116 / 0.35); pointer-events: none; visibility: hidden; }
-
-/* Playful */
-.ex .win.vibe-playful .v-play { position: relative; min-height: 70cqh; margin: 24px; border: 3px solid var(--v-fg); border-radius: 26px; background: #fff7d6; overflow: hidden; touch-action: none; }
-.ex .win.vibe-playful .v-play-head { padding: 18px 22px; font-weight: 900; font-stretch: 112%; text-transform: uppercase; }
-.ex .win.vibe-playful .v-stickers { position: absolute; inset: 70px 20px 20px; display: flex; flex-wrap: wrap; gap: 18px; align-content: center; justify-content: center; }
-.ex .win.vibe-playful .v-sticker { display: grid; place-items: center; width: 74px; height: 74px; border-radius: 50%; border: 3px solid var(--v-fg); box-shadow: 4px 4px 0 var(--v-fg); font-size: 34px; cursor: grab; user-select: none; }
-.ex .win.vibe-playful .v-sticker.s0, .ex .win.vibe-playful .v-sticker.s3 { background: #ff4f9a; }
-.ex .win.vibe-playful .v-sticker.s1, .ex .win.vibe-playful .v-sticker.s4 { background: #3a5bff; color: #fff; }
-.ex .win.vibe-playful .v-sticker.s2, .ex .win.vibe-playful .v-sticker.s5 { background: #fff; }
-.ex .win.vibe-playful .v-heap { display: grid; gap: 14px; justify-items: center; padding: 0 24px 24px; }
-.ex .win.vibe-playful .v-heap-box { position: relative; width: 100%; height: 300px; overflow: hidden; border-bottom: 3px solid var(--v-fg); }
-.ex .win.vibe-playful .v-heap-box > * { position: absolute; left: 0; top: 0; display: block; }
-.ex .win.vibe-playful .v-shake { font: inherit; font-weight: 800; cursor: pointer; padding: 12px 24px; border: 3px solid var(--v-fg); border-radius: 999px; background: #3a5bff; color: #fff; box-shadow: 4px 4px 0 var(--v-fg); }
 
 /* Luxury */
 .ex .win.vibe-luxury .v-curtain { padding: 40px 24px; }
@@ -609,29 +556,211 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win.vibe-luxury .v-spot-reveal { background: #0e0c0a; clip-path: circle(0px at 50% 50%); }
 .ex .win.vibe-luxury .lx-band { width: min(90%, 560px); }
 
-/* Snappy */
-.ex .win.vibe-snappy .v-plans { display: grid; gap: 18px; justify-items: start; padding: 40px 24px; }
+/* Calm: Stillwater. Sand and sage, Fraunces at its softest, Manrope, round corners, nothing sharp. */
+.ex .win.vibe-calm { --v-bg: #f3ede3; --v-fg: #2f3a33; --v-muted: #6b746c; --v-accent: #5f7f66; --v-on-accent: #fff; --v-font: var(--font-manrope), system-ui, sans-serif; --v-display: var(--font-fraunces), Georgia, serif; --v-art: #dfe6dc; }
+.ex .win.vibe-calm .v-brand { display: inline-flex; align-items: center; gap: 8px; font-family: var(--v-display); font-weight: 400; font-size: 21px; font-variation-settings: "SOFT" 100, "opsz" 24; }
+.ex .win.vibe-calm .v-brand svg { width: 22px; height: 22px; color: var(--v-accent); }
+.ex .win.vibe-calm .v-links { gap: 28px; color: var(--v-muted); }
+.ex .win.vibe-calm .v-kicker { text-transform: none; letter-spacing: 0.02em; font-size: 14px; color: var(--v-accent); }
+.ex .win.vibe-calm .v-head { font-family: var(--v-display); font-weight: 300; font-variation-settings: "SOFT" 100, "opsz" 144; font-size: clamp(44px, 7.4cqw, 96px); line-height: 1.02; letter-spacing: -0.02em; max-width: 9ch; }
+.ex .win.vibe-calm .v-head em { font-style: italic; color: var(--v-accent); }
+.ex .win.vibe-calm .v-sub { font-size: 18px; line-height: 1.55; max-width: 34ch; }
+.ex .win.vibe-calm .v-btn { border-radius: 999px; padding: 15px 30px; font-weight: 500; }
+.ex .win.vibe-calm .cl-hero { grid-template-columns: 1fr 1fr; align-items: center; justify-items: stretch; gap: 32px; }
+.ex .win.vibe-calm .cl-copy { display: grid; gap: 20px; justify-items: start; }
+.ex .win.vibe-calm .cl-hero-art { justify-self: center; width: min(100%, 420px); aspect-ratio: 4 / 5; max-height: 74cqh; border-radius: 220px 220px 28px 28px; overflow: hidden; }
+.ex .win.vibe-calm .cl-lake { width: 100%; height: 100%; display: block; }
+@container (max-width: 640px) { .ex .win.vibe-calm .cl-hero { grid-template-columns: 1fr; } .ex .win.vibe-calm .cl-hero-art { order: -1; width: 100%; aspect-ratio: 5 / 4; border-radius: 160px 160px 22px 22px; } }
+.ex .win.vibe-calm .cl-sessions { display: grid; gap: 16px; padding: 56px 24px 24px; }
+.ex .win.vibe-calm .cl-sessions .v-cards { padding: 0; gap: 22px; }
+.ex .win.vibe-calm .v-card { gap: 4px; }
+.ex .win.vibe-calm .v-card > b { margin-top: 12px; font-family: var(--v-display); font-weight: 400; font-size: 23px; font-variation-settings: "SOFT" 100; }
+.ex .win.vibe-calm .v-art { border-radius: 22px; }
+.ex .win.vibe-calm .v-art > i { inset: -10% 0; }
+.ex .win.vibe-calm .cl-play { position: absolute; right: 14px; bottom: 14px; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: rgb(255 255 255 / 0.85); color: var(--v-fg); }
+.ex .win.vibe-calm .cl-play svg { width: 18px; }
+.ex .win.vibe-calm .cl-line { font-size: 15px; color: var(--v-muted); }
+.ex .win.vibe-calm .v-breathe { min-height: 76cqh; display: grid; place-items: center; align-content: center; gap: 36px; padding: 48px 24px; }
+.ex .win.vibe-calm .cl-orb { display: grid; place-items: center; width: min(46cqw, 240px); aspect-ratio: 1; }
+.ex .win.vibe-calm .cl-orb > * { grid-area: 1 / 1; border-radius: 50%; }
+.ex .win.vibe-calm .cl-orb i { width: 118%; height: 118%; border: 1.5px solid rgb(95 127 102 / 0.5); }
+.ex .win.vibe-calm .cl-orb i + i { width: 140%; height: 140%; border-color: rgb(95 127 102 / 0.28); }
+.ex .win.vibe-calm .v-orb { width: 100%; height: 100%; background: radial-gradient(circle at 40% 35%, #e3ece0, #8fa58f 72%); box-shadow: 0 0 80px rgb(111 143 116 / 0.35); }
+.ex .win.vibe-calm .v-orb-say { font-family: var(--v-display); font-style: italic; font-size: 26px; color: var(--v-muted); }
+.ex .win.vibe-calm .cl-day { height: 320cqh; margin: 24px 0; }
+.ex .win.vibe-calm .cl-day-pin { position: sticky; top: 72px; height: calc(100cqh - 96px); margin: 0 24px; border-radius: 26px; overflow: hidden; }
+.ex .win.vibe-calm .cl-hour { position: absolute; inset: 0; margin: 0; }
+.ex .win.vibe-calm .cl-hour figcaption { position: absolute; left: 22px; bottom: 22px; right: 22px; max-width: 360px; display: grid; gap: 4px; padding: 16px 20px; border-radius: 18px; background: rgb(28 36 32 / 0.42); color: #fff; backdrop-filter: blur(8px); }
+.ex .win.vibe-calm .cl-hour span { font-size: 13px; letter-spacing: 0.08em; opacity: 0.85; }
+.ex .win.vibe-calm .cl-hour b { font-family: var(--v-display); font-weight: 300; font-size: clamp(28px, 4cqw, 42px); font-variation-settings: "SOFT" 100; }
+.ex .win.vibe-calm .cl-hour em { font-style: normal; font-size: 15px; opacity: 0.92; }
+.ex .win.vibe-calm .cl-journal { display: grid; max-width: 760px; padding: 56px 24px; }
+.ex .win.vibe-calm .cl-journal .v-kicker { padding-bottom: 14px; }
+.ex .win.vibe-calm .cl-entry { display: grid; gap: 4px; padding: 20px 0; border-top: 1px solid rgb(47 58 51 / 0.14); }
+.ex .win.vibe-calm .cl-entry b { font-family: var(--v-display); font-weight: 400; font-size: 25px; font-variation-settings: "SOFT" 100; }
+.ex .win.vibe-calm .cl-entry span { color: var(--v-muted); }
+.ex .win.vibe-calm .cl-entry small { font-size: 13px; color: var(--v-accent); }
+.ex .win.vibe-calm .v-quote p { font-family: var(--v-display); font-weight: 300; font-style: italic; font-variation-settings: "SOFT" 100; }
+.ex .win.vibe-calm .v-foot { display: flex; justify-content: space-between; gap: 12px; }
+.ex .stage-art .v-soft-cursor { position: fixed; left: 0; top: 0; z-index: 4; width: 34px; height: 34px; border-radius: 50%; background: rgb(111 143 116 / 0.35); pointer-events: none; visibility: hidden; }
+
+/* Playful: Bloop! Sunny yellow, ink outlines, hard shadows, Bricolage Grotesque squeezed and heavy. */
+.ex .win.vibe-playful { --v-bg: #ffd23f; --v-fg: #1d1145; --v-muted: #4a3d75; --v-accent: #ff4f9a; --v-on-accent: #1d1145; --v-font: var(--font-bricolage), system-ui, sans-serif; --v-art: #fff7d6; }
+.ex .win.vibe-playful .v-nav { border-bottom: 3px solid var(--v-fg); }
+.ex .win.vibe-playful .v-brand { font-weight: 800; font-size: 28px; letter-spacing: -0.03em; font-variation-settings: "wdth" 75; rotate: -4deg; }
+.ex .win.vibe-playful .v-links { gap: 10px; font-weight: 700; }
+.ex .win.vibe-playful .v-links a { padding: 6px 14px; border: 3px solid var(--v-fg); border-radius: 999px; background: #fff; box-shadow: 3px 3px 0 var(--v-fg); }
+.ex .win.vibe-playful .v-kicker { display: inline-block; padding: 6px 14px; border-radius: 999px; background: var(--v-fg); color: #ffd23f; font-weight: 800; letter-spacing: 0.04em; rotate: -4deg; }
+.ex .win.vibe-playful .v-head { font-weight: 800; font-variation-settings: "wdth" 75, "opsz" 96; font-size: clamp(54px, 10cqw, 132px); line-height: 0.88; letter-spacing: -0.03em; text-transform: uppercase; max-width: none; }
+.ex .win.vibe-playful .v-head span { display: block; white-space: nowrap; color: var(--v-accent); -webkit-text-stroke: 3px var(--v-fg); paint-order: stroke fill; }
+.ex .win.vibe-playful .v-sub { color: var(--v-fg); font-size: 19px; font-weight: 500; max-width: 30ch; }
+.ex .win.vibe-playful .v-btn { font-weight: 800; font-size: 17px; padding: 14px 28px; border: 3px solid var(--v-fg); border-radius: 999px; box-shadow: 5px 5px 0 var(--v-fg); }
+.ex .win.vibe-playful .pl-hero { grid-template-columns: 1.1fr 1fr; align-items: center; justify-items: stretch; gap: 24px; }
+.ex .win.vibe-playful .pl-copy { display: grid; gap: 18px; justify-items: start; }
+.ex .win.vibe-playful .pl-slap { position: relative; justify-self: center; width: min(100%, 460px); aspect-ratio: 1; }
+.ex .win.vibe-playful .pl-on { position: absolute; width: 46%; }
+.ex .win.vibe-playful .pl-on svg { display: block; width: 100%; filter: drop-shadow(4px 6px 0 rgb(29 17 69 / 0.25)); }
+.ex .win.vibe-playful .pl-on.p0 { left: 2%; top: 4%; rotate: -8deg; }
+.ex .win.vibe-playful .pl-on.p1 { right: 0; top: 0; width: 40%; rotate: 12deg; }
+.ex .win.vibe-playful .pl-on.p2 { left: 8%; bottom: 0; width: 42%; rotate: 6deg; }
+.ex .win.vibe-playful .pl-on.p3 { right: 4%; bottom: 6%; width: 42%; rotate: -10deg; }
+@container (max-width: 640px) { .ex .win.vibe-playful .pl-hero { grid-template-columns: 1fr; } .ex .win.vibe-playful .pl-slap { width: min(78%, 300px); } }
+.ex .win.vibe-playful .v-cards { gap: 22px; }
+.ex .win.vibe-playful .v-card { gap: 4px; background: #fff; border: 3px solid var(--v-fg); border-radius: 22px; padding: 10px 10px 14px; box-shadow: 6px 6px 0 var(--v-fg); }
+.ex .win.vibe-playful .v-art { border-radius: 14px; border: 3px solid var(--v-fg); }
+.ex .win.vibe-playful .v-art > i { inset: -10% 0; display: grid; place-items: center; background: none; }
+.ex .win.vibe-playful .v-art i svg { width: 58%; filter: drop-shadow(3px 4px 0 rgb(29 17 69 / 0.25)); }
+.ex .win.vibe-playful .v-card > b { margin-top: 8px; font-size: 25px; font-weight: 800; font-variation-settings: "wdth" 80; letter-spacing: -0.02em; }
+.ex .win.vibe-playful .v-meta { color: var(--v-muted); font-weight: 500; }
+.ex .win.vibe-playful .pl-price { justify-self: start; margin-top: 4px; padding: 2px 12px; border-radius: 999px; background: var(--v-fg); color: #fff; font-weight: 700; }
+.ex .win.vibe-playful .v-play { position: relative; min-height: 70cqh; margin: 24px; border: 3px solid var(--v-fg); border-radius: 26px; background: #fff7d6; overflow: hidden; touch-action: none; box-shadow: 6px 6px 0 var(--v-fg); }
+.ex .win.vibe-playful .v-play-head { padding: 18px 22px; font-weight: 800; font-size: 22px; font-variation-settings: "wdth" 80; text-transform: uppercase; }
+.ex .win.vibe-playful .v-stickers { position: absolute; inset: 70px 20px 20px; display: flex; flex-wrap: wrap; gap: 14px; align-content: center; justify-content: center; }
+.ex .win.vibe-playful .v-sticker { width: 96px; height: 96px; cursor: grab; user-select: none; }
+.ex .win.vibe-playful .v-sticker svg { display: block; width: 100%; height: 100%; filter: drop-shadow(3px 5px 0 rgb(29 17 69 / 0.25)); pointer-events: none; }
+.ex .win.vibe-playful .v-heap { display: grid; gap: 14px; justify-items: center; padding: 24px; }
+.ex .win.vibe-playful .v-heap .v-play-head { padding: 0; }
+.ex .win.vibe-playful .v-heap-box { position: relative; width: 100%; max-width: 560px; height: 300px; overflow: hidden; border: 3px solid var(--v-fg); border-top: 0; border-radius: 0 0 40px 40px; background: rgb(255 255 255 / 0.45); }
+.ex .win.vibe-playful .v-heap-box > * { position: absolute; left: 0; top: 0; display: block; }
+.ex .win.vibe-playful .v-heap-box svg { display: block; width: 100%; height: 100%; }
+.ex .win.vibe-playful .v-shake { font: inherit; font-weight: 800; cursor: pointer; padding: 12px 24px; border: 3px solid var(--v-fg); border-radius: 999px; background: #3a5bff; color: #fff; box-shadow: 4px 4px 0 var(--v-fg); }
+.ex .win.vibe-playful .v-quote p { font-weight: 800; font-variation-settings: "wdth" 75; text-transform: uppercase; letter-spacing: -0.02em; }
+.ex .win.vibe-playful .v-foot { display: flex; justify-content: space-between; gap: 12px; font-weight: 600; color: var(--v-fg); border-top: 3px solid var(--v-fg); }
+
+/* Snappy: Tasko. White, ink, electric blue, Geist, tight corners, a product that answers at once. */
+.ex .win.vibe-snappy { --v-bg: #ffffff; --v-fg: #0b0b0f; --v-muted: #5c5f6a; --v-accent: #0055ff; --v-on-accent: #fff; --v-font: var(--font-geist), system-ui, sans-serif; --v-mono: var(--font-geist-mono), ui-monospace, monospace; }
+.ex .win.vibe-snappy .v-nav { border-bottom: 1px solid #eceef3; }
+.ex .win.vibe-snappy .v-brand { display: inline-flex; align-items: center; gap: 8px; font-size: 18px; letter-spacing: -0.03em; }
+.ex .win.vibe-snappy .sn-mark { width: 18px; height: 18px; border-radius: 5px; background: var(--v-accent); box-shadow: inset -6px -6px 0 #7aa5ff; }
+.ex .win.vibe-snappy .v-links { font-weight: 500; color: var(--v-muted); }
+.ex .win.vibe-snappy .v-kicker { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 4px; border: 1px solid #e5e7ee; border-radius: 999px; text-transform: none; letter-spacing: 0; font-size: 13px; }
+.ex .win.vibe-snappy .v-kicker b { padding: 2px 8px; border-radius: 999px; background: var(--v-accent); color: #fff; font-weight: 600; }
+.ex .win.vibe-snappy .v-head { font-weight: 700; font-size: clamp(42px, 6.6cqw, 84px); line-height: 0.98; letter-spacing: -0.045em; max-width: 9ch; }
+.ex .win.vibe-snappy .v-head span { color: var(--v-accent); }
+.ex .win.vibe-snappy .v-sub { font-size: 18px; max-width: 34ch; }
+.ex .win.vibe-snappy .v-btn { font-weight: 600; border-radius: 8px; padding: 13px 22px; }
+.ex .win.vibe-snappy .sn-ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.ex .win.vibe-snappy .sn-note { font-size: 13px; color: var(--v-muted); }
+.ex .win.vibe-snappy .sn-hero { grid-template-columns: 1fr 1.15fr; align-items: center; justify-items: stretch; gap: 32px; }
+.ex .win.vibe-snappy .sn-copy { display: grid; gap: 18px; justify-items: start; }
+.ex .win.vibe-snappy .sn-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 10px; padding: 12px; border: 1px solid #e5e7ee; border-radius: 14px; background: #f5f6f9; box-shadow: 0 24px 60px -24px rgb(11 11 15 / 0.28); }
+.ex .win.vibe-snappy .sn-col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ex .win.vibe-snappy .sn-col > p { display: flex; align-items: center; gap: 6px; padding: 2px 4px; font-size: 12px; font-weight: 600; color: var(--v-muted); }
+.ex .win.vibe-snappy .sn-col > p i { padding: 0 5px; border-radius: 4px; background: #e8eaf0; font-family: var(--v-mono); font-style: normal; }
+.ex .win.vibe-snappy .sn-task { display: grid; gap: 8px; padding: 9px 10px; border: 1px solid #e5e7ee; border-radius: 8px; background: #fff; font-size: 13px; font-weight: 500; line-height: 1.3; }
+.ex .win.vibe-snappy .sn-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.ex .win.vibe-snappy .sn-tag { padding: 1px 6px; border-radius: 4px; background: color-mix(in srgb, var(--c) 12%, white); color: var(--c); font-size: 11px; font-weight: 600; font-style: normal; }
+.ex .win.vibe-snappy .sn-who { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--v-fg); color: #fff; font-size: 9px; font-weight: 600; font-style: normal; }
+.ex .win.vibe-snappy .sn-task.is-done > span:first-child { color: var(--v-muted); text-decoration: line-through; }
+.ex .win.vibe-snappy .sn-task.is-done .sn-who { background: #00a870; }
+@container (max-width: 640px) { .ex .win.vibe-snappy .sn-hero { grid-template-columns: 1fr; } .ex .win.vibe-snappy .sn-board { gap: 6px; padding: 8px; } .ex .win.vibe-snappy .sn-task { padding: 7px; font-size: 11px; } .ex .win.vibe-snappy .sn-tag { display: none; } }
+.ex .win.vibe-snappy .sn-logos { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px 28px; padding: 16px 24px 8px; font-size: 13px; color: var(--v-muted); }
+.ex .win.vibe-snappy .sn-logos b { font-size: 17px; letter-spacing: -0.03em; color: #9a9daa; }
+.ex .win.vibe-snappy .v-cards { gap: 16px; padding: 32px 24px; }
+.ex .win.vibe-snappy .v-card { gap: 4px; padding: 12px; border: 1px solid #e5e7ee; border-radius: 12px; }
+.ex .win.vibe-snappy .v-art { aspect-ratio: 16 / 10; border-radius: 8px; background: #f5f6f9; }
+.ex .win.vibe-snappy .v-art > i { inset: -6% 0; font-style: normal; display: grid; place-items: center; align-content: center; gap: 10px; background: none; }
+.ex .win.vibe-snappy .v-card > b { margin-top: 8px; font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
+.ex .win.vibe-snappy .v-meta { font-size: 14px; }
+.ex .win.vibe-snappy .sn-keys { display: flex; gap: 6px; }
+.ex .win.vibe-snappy kbd { display: grid; place-items: center; min-width: 40px; height: 40px; border: 1px solid #d9dce5; border-bottom-width: 3px; border-radius: 8px; background: #fff; font-family: var(--v-mono); font-size: 17px; }
+.ex .win.vibe-snappy .sn-palette { display: grid; gap: 2px; width: 70%; padding: 4px; border: 1px solid #e5e7ee; border-radius: 8px; background: #fff; font-size: 12px; }
+.ex .win.vibe-snappy .sn-palette span { padding: 4px 8px; border-radius: 5px; }
+.ex .win.vibe-snappy .sn-palette span:first-child { background: #eef3ff; color: var(--v-accent); }
+.ex .win.vibe-snappy .sn-avatars { display: flex; padding-left: 10px; }
+.ex .win.vibe-snappy .sn-avatars i { display: grid; place-items: center; width: 42px; height: 42px; margin-left: -10px; border: 3px solid #f5f6f9; border-radius: 50%; background: var(--v-accent); color: #fff; font-size: 12px; font-weight: 600; font-style: normal; }
+.ex .win.vibe-snappy .sn-avatars i:nth-child(2) { background: #7c5cff; }
+.ex .win.vibe-snappy .sn-avatars i:nth-child(3) { background: #00a870; }
+.ex .win.vibe-snappy .sn-live { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--v-muted); }
+.ex .win.vibe-snappy .sn-live b, .ex .win.vibe-snappy .sn-status b { width: 8px; height: 8px; border-radius: 50%; background: #00a870; }
+.ex .win.vibe-snappy .sn-notes { display: grid; gap: 6px; padding: 10px 14px; border: 1px solid #e5e7ee; border-radius: 8px; background: #fff; font-size: 13px; font-weight: 500; }
+.ex .win.vibe-snappy .v-plans { display: grid; gap: 18px; justify-items: start; padding: 48px 24px; }
+.ex .win.vibe-snappy .v-plans .v-kicker { padding: 0; border: 0; color: var(--v-accent); font-weight: 600; }
 .ex .win.vibe-snappy .v-tablist { position: relative; display: flex; gap: 24px; border-bottom: 1px solid #e5e7ee; }
-.ex .win.vibe-snappy .v-tablist button { font: inherit; font-weight: 700; padding: 0 0 10px; background: none; border: 0; color: var(--v-muted); cursor: pointer; }
+.ex .win.vibe-snappy .v-tablist button { font: inherit; font-weight: 600; padding: 0 0 10px; background: none; border: 0; color: var(--v-muted); cursor: pointer; }
 .ex .win.vibe-snappy .v-tablist button[aria-selected="true"] { color: var(--v-fg); }
-.ex .win.vibe-snappy .v-tab-ind { position: absolute; left: 0; bottom: -1px; width: 40px; height: 3px; background: var(--v-accent); }
-.ex .win.vibe-snappy .v-price { font-size: 18px; overflow: hidden; }
-.ex .win.vibe-snappy .v-price b { display: inline-block; font-size: 48px; font-stretch: 82%; letter-spacing: -0.03em; }
-.ex .win.vibe-snappy .v-state { font: inherit; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border: 0; border-radius: 6px; background: var(--v-fg); color: #fff; }
-.ex .win.vibe-snappy .v-tasks { padding: 0 24px 40px; display: grid; gap: 12px; }
-.ex .win.vibe-snappy .v-sort { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-width: 520px; }
-.ex .win.vibe-snappy .v-sort li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #e5e7ee; border-radius: 8px; background: #fff; font-weight: 600; }
-.ex .win.vibe-snappy .v-handle { touch-action: none; cursor: grab; background: none; border: 0; font-size: 18px; color: var(--v-accent); }
-.ex .win.vibe-snappy .v-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 24px; }
+.ex .win.vibe-snappy .v-tab-ind { position: absolute; left: 0; bottom: -1px; width: 40px; height: 2px; background: var(--v-accent); }
+.ex .win.vibe-snappy .v-price { overflow: hidden; }
+.ex .win.vibe-snappy .v-price b { display: inline-block; font-size: 52px; font-weight: 700; letter-spacing: -0.04em; }
+.ex .win.vibe-snappy .v-price span { color: var(--v-muted); }
+.ex .win.vibe-snappy .sn-perks { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.ex .win.vibe-snappy .sn-perks li::before { content: "✓  "; color: var(--v-accent); font-weight: 700; }
+.ex .win.vibe-snappy .v-state { font: inherit; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border: 0; border-radius: 8px; background: var(--v-fg); color: #fff; }
+.ex .win.vibe-snappy .v-tasks { display: grid; gap: 12px; padding: 0 24px 40px; }
+.ex .win.vibe-snappy .v-tasks .v-kicker { justify-self: start; }
+.ex .win.vibe-snappy .v-sort { display: grid; gap: 6px; max-width: 560px; margin: 0; padding: 0; list-style: none; }
+.ex .win.vibe-snappy .v-sort li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #e5e7ee; border-radius: 8px; background: #fff; font-weight: 500; }
+.ex .win.vibe-snappy .v-sort .sn-tag { margin-left: auto; }
+.ex .win.vibe-snappy .v-handle { touch-action: none; cursor: grab; background: none; border: 0; font-size: 18px; color: var(--v-muted); }
+.ex .win.vibe-snappy .v-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 32px 24px; border-block: 1px solid #eceef3; }
 .ex .win.vibe-snappy .v-stats p { display: grid; gap: 4px; }
-.ex .win.vibe-snappy .v-stats b { font-size: clamp(36px, 7cqw, 64px); font-stretch: 82%; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--v-accent); }
+.ex .win.vibe-snappy .v-stats b { font-size: clamp(30px, 6cqw, 60px); font-weight: 700; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; color: var(--v-accent); }
 .ex .win.vibe-snappy .v-stats span { font-size: 13px; color: var(--v-muted); }
+.ex .win.vibe-snappy .v-quote { align-content: center; gap: 18px; }
+.ex .win.vibe-snappy .v-quote p { font-weight: 600; letter-spacing: -0.035em; }
+.ex .win.vibe-snappy .sn-cite { font-size: 14px; color: var(--v-muted); }
+.ex .win.vibe-snappy .v-foot { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid #eceef3; }
+.ex .win.vibe-snappy .sn-status { display: inline-flex; align-items: center; gap: 6px; }
 @media (hover: hover) { .ex .win.vibe-snappy .v-card { transition: transform 0.15s ease-out; } .ex .win.vibe-snappy .v-card:hover { transform: translateY(-4px); } }
 
-/* Glitchy */
+/* Glitchy: NULL//SET. Black, phosphor green, magenta and cyan out of register, VT323 and JetBrains Mono. */
+.ex .win.vibe-glitchy { --v-bg: #0a0a0a; --v-fg: #39ff14; --v-muted: #1fae0d; --v-accent: #39ff14; --v-on-accent: #0a0a0a; --v-font: var(--font-jetbrains), ui-monospace, monospace; --v-display: var(--font-vt323), ui-monospace, monospace; font-size: 15px; }
+.ex .win.vibe-glitchy .v-nav { border-bottom: 1px solid rgb(57 255 20 / 0.3); }
+.ex .win.vibe-glitchy .v-brand { font-family: var(--v-display); font-weight: 400; font-size: 28px; letter-spacing: 0.06em; }
+.ex .win.vibe-glitchy .v-links { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; }
+.ex .win.vibe-glitchy .gl-hero { position: relative; overflow: hidden; background: repeating-linear-gradient(0deg, rgb(57 255 20 / 0.05) 0 1px, transparent 1px 3px), radial-gradient(ellipse at 40% 45%, #0f1c0b, #0a0a0a 70%); }
+.ex .win.vibe-glitchy .gl-roll { position: absolute; left: 0; right: 0; top: 0; height: 12%; background: linear-gradient(transparent, rgb(57 255 20 / 0.2), transparent); pointer-events: none; visibility: hidden; }
+.ex .win.vibe-glitchy .v-kicker { color: #ff2bd6; font-size: 13px; letter-spacing: 0.14em; }
+.ex .win.vibe-glitchy .gl-title { position: relative; }
+.ex .win.vibe-glitchy .v-head, .ex .win.vibe-glitchy .gl-ghost { font-family: var(--v-display); font-weight: 400; font-size: clamp(64px, 13cqw, 176px); line-height: 0.82; text-transform: uppercase; max-width: none; }
+.ex .win.vibe-glitchy .v-head { text-shadow: 3px 0 #ff2bd6, -3px 0 #00e5ff; }
+.ex .win.vibe-glitchy .gl-ghost { position: absolute; inset: 0; visibility: hidden; pointer-events: none; mix-blend-mode: screen; }
+.ex .win.vibe-glitchy .gl-ghost.c1 { color: #ff2bd6; }
+.ex .win.vibe-glitchy .gl-ghost.c2 { color: #00e5ff; }
+.ex .win.vibe-glitchy .v-sub { color: #b8ffa6; max-width: 40ch; font-size: 16px; }
+.ex .win.vibe-glitchy .gl-meta { display: flex; flex-wrap: wrap; gap: 6px 24px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--v-muted); }
+.ex .win.vibe-glitchy .gl-meta span::before { content: "// "; color: #ff2bd6; }
+.ex .win.vibe-glitchy .v-btn { padding: 14px 26px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; }
+.ex .win.vibe-glitchy .v-cards { gap: 18px; padding: 40px 24px; }
+.ex .win.vibe-glitchy .v-card { gap: 4px; }
+.ex .win.vibe-glitchy .v-art { outline: 1px solid rgb(57 255 20 / 0.4); }
+.ex .win.vibe-glitchy .v-art > i { inset: 0; background: none; }
+.ex .win.vibe-glitchy .gl-portrait { display: block; width: 100%; height: 100%; }
+.ex .win.vibe-glitchy .v-card > b { margin-top: 8px; font-family: var(--v-display); font-weight: 400; font-size: 36px; line-height: 1; text-transform: uppercase; }
+.ex .win.vibe-glitchy .v-meta { color: #ff2bd6; text-transform: uppercase; letter-spacing: 0.1em; }
 .ex .win.vibe-glitchy .v-count { min-height: 50cqh; display: grid; place-content: center; justify-items: center; gap: 10px; padding: 40px 24px; }
-.ex .win.vibe-glitchy .v-clock { font-size: clamp(44px, 11cqw, 120px); font-weight: 700; font-variant-numeric: tabular-nums; text-shadow: 2px 0 #ff2bd6, -2px 0 #00e5ff; }
-.ex .win.vibe-glitchy .v-marquee { overflow: hidden; border-block: 1px solid rgb(57 255 20 / 0.4); padding: 14px 0; }
-.ex .win.vibe-glitchy .v-marquee-track { display: inline-block; white-space: nowrap; font-size: 22px; letter-spacing: 0.1em; color: #ff2bd6; }
-.ex .stage-art .v-glyphs { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; font-family: ui-monospace, Menlo, monospace; }
+.ex .win.vibe-glitchy .v-clock { font-family: var(--v-display); font-size: clamp(64px, 15cqw, 180px); line-height: 0.9; font-variant-numeric: tabular-nums; text-shadow: 3px 0 #ff2bd6, -3px 0 #00e5ff; }
+.ex .win.vibe-glitchy .v-marquee { overflow: hidden; border-block: 1px solid rgb(57 255 20 / 0.4); padding: 10px 0; }
+.ex .win.vibe-glitchy .v-marquee-track { display: inline-block; white-space: nowrap; font-family: var(--v-display); font-size: 34px; letter-spacing: 0.08em; color: #ff2bd6; }
+.ex .win.vibe-glitchy .gl-tickets { display: grid; gap: 14px; padding: 48px 24px; }
+.ex .win.vibe-glitchy .gl-tickets ul { margin: 0; padding: 0; list-style: none; border-top: 1px solid rgb(57 255 20 / 0.3); }
+.ex .win.vibe-glitchy .gl-tickets li { display: grid; grid-template-columns: 1fr auto 13ch; align-items: center; gap: 18px; padding: 16px 0; border-bottom: 1px solid rgb(57 255 20 / 0.3); text-transform: uppercase; letter-spacing: 0.08em; }
+.ex .win.vibe-glitchy .gl-tickets b { font-family: var(--v-display); font-weight: 400; font-size: 32px; }
+.ex .win.vibe-glitchy .gl-tickets em { font-style: normal; text-align: center; color: #ff2bd6; }
+.ex .win.vibe-glitchy .gl-tickets .is-sold span, .ex .win.vibe-glitchy .gl-tickets .is-sold b { opacity: 0.45; text-decoration: line-through; }
+.ex .win.vibe-glitchy .gl-buy { font: inherit; padding: 8px 12px; border: 1px solid currentColor; background: none; color: inherit; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; }
+.ex .win.vibe-glitchy .gl-buy[aria-disabled="true"] { background: var(--v-fg); color: var(--v-bg); cursor: default; }
+.ex .win.vibe-glitchy .v-quote p { font-family: var(--v-display); font-size: clamp(40px, 8cqw, 88px); line-height: 0.95; text-transform: uppercase; text-shadow: 2px 0 #ff2bd6, -2px 0 #00e5ff; }
+.ex .win.vibe-glitchy .v-foot { display: flex; justify-content: space-between; gap: 12px; text-transform: uppercase; letter-spacing: 0.1em; border-top: 1px solid rgb(57 255 20 / 0.3); }
+.ex .stage-art .v-glyphs { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; font-family: var(--font-jetbrains), ui-monospace, monospace; }
 .ex .stage-art .v-glyphs span { position: absolute; left: 0; top: 0; font-size: 16px; color: #39ff14; text-shadow: 1px 0 #ff2bd6; }

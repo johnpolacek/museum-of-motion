@@ -2,7 +2,7 @@
 // built on one skeleton (nav, hero, button, cards, a statement, a footer) so the vibes compare cleanly.
 // The skills supply the parts: revealOnScroll, scrubStatement, parallax, pressFeedback, the hover
 // effects, confetti, and Lenis on the window. Each vibe chooses which, and tunes their curves and timing.
-import { gsap, prefersReducedMotion, ScrollTrigger, SplitText } from "../gsap";
+import { Flip, gsap, prefersReducedMotion, ScrollTrigger, SplitText } from "../gsap";
 import { play, type StageDef } from "../stage-core";
 import { windowed } from "./scroll";
 import { parallax, revealOnScroll, scrubStatement } from "../recipes/scroll-effects";
@@ -192,117 +192,194 @@ const split = (el: HTMLElement, type: string, mask?: "lines" | "words" | "chars"
 
 /* ---------- Calm ---------- */
 
-// Slow and soft: long fades on gentle eases, words that drift up a little, nothing that bounces.
+/** One time of day for the lake: sky, sun, three hills back to front, water, and whether stars are out. */
+type Hour = { sky: [string, string]; sun: string; sunY: number; hills: [string, string, string]; water: string; stars?: boolean; moon?: boolean };
+const DAWN: Hour = { sky: ["#f1e4d3", "#f6d9bf"], sun: "#f3b98a", sunY: 146, hills: ["#d7d6c6", "#b9c4b2", "#93a893"], water: "#e6e3d6" };
+const NOON: Hour = { sky: ["#dfe9ea", "#eef1e8"], sun: "#fbf3dc", sunY: 104, hills: ["#c4d1c3", "#a3b8a2", "#7f9a82"], water: "#d5e2e1" };
+const DUSK: Hour = { sky: ["#e9cfc4", "#f1d7b8"], sun: "#e79a78", sunY: 182, hills: ["#c9b7b0", "#a99c9a", "#857c80"], water: "#e3d2c8" };
+const NIGHT: Hour = { sky: ["#2f3b45", "#46525a"], sun: "#e8e4d6", sunY: 100, hills: ["#3f4c52", "#34414a", "#28343c"], water: "#3a4750", stars: true, moon: true };
+
+/** A still lake under low hills, at one hour. Soft shapes only, no outlines. */
+function lake(id: string, h: Hour, hero = false) {
+  const stars = h.stars ? [[60, 40], [110, 24], [170, 52], [250, 30], [300, 58], [350, 22], [80, 90], [330, 96]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.2" fill="#f4efe2" opacity=".8"/>`).join("") : "";
+  const sun = h.moon
+    ? `<g class="cl-sun"><circle cx="290" cy="${h.sunY}" r="18" fill="${h.sun}"/><circle cx="298" cy="${h.sunY - 5}" r="16" fill="${h.sky[0]}"/></g>`
+    : `<circle class="cl-sun" cx="200" cy="${h.sunY}" r="${hero ? 30 : 26}" fill="${h.sun}"/>`;
+  return `<svg viewBox="0 0 400 300" class="cl-lake" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs><linearGradient id="${id}-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${h.sky[0]}"/><stop offset="1" stop-color="${h.sky[1]}"/></linearGradient>
+  <linearGradient id="${id}-glow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${h.sun}" stop-opacity=".9"/><stop offset="1" stop-color="${h.sun}" stop-opacity="0"/></linearGradient></defs>
+  <rect width="400" height="300" fill="url(#${id}-sky)"/>${stars}${sun}
+  <path class="cl-hill" d="M0 170C60 140 110 128 170 146C230 164 290 132 400 150V210H0Z" fill="${h.hills[0]}"/>
+  <path class="cl-hill" d="M0 186C70 166 130 176 190 184C260 194 320 166 400 176V210H0Z" fill="${h.hills[1]}"/>
+  <path class="cl-hill" d="M0 200C80 188 150 204 220 198C290 192 340 186 400 194V212H0Z" fill="${h.hills[2]}"/>
+  <rect class="cl-water" y="208" width="400" height="92" fill="${h.water}"/>
+  <path d="${[0, 1, 2, 3, 4, 5].map((i) => `M${(h.moon ? 290 : 200) - (26 - i * 4)} ${216 + i * 9}h${(26 - i * 4) * 2}`).join("")}" stroke="url(#${id}-glow)" stroke-width="3" stroke-linecap="round"/>
+  <path class="cl-ripple" d="M150 232H250M120 252H280M170 270H230M90 286H200" stroke="#fff" stroke-opacity="${h.stars ? 0.25 : 0.7}" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+</svg>`;
+}
+
+const CALM_SESSIONS: Array<[string, string, string, Hour]> = [
+  ["Morning light", "10 min · with Ama", "Wake slowly, one breath at a time.", DAWN],
+  ["Evening tide", "12 min · with Jonah", "Set the day down like a heavy bag.", DUSK],
+  ["Into sleep", "20 min · with Ama", "A body scan that ends in rest.", NIGHT],
+];
+const CALM_DAY: Array<[string, string, string, Hour]> = [
+  ["05:58", "First light", "Morning light, ten minutes, before the house wakes.", DAWN],
+  ["12:30", "Midday", "Three breaths at your desk. No one has to know.", NOON],
+  ["19:40", "Dusk", "Evening tide, to let the day go.", DUSK],
+  ["22:15", "Night", "Into sleep, with the lights already off.", NIGHT],
+];
+
+// Slow and soft: long fades on gentle eases, a dawn that rises, ripples that spread, nothing that bounces.
+// Its own page, set in Fraunces at its softest and Manrope.
 const calm = vibe("calm", {
-  copy: {
-    brand: "Stillwater",
-    links: ["Practice", "Journal"],
-    kicker: "Daily practice",
-    head: "Breathe out.",
-    sub: "Ten quiet minutes, every morning.",
-    cta: "Begin",
-    cards: [["Morning", "10 min"], ["Evening", "12 min"], ["Sleep", "20 min"]],
-    quote: "Nothing to fix. Nowhere to be. Just this breath, and then the next.",
-    foot: "Stillwater · a practice",
-  },
-  // A breathing guide and slow-fading color fields, both ambient, with one pause. A heavy, slow scroll,
-  // and a soft dot that drifts after the pointer.
-  extra: `<section class="v-breathe"><div class="v-orb" aria-hidden="true"></div><p class="v-orb-say">Breathe in</p></section>
-    <section class="v-fields" aria-hidden="true"><i></i><i></i><i></i></section>
-    <p class="v-ambient"><button type="button" class="v-pause">Pause</button></p>
-    <i class="v-soft-cursor" aria-hidden="true"></i>`,
+  copy: { brand: "", links: ["", ""], kicker: "", head: "", sub: "", cta: "", cards: [], quote: "", foot: "" },
   lenis: { lerp: 0.045 },
   move: { duration: 2.2, ease: "sine.inOut" },
-  nav: [".v-breathe", ".v-quote"],
+  nav: [".v-cards", ".cl-journal"],
+  page: `<header class="v-nav"><b class="v-brand"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 14c3-2 6-2 9 0s6 2 9 0M6 18c2-1.3 4-1.3 6 0s4 1.3 6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="8" r="3" fill="currentColor"/></svg>Stillwater</b><span class="v-links"><a href="#v">Practice</a><a href="#v">Journal</a></span></header>
+    <section class="v-hero cl-hero">
+      <div class="cl-copy"><p class="v-kicker">A morning practice</p><h3 class="v-head">Breathe out. <em>Begin again.</em></h3><p class="v-sub">Ten unhurried minutes to start the day, guided by a voice that never rushes you.</p><button type="button" class="v-btn">Begin a session</button></div>
+      <div class="cl-hero-art">${lake("clh", DAWN, true)}</div>
+    </section>
+    <section class="cl-sessions"><p class="v-kicker">Today’s sessions</p><div class="v-cards">${CALM_SESSIONS.map(([name, meta, line, hour], i) => `<article class="v-card"><span class="v-art"><i data-parallax="-16">${lake(`clc${i}`, hour)}</i><b class="cl-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 7l8 5-8 5Z" fill="currentColor"/></svg></b></span><b>${name}</b><span class="v-meta">${meta}</span><span class="cl-line">${line}</span></article>`).join("")}</div></section>
+    <section class="v-breathe"><div class="cl-orb" aria-hidden="true"><i></i><i></i><span class="v-orb"></span></div><p class="v-orb-say">Breathe in</p></section>
+    <p class="v-ambient"><button type="button" class="v-pause">Pause</button></p>
+    <section class="cl-day"><div class="cl-day-pin">${CALM_DAY.map(([time, name, line, hour], i) => `<figure class="cl-hour">${lake(`cld${i}`, hour)}<figcaption><span>${time}</span><b>${name}</b><em>${line}</em></figcaption></figure>`).join("")}</div></section>
+    <section class="cl-journal"><p class="v-kicker">From the journal</p>${[["On beginning badly", "Why a wandering mind is the practice, not the failure.", "4 min read"], ["The long exhale", "A breath twice as long going out as coming in, and what it does.", "6 min read"], ["Rest is not a reward", "You do not have to earn the ten minutes.", "5 min read"]].map(([t, d, m]) => `<article class="cl-entry"><b>${t}</b><span>${d}</span><small>${m}</small></article>`).join("")}</section>
+    <section class="v-quote"><p>Nothing to fix. Nowhere to be. Just this breath, and then the next.</p></section>
+    <footer class="v-foot"><span>Stillwater</span><span>Made slowly in Lisbon</span></footer>
+    <i class="v-soft-cursor" aria-hidden="true"></i>`,
   intro: (p, tl) => {
     const s = split(p.head, "words");
-    tl.from(p.nav, { autoAlpha: 0, duration: 1.2, ease: "sine.out", stagger: 0.15 }, 0)
-      .from(p.kicker, { autoAlpha: 0, y: 8, duration: 1.2, ease: "sine.out" }, 0.2)
-      .from(s.words, { autoAlpha: 0, y: 20, duration: 1.6, ease: "power2.out", stagger: 0.25 }, 0.4)
-      .from(p.sub, { autoAlpha: 0, duration: 1.4, ease: "sine.out" }, 1.0)
-      .from(p.btn, { autoAlpha: 0, duration: 1.2, ease: "sine.out" }, 1.4);
-    return () => s.revert();
+    const art = one(p.win, ".cl-hero-art");
+    const sun = one(art, ".cl-sun");
+    const hills = all(art, ".cl-hill");
+    const ripple = one(art, ".cl-ripple");
+    tl.from(p.nav, { autoAlpha: 0, duration: 1.4, ease: "sine.out", stagger: 0.2 }, 0)
+      // Dawn: the sun lifts out of the hills, the hills settle back to front, the water ripples outward.
+      .from(art, { autoAlpha: 0, duration: 2, ease: "sine.out" }, 0)
+      .from(sun, { y: 50, duration: 4, ease: "sine.out" }, 0.2)
+      .from(hills, { y: 14, autoAlpha: 0, duration: 2.4, ease: "sine.out", stagger: 0.4 }, 0.4)
+      .fromTo(ripple, { drawSVG: "50% 50%" }, { drawSVG: "0% 100%", duration: 3, ease: "sine.inOut" }, 1.4)
+      .from(p.kicker, { autoAlpha: 0, y: 8, duration: 1.4, ease: "sine.out" }, 0.4)
+      .from(s.words, { autoAlpha: 0, y: 18, duration: 1.8, ease: "power2.out", stagger: 0.28 }, 0.7)
+      .from(p.sub, { autoAlpha: 0, duration: 1.6, ease: "sine.out" }, 1.8)
+      .from(p.btn, { autoAlpha: 0, duration: 1.4, ease: "sine.out" }, 2.3);
+    return () => {
+      s.revert();
+      gsap.set([art, sun, ...hills, ripple], { clearProps: "all" });
+    };
   },
   wire: (p) => [
     (() => {
       const orb = one(p.win, ".v-orb");
+      const rings = all(p.win, ".cl-orb i");
       const say = one(p.win, ".v-orb-say");
-      // Four seconds in, a beat held, four seconds out: the pace of a calm breath.
+      // Four seconds in, a beat held, four seconds out: the pace of a calm breath. The rings follow a little late.
       const breath = gsap
         .timeline({ repeat: -1, defaults: { ease: "sine.inOut" } })
         .call(() => (say.textContent = "Breathe in"))
         .fromTo(orb, { scale: 0.55 }, { scale: 1, duration: 4 })
+        .fromTo(rings, { scale: 0.6, opacity: 0.2 }, { scale: 1, opacity: 1, duration: 4, stagger: 0.3 }, "<")
         .call(() => (say.textContent = "Hold"))
         .to({}, { duration: 1.2 })
         .call(() => (say.textContent = "Breathe out"))
-        .to(orb, { scale: 0.55, duration: 4 });
-      const fields = all(p.win, ".v-fields i");
-      gsap.set(fields.slice(1), { opacity: 0 });
-      const drift = gsap.timeline({ repeat: -1 });
-      fields.forEach((f, i) => {
-        const next = fields[(i + 1) % fields.length]!;
-        drift.to(next, { opacity: 1, duration: 2.4, ease: "sine.inOut" }, "+=2").set(f, { opacity: 0 });
+        .to(orb, { scale: 0.55, duration: 4 })
+        .to(rings, { scale: 0.6, opacity: 0.2, duration: 4, stagger: 0.3 }, "<");
+      // The day, as you scroll: dawn gives way to noon, dusk, then night. A slow crossfade, scrubbed.
+      const hours = all(p.win, ".cl-hour");
+      gsap.set(hours.slice(1), { autoAlpha: 0 });
+      const day = gsap.timeline({ scrollTrigger: { trigger: one(p.win, ".cl-day"), scroller: p.win, start: "top top", end: "bottom bottom", scrub: 1.4 } });
+      hours.slice(1).forEach((h, i) => {
+        day.to(h, { autoAlpha: 1, duration: 1, ease: "sine.inOut" }, i * 1.4 + 0.4).set(hours[i]!, { autoAlpha: 0 });
       });
-      // Begin: a slow glide down to the guide. The breath carries on as it was: restarting it on arrival
-      // would snap the circle back to small, or reverse a breath half taken.
+      // Begin: a slow glide down to the guide. The breath carries on as it was.
       const begin = cta(p, one(p.win, ".v-breathe"), { duration: 2.2, ease: "sine.inOut" });
-      const loops = ambient(one(p.win, ".v-pause"), [breath, drift]);
+      const loops = ambient(one(p.win, ".v-pause"), [breath]);
       return () => {
         begin();
         loops();
+        day.scrollTrigger?.kill();
+        day.kill();
+        gsap.set([...hours, ...rings], { clearProps: "all" });
       };
     })(),
     cursorFollower(one(p.win, ".v-soft-cursor"), { touch: p.win }),
-    revealOnScroll(p.cards, { scroller: p.win, y: 24, duration: 1.2, stagger: 0.2, ease: "power2.out" }),
-    scrubStatement(p.quote, { by: "words", scroller: p.win, scrub: 1.2 }),
+    revealOnScroll(p.cards, { scroller: p.win, y: 24, duration: 1.4, stagger: 0.25, ease: "power2.out" }),
+    revealOnScroll(all(p.win, ".cl-entry"), { scroller: p.win, y: 20, duration: 1.4, stagger: 0.25, ease: "power2.out" }),
+    scrubStatement(p.quote, { by: "words", scroller: p.win, scrub: 1.4 }),
     parallax(p.cardsSection, { scroller: p.win }),
     pressFeedback(p.btn, { squash: 0.98, ink: 0.12 }),
-    ...p.cards.map((c) => imageZoom(c, { image: one<HTMLElement>(c, ".v-art i"), scale: 1.04, duration: 1.2, touch: true })),
+    ...p.cards.map((c) => imageZoom(c, { image: one<HTMLElement>(c, ".v-art i"), scale: 1.04, duration: 1.4, touch: true })),
   ],
 });
 
 /* ---------- Playful ---------- */
 
-// Bouncy and loud: letters pop in on elastic curves at odd angles, cards plop, the button squashes and
-// throws confetti, cards tilt under the pointer.
+// Sticker characters, drawn in SVG with a thick ink outline and a white die-cut edge.
+const INK = "#1d1145";
+const eyes = (x: number, y: number, gap = 16) =>
+  `<g class="pl-eyes"><circle cx="${x - gap / 2}" cy="${y}" r="6" fill="#fff" stroke="${INK}" stroke-width="3"/><circle cx="${x + gap / 2}" cy="${y}" r="6" fill="#fff" stroke="${INK}" stroke-width="3"/><circle cx="${x - gap / 2 + 1.5}" cy="${y + 1}" r="2.6" fill="${INK}"/><circle cx="${x + gap / 2 + 1.5}" cy="${y + 1}" r="2.6" fill="${INK}"/></g>`;
+const smile = (x: number, y: number, w = 12) => `<path d="M${x - w / 2} ${y}q${w / 2} ${w * 0.6} ${w} 0" fill="none" stroke="${INK}" stroke-width="3.2" stroke-linecap="round"/>`;
+const sticker = (body: string) =>
+  `<svg viewBox="0 0 100 100" class="pl-char" aria-hidden="true"><g stroke-linejoin="round"><g class="pl-cut">${body.replace(/fill="[^"]*"/g, 'fill="#fff"').replace(/stroke-width="[\d.]+"/g, 'stroke-width="14"').replace(/stroke="[^"]*"/g, 'stroke="#fff"')}</g>${body}</g></svg>`;
+const CHARS: Record<string, string> = {
+  blob: sticker(`<path d="M50 14C74 12 90 30 88 52C86 76 70 88 48 86C26 84 12 70 14 48C16 28 30 15 50 14Z" fill="#ff4f9a" stroke="${INK}" stroke-width="4"/>${eyes(50, 46)}${smile(50, 62)}`),
+  star: sticker(`<path d="M50 10L61 36L89 38L67 56L74 84L50 69L26 84L33 56L11 38L39 36Z" fill="#ffd23f" stroke="${INK}" stroke-width="4"/>${eyes(50, 48, 14)}${smile(50, 62, 10)}`),
+  pizza: sticker(`<path d="M18 20Q50 6 82 20L50 92Z" fill="#ffb648" stroke="${INK}" stroke-width="4"/><path d="M18 20Q50 6 82 20L78 30Q50 18 22 30Z" fill="#c9773a" stroke="${INK}" stroke-width="4"/><circle cx="40" cy="58" r="5" fill="#ff4f4f" stroke="${INK}" stroke-width="2.5"/><circle cx="60" cy="68" r="4" fill="#ff4f4f" stroke="${INK}" stroke-width="2.5"/>${eyes(50, 40, 14)}`),
+  cloud: sticker(`<path d="M26 72C12 72 10 52 24 50C22 34 42 28 50 40C56 26 80 30 78 48C92 50 90 72 76 72Z" fill="#8fd3ff" stroke="${INK}" stroke-width="4"/><path d="M38 56q4 3 8 0M54 56q4 3 8 0" fill="none" stroke="${INK}" stroke-width="3.2" stroke-linecap="round"/>${smile(50, 64, 8)}`),
+  heart: sticker(`<path d="M50 86C20 64 10 46 18 30C26 16 44 18 50 32C56 18 74 16 82 30C90 46 80 64 50 86Z" fill="#ff6b6b" stroke="${INK}" stroke-width="4"/>${eyes(50, 44)}<circle cx="32" cy="56" r="5" fill="#ffb3c7"/><circle cx="68" cy="56" r="5" fill="#ffb3c7"/>${smile(50, 58)}`),
+  bolt: sticker(`<path d="M58 8L22 56H46L38 92L78 40H54Z" fill="#3a5bff" stroke="${INK}" stroke-width="4"/>${eyes(50, 46, 12)}`),
+};
+const PL_PACKS: Array<[string, string, string, string, string]> = [
+  ["Snack Attack", "Pack 12 · 8 stickers", "$6", "#ffb648", "pizza"],
+  ["Space Goo", "Pack 13 · 8 stickers", "$6", "#8fd3ff", "blob"],
+  ["Tiny Weather", "Pack 14 · 10 stickers", "$7", "#c7f0a8", "cloud"],
+];
+
+// Bouncy and loud: stickers slap onto the hero, letters pop in at odd angles, cards plop, the button
+// squashes and throws confetti, stickers fling and a jar of them shakes. Bricolage Grotesque, squeezed.
 const playful = vibe("playful", {
-  copy: {
-    brand: "Bloop!",
-    links: ["Stickers", "Games"],
-    kicker: "New!",
-    head: "Make it pop.",
-    sub: "Stickers, sounds, and a lot of bounce.",
-    cta: "Let's go",
-    cards: [["Boing", "level 1"], ["Wobble", "level 2"], ["Kaboom", "level 3"]],
-    quote: "Every button deserves a little party.",
-    foot: "Bloop! · made for fun",
-  },
+  copy: { brand: "", links: ["", ""], kicker: "", head: "", sub: "", cta: "", cards: [], quote: "", foot: "" },
   move: { duration: 0.8, ease: "back.inOut(1.4)" },
-  nav: [".v-play", ".v-heap"],
-  // Stickers to fling, a heap of shapes to shake, and headline letters that hop when touched.
-  extra: `<section class="v-play"><p class="v-play-head">Grab a sticker. Throw it.</p><div class="v-stickers">${["★", "♥", "☺", "✿", "⚡", "●"]
-    .map((s, i) => `<span class="v-sticker s${i}">${s}</span>`)
-    .join("")}</div></section>
-    <section class="v-heap"><div class="v-heap-box"></div><button type="button" class="v-shake">Shake it</button></section>`,
+  nav: [".v-cards", ".v-play"],
+  page: `<header class="v-nav"><b class="v-brand">Bloop!</b><span class="v-links"><a href="#v">Packs</a><a href="#v">Play</a></span></header>
+    <section class="v-hero pl-hero">
+      <div class="pl-copy"><p class="v-kicker">New pack every month</p><h3 class="v-head">Stick it <span>anywhere.</span></h3><p class="v-sub">Weird little stickers, drawn by a different artist every month and mailed to your door.</p><button type="button" class="v-btn">Get pack Nº 1</button></div>
+      <div class="pl-slap" aria-hidden="true">${["blob", "star", "pizza", "heart"].map((c, i) => `<span class="pl-on p${i}">${CHARS[c]}</span>`).join("")}</div>
+    </section>
+    <section class="v-cards">${PL_PACKS.map(([name, meta, price, bg, c]) => `<article class="v-card"><span class="v-art" style="background:${bg}"><i data-parallax="-14">${CHARS[c]}</i></span><b>${name}</b><span class="v-meta">${meta}</span><span class="pl-price">${price}</span></article>`).join("")}</section>
+    <section class="v-play"><p class="v-play-head">Go on, grab one. Throw it.</p><div class="v-stickers">${["blob", "star", "pizza", "cloud", "heart", "bolt"].map((c) => `<span class="v-sticker">${CHARS[c]}</span>`).join("")}</div></section>
+    <section class="v-heap"><p class="v-play-head">The sticker jar</p><div class="v-heap-box"></div><button type="button" class="v-shake">Shake the jar</button></section>
+    <section class="v-quote"><p>Every laptop deserves a little party.</p></section>
+    <footer class="v-foot"><span>Bloop! Sticker Club</span><span>Mailed from Portland · Cancel anytime</span></footer>`,
   intro: (p, tl) => {
     const s = split(p.head, "chars");
+    const slaps = all(p.win, ".pl-on");
     tl.from(p.nav, { autoAlpha: 0, scale: 0, duration: 0.6, ease: "back.out(2.5)", stagger: 0.08 }, 0)
       .from(p.kicker, { autoAlpha: 0, scale: 0, rotation: -25, duration: 0.7, ease: "back.out(3)" }, 0.15)
-      .from(s.chars, { autoAlpha: 0, scale: 0, yPercent: 60, rotation: () => gsap.utils.random(-40, 40), duration: 0.9, ease: "elastic.out(1, 0.45)", stagger: 0.05 }, 0.25)
-      .from(p.sub, { autoAlpha: 0, y: 20, duration: 0.6, ease: "back.out(2)" }, 0.8)
-      .from(p.btn, { autoAlpha: 0, scale: 0, duration: 0.9, ease: "elastic.out(1, 0.4)" }, 1.0);
-    return () => s.revert();
+      .from(s.chars, { autoAlpha: 0, scale: 0, yPercent: 60, rotation: () => gsap.utils.random(-40, 40), duration: 0.9, ease: "elastic.out(1, 0.45)", stagger: 0.04 }, 0.25)
+      // Each sticker comes down from above the page and slaps on: big, then squashed flat, then itself.
+      .from(slaps, { autoAlpha: 0, scale: 1.8, rotation: () => gsap.utils.random(-30, 30), duration: 0.35, ease: "power3.in", stagger: 0.22 }, 0.6)
+      .fromTo(slaps, { scaleX: 1, scaleY: 1 }, { keyframes: { scaleX: [1.18, 0.94, 1], scaleY: [0.82, 1.06, 1] }, duration: 0.45, ease: "power1.out", stagger: 0.22, immediateRender: false }, 0.95)
+      .from(p.sub, { autoAlpha: 0, y: 20, duration: 0.6, ease: "back.out(2)" }, 0.9)
+      .from(p.btn, { autoAlpha: 0, scale: 0, duration: 0.9, ease: "elastic.out(1, 0.4)" }, 1.1);
+    return () => {
+      s.revert();
+      gsap.set(slaps, { clearProps: "all" });
+    };
   },
   wire: (p, layer) => {
     const confetti = () =>
       burstFrom(one(layer, ".v-burst"), p.btn, {
-        pieces: ["#ff4f9a", "#3a5bff", "#1d1145", "#ffffff"].map((c) => {
+        pieces: ["#ff4f9a", "#3a5bff", "#1d1145", "#ffffff", "#8fd3ff"].map((c) => {
           const s = document.createElement("span");
           s.className = "confetto";
           s.style.background = c;
           return s;
         }),
-        count: 30,
+        count: 34,
       });
     const burst = document.createElement("div");
     burst.className = "v-burst";
@@ -311,11 +388,21 @@ const playful = vibe("playful", {
     p.btn.addEventListener("click", confetti);
     // Letters hop when the pointer or a finger finds them.
     const hop = (e: PointerEvent) => {
-      const letter = e.target as HTMLElement;
-      if (letter.parentElement !== p.head || prefersReducedMotion()) return;
+      const letter = (e.target as HTMLElement).closest<HTMLElement>(".v-head div, .v-head span > div");
+      if (!letter || prefersReducedMotion()) return;
       gsap.fromTo(letter, { y: 0 }, { y: -22, rotation: gsap.utils.random(-12, 12), duration: 0.18, ease: "power2.out", yoyo: true, repeat: 1, overwrite: true });
     };
     p.head.addEventListener("pointerover", hop);
+    // Hero stickers wobble when touched.
+    const wobbles = all(p.win, ".pl-on").map((el) => {
+      const wobble = () => !prefersReducedMotion() && gsap.fromTo(el, { rotation: 0 }, { keyframes: { rotation: [-12, 9, -5, 0] }, duration: 0.6, ease: "power1.out", overwrite: true });
+      el.addEventListener("pointerenter", wobble);
+      el.addEventListener("pointerdown", wobble);
+      return () => {
+        el.removeEventListener("pointerenter", wobble);
+        el.removeEventListener("pointerdown", wobble);
+      };
+    });
     // Stickers drag and throw, bounded by their section; the one held grows and leans.
     const area = one(p.win, ".v-play");
     const stickers = Draggable.create(all(p.win, ".v-sticker"), {
@@ -330,28 +417,26 @@ const playful = vibe("playful", {
         gsap.to(this.target, { scale: 1, duration: 0.4, ease: "elastic.out(1, 0.4)" });
       },
     });
-    // A heap of shapes falls in once its box scrolls into view; the button throws it back up.
+    // A jar of stickers falls in once it scrolls into view; the button throws them back up.
     const heap = pile(one(p.win, ".v-heap-box"), {
-      pieces: [
-        ["#ff4f9a", 46, "50%"],
-        ["#3a5bff", 38, "50%"],
-        ["#1d1145", 30, "30%"],
-        ["#ffffff", 42, "50%"],
-      ].map(([c, s, r]) => {
+      pieces: ["blob", "star", "pizza", "cloud", "heart", "bolt", "blob", "star"].map((c, i) => {
         const el = document.createElement("span");
-        Object.assign(el.style, { background: String(c), width: `${s}px`, height: `${s}px`, borderRadius: String(r), border: "3px solid #1d1145" });
+        const size = [64, 56, 60, 58, 54, 52, 48, 50][i]!;
+        Object.assign(el.style, { width: `${size}px`, height: `${size}px`, borderRadius: "50%" });
+        el.innerHTML = CHARS[c]!;
         return el;
       }),
     });
-    const landed = onView(one(p.win, ".v-heap"), p.win, () => heap.drop(22));
-    // Let's go: confetti first, then a quick hop down to the stickers.
-    const go = cta(p, area, { duration: 0.8, ease: "back.inOut(1.4)", delay: 0.5 });
+    const landed = onView(one(p.win, ".v-heap"), p.win, () => heap.drop(18));
+    // Get pack: confetti first, then a quick hop down to the packs.
+    const go = cta(p, p.cardsSection, { duration: 0.8, ease: "back.inOut(1.4)", delay: 0.5 });
     const shake = () => heap.shake();
     one(p.win, ".v-shake").addEventListener("click", shake);
     return [
       () => {
         go();
         p.head.removeEventListener("pointerover", hop);
+        wobbles.forEach((off) => off());
         stickers.forEach((d) => d.kill());
         landed.kill();
         one(p.win, ".v-shake").removeEventListener("click", shake);
@@ -533,47 +618,84 @@ const luxury = vibe("luxury", {
 
 /* ---------- Snappy ---------- */
 
-// Fast and sure: everything slides a short way in a quarter second, all at once, on a hard ease-out.
-// Labels roll on hover; the button answers the press instantly.
+const SN_TAG: Record<string, string> = { Docs: "#7c5cff", Web: "#0055ff", API: "#00a870", Bug: "#ff4d4f" };
+const snTask = (name: string, tag: string, who: string, cls = "") =>
+  `<div class="sn-task${cls}"><span>${name}</span><span class="sn-row"><i class="sn-tag" style="--c:${SN_TAG[tag]}">${tag}</i><i class="sn-who">${who}</i></span></div>`;
+const SN_FEATURES: Array<[string, string, string]> = [
+  ["Keyboard first", "Every action has a shortcut. ⌘K finds the rest.", `<span class="sn-keys"><kbd>⌘</kbd><kbd>K</kbd></span><span class="sn-palette"><span>Move to Done</span><span>Assign to me</span><span>Set due Friday</span></span>`],
+  ["Live everywhere", "Changes land on every screen in under 50 ms.", `<span class="sn-avatars"><i>PR</i><i>MK</i><i>JS</i></span><span class="sn-live"><b></b>3 editing now</span>`],
+  ["Notes that write themselves", "Finished tasks become release notes for Friday.", `<span class="sn-notes"><span>✓ Faster search</span><span>✓ Dark mode</span><span>✓ CSV export</span></span>`],
+];
+
+// Fast and sure: everything slides a short way in a quarter second on a hard ease-out, the board fills
+// at once, and a task moves itself to Done. Labels roll on hover; every press answers instantly. Geist.
 const snappy = vibe("snappy", {
-  copy: {
-    brand: "Tasko",
-    links: ["Pricing", "Features"],
-    kicker: "v3 is here",
-    head: "Ship it today.",
-    sub: "Plans, tasks, done. Fast.",
-    cta: "Start free",
-    cards: [["Plan", "2 min"], ["Track", "live"], ["Ship", "today"]],
-    quote: "Less waiting. More done. Every click answers at once.",
-    foot: "Tasko · ship faster",
-  },
+  copy: { brand: "", links: ["", ""], kicker: "", head: "", sub: "", cta: "", cards: [], quote: "", foot: "" },
   move: { duration: 0.35, ease: "power3.out" },
-  nav: [".v-plans", ".v-tasks"],
-  // Plans that switch instantly under a sliding indicator, a button that answers with a check, a task
-  // list to reorder, and numbers that count up the moment they arrive.
-  extra: `<section class="v-plans"><div class="v-tablist" role="tablist" aria-label="Billing">${["Monthly", "Yearly", "Team"].map((t, i) => `<button type="button" role="tab" aria-selected="${i === 0}">${t}</button>`).join("")}<span class="v-tab-ind" aria-hidden="true"></span></div><p class="v-price"><b>$8</b> per month</p><button type="button" class="v-state"><span data-state-label>Upgrade</span></button></section>
-    <section class="v-tasks"><p class="v-kicker">Today, drag to reorder</p><p id="v-sort-help" hidden>Press Space to pick up, arrow keys to move, Space to drop.</p><ol class="v-sort">${["Write the brief", "Review designs", "Ship v3", "Reply to Sam"].map((n) => `<li data-sortable-item><button type="button" class="v-handle" data-sortable-handle aria-describedby="v-sort-help" aria-label="Move ${n}">⠿</button><span data-sortable-name>${n}</span></li>`).join("")}</ol></section>
-    <section class="v-stats">${[["42", "teams"], ["1.2", "s to plan"], ["99", "% on time"]].map(([n, l]) => `<p><b data-count="${n}">0</b><span>${l}</span></p>`).join("")}</section>`,
+  nav: [".v-plans", ".v-cards"],
+  page: `<header class="v-nav"><b class="v-brand"><i class="sn-mark" aria-hidden="true"></i>Tasko</b><span class="v-links"><a href="#v"><span data-roll-label>Pricing</span></a><a href="#v"><span data-roll-label>Features</span></a></span></header>
+    <section class="v-hero sn-hero">
+      <div class="sn-copy"><p class="v-kicker"><b>New</b> Tasko 3 is out. See what changed</p><h3 class="v-head">Plan Monday. <span>Ship Friday.</span></h3><p class="v-sub">The task board for small teams who would rather be shipping. Keyboard first, instant everywhere.</p><div class="sn-ctas"><button type="button" class="v-btn"><span data-roll-label>Start free</span></button><span class="sn-note">No card. Ten seats free.</span></div></div>
+      <div class="sn-board" aria-hidden="true">
+        <div class="sn-col"><p>To do <i>3</i></p>${snTask("Write launch post", "Docs", "PR")}${snTask("Fix Safari tab focus", "Bug", "MK")}${snTask("Rate limit export", "API", "JS")}</div>
+        <div class="sn-col"><p>Doing <i>2</i></p>${snTask("New pricing page", "Web", "PR", " sn-mover")}${snTask("Webhooks v2", "API", "JS")}</div>
+        <div class="sn-col sn-done"><p>Done <i>1</i></p>${snTask("Search in 40 ms", "API", "MK", " is-done")}</div>
+      </div>
+    </section>
+    <p class="sn-logos">Used by teams at <b>Northwind</b><b>Halcyon</b><b>Fieldnote</b><b>Parallel</b><b>Kiln</b></p>
+    <section class="v-cards">${SN_FEATURES.map(([t, m, art]) => `<article class="v-card"><span class="v-art"><i data-parallax="-10">${art}</i></span><b>${t}</b><span class="v-meta">${m}</span></article>`).join("")}</section>
+    <section class="v-plans"><p class="v-kicker">Pricing</p><div class="v-tablist" role="tablist" aria-label="Billing">${["Monthly", "Yearly", "Team"].map((t, i) => `<button type="button" role="tab" aria-selected="${i === 0}">${t}</button>`).join("")}<span class="v-tab-ind" aria-hidden="true"></span></div><p class="v-price"><b>$8</b> <span>per seat, per month</span></p><ul class="sn-perks"><li>Unlimited boards and tasks</li><li>⌘K for everything</li><li>Release notes from Done</li></ul><button type="button" class="v-state"><span data-state-label>Upgrade</span></button></section>
+    <section class="v-tasks"><p class="v-kicker">Today. Drag to reorder</p><p id="v-sort-help" hidden>Press Space to pick up, arrow keys to move, Space to drop.</p><ol class="v-sort">${[["Write the launch post", "Docs"], ["Review the new pricing page", "Web"], ["Ship Webhooks v2", "API"], ["Reply to Sam about SSO", "Bug"]].map(([n, tag]) => `<li data-sortable-item><button type="button" class="v-handle" data-sortable-handle aria-describedby="v-sort-help" aria-label="Move ${n}">⠿</button><span data-sortable-name>${n}</span><i class="sn-tag" style="--c:${SN_TAG[tag!]}">${tag}</i></li>`).join("")}</ol></section>
+    <section class="v-stats">${[["4200", "teams shipping"], ["38", "ms median sync"], ["99.98", "% uptime"]].map(([n, l]) => `<p><b data-count="${n}">0</b><span>${l}</span></p>`).join("")}</section>
+    <section class="v-quote"><p>We moved the whole sprint over on a Friday. By Monday nobody remembered the old tool.</p><span class="sn-cite">Priya Raman, engineering lead at Northwind</span></section>
+    <footer class="v-foot"><span>© 2026 Tasko</span><span class="sn-status"><b></b>All systems normal</span></footer>`,
   intro: (p, tl) => {
     const s = split(p.head, "words");
+    const board = one(p.win, ".sn-board");
+    const cols = all(board, ".sn-col");
+    const tasks = all(board, ".sn-task");
+    const mover = one(board, ".sn-mover");
+    const from = mover.parentElement!;
+    const done = one(board, ".sn-done");
+    const counts = all(board, ".sn-col > p i");
     tl.from([...p.nav, p.kicker], { autoAlpha: 0, x: -16, duration: 0.25, ease: "power3.out", stagger: 0.02 }, 0)
       .from(s.words, { autoAlpha: 0, x: -24, duration: 0.3, ease: "power4.out", stagger: 0.04 }, 0.05)
-      .from([p.sub, p.btn], { autoAlpha: 0, x: -16, duration: 0.25, ease: "power3.out", stagger: 0.03 }, 0.15);
-    return () => s.revert();
+      .from([p.sub, one(p.win, ".sn-ctas")], { autoAlpha: 0, x: -16, duration: 0.25, ease: "power3.out", stagger: 0.03 }, 0.15)
+      .from(board, { autoAlpha: 0, y: 16, duration: 0.3, ease: "power3.out" }, 0.1)
+      .from(cols, { autoAlpha: 0, duration: 0.2, ease: "power2.out", stagger: 0.04 }, 0.2)
+      .from(tasks, { autoAlpha: 0, x: -12, duration: 0.25, ease: "power3.out", stagger: 0.03 }, 0.25)
+      // A beat later, a task finishes itself: it jumps to Done, the counts change, and it ticks green.
+      .call(() => {
+        const state = Flip.getState(mover);
+        done.querySelector("p")!.after(mover);
+        mover.classList.add("is-done");
+        counts[1]!.textContent = "1";
+        counts[2]!.textContent = "2";
+        Flip.from(state, { duration: prefersReducedMotion() ? 0 : 0.35, ease: "power3.out" });
+      }, undefined, 1.3);
+    return () => {
+      s.revert();
+      from.querySelector("p")!.after(mover);
+      mover.classList.remove("is-done");
+      counts[1]!.textContent = "2";
+      counts[2]!.textContent = "1";
+      gsap.set([board, ...cols, ...tasks], { clearProps: "all" });
+    };
   },
   wire: (p) => [
     (() => {
       const list = one(p.win, ".v-tablist");
       const tabs = all(list, "[role=tab]");
       const price = one(p.win, ".v-price b");
-      const prices = ["$8", "$80", "$24"];
+      const per = one(p.win, ".v-price span");
+      const prices: Array<[string, string]> = [["$8", "per seat, per month"], ["$80", "per seat, per year"], ["$24", "per month, up to 10 seats"]];
       const ind = tabIndicator(one(p.win, ".v-tab-ind"), list, { duration: 0.2 });
       ind.moveTo(tabs[0]!);
       const pick = (e: Event) => {
         const i = tabs.indexOf(e.currentTarget as HTMLElement);
         tabs.forEach((t, j) => t.setAttribute("aria-selected", String(i === j)));
         ind.moveTo(tabs[i]!);
-        price.textContent = prices[i]!;
+        [price.textContent, per.textContent] = prices[i]!;
         if (!prefersReducedMotion()) gsap.fromTo(price, { yPercent: 40, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: 0.18, ease: "power3.out" });
       };
       tabs.forEach((t) => t.addEventListener("click", pick));
@@ -593,9 +715,9 @@ const snappy = vibe("snappy", {
       const counted = onView(one(p.win, ".v-stats"), p.win, () =>
         counts.forEach((el) => {
           const to = Number(el.dataset.count);
-          const decimals = el.dataset.count!.includes(".") ? 1 : 0;
+          const decimals = el.dataset.count!.includes(".") ? 2 : 0;
           gsap.fromTo({ v: 0 }, { v: 0 }, { v: to, duration: prefersReducedMotion() ? 0 : 0.6, ease: "power3.out", onUpdate() {
-            el.textContent = (this.targets()[0] as { v: number }).v.toFixed(decimals);
+            el.textContent = (this.targets()[0] as { v: number }).v.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
           } });
         }),
       );
@@ -621,77 +743,135 @@ const snappy = vibe("snappy", {
 
 /* ---------- Glitch ---------- */
 
-// Broken on purpose: the headline decodes from noise, things blink on in hard steps, the statement
-// scrambles as it scrolls in, and the button jitters under the pointer.
+/** A small seeded random, so the corrupted portraits come out the same on every visit. */
+const seeded = (seed: number) => () => {
+  seed = (seed + 0x6d2b79f5) | 0;
+  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+/** A halftone head and shoulders, sliced into bands that slip sideways, with a few bars of noise. */
+function portrait(id: string, seed: number) {
+  const r = seeded(seed);
+  const bands = Array.from({ length: 9 }, (_, i) => {
+    const y = i * (150 / 9);
+    const dx = r() < 0.45 ? Math.round((r() - 0.5) * 36) : 0;
+    return `<clipPath id="${id}-b${i}"><rect y="${y}" width="200" height="${150 / 9 + 0.5}"/></clipPath><use href="#${id}-s" clip-path="url(#${id}-b${i})" transform="translate(${dx} 0)"/>`;
+  }).join("");
+  const noise = Array.from({ length: 5 }, () => `<rect x="${Math.round(r() * 160)}" y="${Math.round(r() * 140)}" width="${Math.round(20 + r() * 70)}" height="${1 + Math.round(r() * 3)}" fill="${r() < 0.5 ? "#ff2bd6" : "#00e5ff"}"/>`).join("");
+  return `<svg viewBox="0 0 200 150" class="gl-portrait" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs><pattern id="${id}-d" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.3" fill="#39ff14"/></pattern>
+  <g id="${id}-s"><circle cx="${96 + r() * 8}" cy="62" r="30" fill="url(#${id}-d)"/><path d="M40 150C44 112 70 98 100 98C130 98 156 112 160 150Z" fill="url(#${id}-d)"/></g></defs>
+  <rect width="200" height="150" fill="#0d0d0d"/>${bands}${noise}
+</svg>`;
+}
+const GL_LINEUP: Array<[string, string, number]> = [
+  ["KAI/0", "live · 23:00", 4],
+  ["Static Mother", "dj · 01:30", 11],
+  ["Low Orbit", "a/v set · 03:00", 27],
+];
+const CHARS_GLITCH = "01#$%&*/<>";
+
+// Broken on purpose: the headline decodes from noise and tears into color, a roll bar sweeps the screen,
+// things blink on in hard steps, the countdown scrambles each tick. VT323 and JetBrains Mono.
 const glitchy = vibe("glitchy", {
-  copy: {
-    brand: "NULL//SET",
-    links: ["Lineup", "Tickets"],
-    kicker: "> transmission 04",
-    head: "Signal lost.",
-    sub: "Decoding the rest of the night.",
-    cta: "Enter",
-    cards: [["Static", "23:00"], ["Feedback", "01:30"], ["Noise", "03:00"]],
-    quote: "The night is a broken signal. Tune in anyway.",
-    foot: "NULL//SET · live",
-  },
+  copy: { brand: "", links: ["", ""], kicker: "", head: "", sub: "", cta: "", cards: [], quote: "", foot: "" },
   move: { duration: 0.45, ease: "steps(6)" },
-  nav: [".v-cards", ".v-count"],
-  // A countdown that ticks in broken steps, a flickering marquee, nav that scrambles under the pointer,
-  // pictures that tear on hover, and a trail of symbols behind the pointer or finger.
-  extra: `<section class="v-count"><p class="v-kicker">> doors open in</p><p class="v-clock">00:59:59</p></section>
+  nav: [".v-cards", ".gl-tickets"],
+  page: `<header class="v-nav"><b class="v-brand">NULL//SET</b><span class="v-links"><a href="#v">Lineup</a><a href="#v">Tickets</a></span></header>
+    <section class="v-hero gl-hero">
+      <i class="gl-roll" aria-hidden="true"></i>
+      <p class="v-kicker">&gt; transmission 04 // sat 14 nov</p>
+      <div class="gl-title"><h3 class="v-head">Signal lost.</h3><span class="gl-ghost c1" aria-hidden="true">Signal lost.</span><span class="gl-ghost c2" aria-hidden="true">Signal lost.</span></div>
+      <p class="v-sub">Seven hours of broken techno in a disused print works. Bring nothing you would miss.</p>
+      <p class="gl-meta"><span>Warehouse 9, Berlin</span><span>23:00 until the signal dies</span></p>
+      <button type="button" class="v-btn">Get tickets</button>
+    </section>
+    <section class="v-cards">${GL_LINEUP.map(([name, meta, seed], i) => `<article class="v-card"><span class="v-art"><i>${portrait(`glp${i}`, seed)}</i></span><b>${name}</b><span class="v-meta">${meta}</span></article>`).join("")}</section>
+    <section class="v-count"><p class="v-kicker">&gt; doors open in</p><p class="v-clock">00:59:59</p></section>
     <section class="v-marquee" aria-hidden="true"><div class="v-marquee-track">${"SIGNAL LOST // NO CARRIER // TUNE IN // ".repeat(4)}</div></section>
-    <p class="v-ambient"><button type="button" class="v-pause">Pause</button></p>`,
+    <p class="v-ambient"><button type="button" class="v-pause">Pause</button></p>
+    <section class="gl-tickets"><p class="v-kicker">&gt; tickets</p><ul>
+      <li class="is-sold"><span>Early signal</span><b>€18</b><em>Sold out</em></li>
+      <li><span>Standard</span><b>€24</b><button type="button" class="gl-buy">Reserve</button></li>
+      <li><span>Late / door</span><b>€30</b><button type="button" class="gl-buy">Reserve</button></li>
+    </ul></section>
+    <section class="v-quote"><p>The night is a broken signal. Tune in anyway.</p></section>
+    <footer class="v-foot"><span>NULL//SET</span><span>No photos on the floor</span></footer>`,
   intro: (p, tl) => {
     const head = p.head.textContent ?? "";
     const kicker = p.kicker.textContent ?? "";
+    const ghosts = all(p.win, ".gl-ghost");
+    const roll = one(p.win, ".gl-roll");
     tl.from(p.nav, { autoAlpha: 0, duration: 0.4, ease: "steps(4)", stagger: 0.1 }, 0)
+      // A bright roll bar sweeps down the screen once, like a tube warming up.
+      .fromTo(roll, { yPercent: -100, autoAlpha: 1 }, { yPercent: 900, duration: 1.1, ease: "none" }, 0)
+      .set(roll, { autoAlpha: 0 })
       .fromTo(p.kicker, { text: "" }, { text: kicker, duration: 0.8, ease: "none" }, 0.1)
-      .fromTo(p.head, { scrambleText: { text: "", chars: "01#$%&*/<>", speed: 0.6 } }, { scrambleText: { text: head, chars: "01#$%&*/<>", speed: 0.6 }, duration: 1.4, ease: "none" }, 0.3)
-      .from([p.sub, p.btn], { autoAlpha: 0, duration: 0.5, ease: "steps(5)", stagger: 0.15 }, 1.2);
+      .fromTo(p.head, { scrambleText: { text: "", chars: CHARS_GLITCH, speed: 0.6 } }, { scrambleText: { text: head, chars: CHARS_GLITCH, speed: 0.6 }, duration: 1.4, ease: "none" }, 0.3)
+      // Then it tears: the color layers jump out of register in hard steps and snap back.
+      .add(tear(ghosts, p.head), 1.75)
+      .from([p.sub, one(p.win, ".gl-meta"), p.btn], { autoAlpha: 0, duration: 0.5, ease: "steps(5)", stagger: 0.15 }, 1.3);
     return () => {
       p.head.textContent = head;
       p.kicker.textContent = kicker;
+      gsap.set([...ghosts, roll, p.head], { clearProps: "all" });
     };
   },
   wire: (p, layer) => {
     const quote = p.quote.textContent ?? "";
+    const ghosts = all(p.win, ".gl-ghost");
     // The statement decodes as it scrolls into view, and again whenever it comes back.
-    const st = ScrollTrigger.create({
-      trigger: p.quoteSection,
-      scroller: p.win,
-      start: "top 75%",
-      onEnter: () => gsap.to(p.quote, { scrambleText: { text: quote, chars: "01#$%&*/<>", speed: 0.5 }, duration: 1.2, ease: "none", overwrite: true }),
-      onEnterBack: () => gsap.to(p.quote, { scrambleText: { text: quote, chars: "01#$%&*/<>", speed: 0.5 }, duration: 1.2, ease: "none", overwrite: true }),
-    });
+    const decode = () => gsap.to(p.quote, { scrambleText: { text: quote, chars: CHARS_GLITCH, speed: 0.5 }, duration: 1.2, ease: "none", overwrite: true });
+    const st = ScrollTrigger.create({ trigger: p.quoteSection, scroller: p.win, start: "top 75%", onEnter: decode, onEnterBack: decode });
+    // The title tears again under the pointer or a tap.
+    const title = one(p.win, ".gl-title");
+    const again = () => !prefersReducedMotion() && tear(ghosts, p.head);
+    title.addEventListener("pointerenter", again);
+    title.addEventListener("pointerdown", again);
     const jitter = () => {
       if (prefersReducedMotion()) return;
       gsap.fromTo(p.btn, { x: 0, skewX: 0 }, { keyframes: { x: [-4, 3, -2, 2, 0], skewX: [8, -6, 4, 0, 0] }, duration: 0.3, ease: "steps(5)", overwrite: true });
     };
     p.btn.addEventListener("pointerenter", jitter);
     p.btn.addEventListener("pointerdown", jitter);
-    const CHARS = "01#$%&*/<>";
     // Nav links scramble when the pointer finds them.
     const links = all(p.win, ".v-links a");
     const scrambleLink = (e: Event) => {
       const a = e.currentTarget as HTMLElement;
       if (prefersReducedMotion()) return;
-      gsap.to(a, { scrambleText: { text: a.dataset.text ?? a.textContent ?? "", chars: CHARS, speed: 0.8 }, duration: 0.5, overwrite: true });
+      gsap.to(a, { scrambleText: { text: a.dataset.text ?? a.textContent ?? "", chars: CHARS_GLITCH, speed: 0.8 }, duration: 0.5, overwrite: true });
     };
     links.forEach((a) => {
       a.dataset.text = a.textContent ?? "";
       a.addEventListener("pointerenter", scrambleLink);
     });
-    // Pictures tear on hover: the art jumps sideways in hard steps.
+    // Portraits tear on hover: the picture jumps sideways in hard steps.
     const tears = p.cards.map((c) => {
       const art = one(c, ".v-art i");
-      const tear = () => !prefersReducedMotion() && gsap.fromTo(art, { x: 0, skewX: 0 }, { keyframes: { x: [12, -18, 6, -4, 0], skewX: [-14, 10, -6, 2, 0] }, duration: 0.35, ease: "steps(5)", overwrite: true });
-      c.addEventListener("pointerenter", tear);
-      c.addEventListener("pointerdown", tear);
+      const go = () => !prefersReducedMotion() && gsap.fromTo(art, { x: 0, skewX: 0 }, { keyframes: { x: [12, -18, 6, -4, 0], skewX: [-14, 10, -6, 2, 0] }, duration: 0.35, ease: "steps(5)", overwrite: true });
+      c.addEventListener("pointerenter", go);
+      c.addEventListener("pointerdown", go);
       return () => {
-        c.removeEventListener("pointerenter", tear);
-        c.removeEventListener("pointerdown", tear);
+        c.removeEventListener("pointerenter", go);
+        c.removeEventListener("pointerdown", go);
         gsap.set(art, { clearProps: "transform" });
+      };
+    });
+    // Reserve: the label decodes to a confirmation, once.
+    const buys = all(p.win, ".gl-buy").map((b) => {
+      const label = b.textContent ?? "";
+      const buy = () => {
+        if (b.getAttribute("aria-disabled") === "true") return;
+        b.setAttribute("aria-disabled", "true");
+        gsap.to(b, { scrambleText: { text: "Reserved", chars: CHARS_GLITCH, speed: 0.8 }, duration: prefersReducedMotion() ? 0 : 0.6, ease: "none" });
+      };
+      b.addEventListener("click", buy);
+      return () => {
+        b.removeEventListener("click", buy);
+        gsap.killTweensOf(b);
+        b.textContent = label;
+        b.removeAttribute("aria-disabled");
       };
     });
     // The countdown ticks once a second; each tick scrambles the digits it changes.
@@ -707,10 +887,9 @@ const glitchy = vibe("glitchy", {
     const run = gsap.to(track, { xPercent: -50, duration: 14, ease: "none", repeat: -1 });
     const flicker = gsap.to(track, { opacity: 0.35, duration: 0.12, ease: "steps(1)", repeat: -1, yoyo: true, repeatDelay: 1.7 });
     const loops = ambient(one(p.win, ".v-pause"), [tick, run, flicker]);
-    // Enter: a jump to the countdown in six hard steps.
-    const enter = cta(p, one(p.win, ".v-count"), { duration: 0.45, ease: "steps(6)" });
-    // A trail of symbols behind the pointer, or a finger dragging over the page.
-    // Over the whole stage, outside the scrolling page, so it lines up with the pointer at any scroll.
+    // Get tickets: a jump to the tickets in six hard steps.
+    const enter = cta(p, one(p.win, ".gl-tickets"), { duration: 0.45, ease: "steps(6)" });
+    // A trail of symbols behind the pointer, or a finger dragging over the page, over the whole stage.
     const glyphs = document.createElement("div");
     glyphs.className = "v-glyphs";
     glyphs.setAttribute("aria-hidden", "true");
@@ -720,7 +899,7 @@ const glitchy = vibe("glitchy", {
       if (prefersReducedMotion() || (e.pointerType !== "mouse" && e.buttons === 0) || e.timeStamp - last < 45) return;
       last = e.timeStamp;
       const g = document.createElement("span");
-      g.textContent = CHARS[Math.floor(Math.random() * CHARS.length)]!;
+      g.textContent = CHARS_GLITCH[Math.floor(Math.random() * CHARS_GLITCH.length)]!;
       const box = layer.getBoundingClientRect();
       glyphs.append(g);
       gsap.fromTo(
@@ -740,11 +919,14 @@ const glitchy = vibe("glitchy", {
           delete a.dataset.text;
         });
         tears.forEach((off) => off());
+        buys.forEach((off) => off());
         enter();
         loops();
         gsap.killTweensOf(clock);
         p.win.removeEventListener("pointermove", trail);
         glyphs.remove();
+        title.removeEventListener("pointerenter", again);
+        title.removeEventListener("pointerdown", again);
       },
       () => {
         st.kill();
@@ -759,6 +941,16 @@ const glitchy = vibe("glitchy", {
     ];
   },
 });
+
+/** The title tears: magenta and cyan copies jump out of register in sliced bands, then snap back. */
+function tear(ghosts: HTMLElement[], head: HTMLElement) {
+  const slice = () => `inset(${gsap.utils.random(0, 70, 1)}% 0 ${gsap.utils.random(0, 70, 1)}% 0)`;
+  return gsap
+    .timeline()
+    .to(ghosts, { keyframes: [0, 1, 2, 3, 4].map(() => ({ autoAlpha: 1, x: () => gsap.utils.random(-14, 14, 1), clipPath: slice, duration: 0.06 })), ease: "steps(1)" })
+    .to(head, { keyframes: { x: [3, -4, 2, 0], skewX: [-6, 4, -2, 0] }, duration: 0.3, ease: "steps(4)" }, 0)
+    .set(ghosts, { autoAlpha: 0, x: 0, clipPath: "inset(0% 0 0% 0)" });
+}
 
 export const VIBE_STAGES: Record<string, StageDef> = {
   calm,
