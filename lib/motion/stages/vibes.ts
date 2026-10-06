@@ -219,8 +219,9 @@ const calm = vibe("calm", {
         const next = fields[(i + 1) % fields.length]!;
         drift.to(next, { opacity: 1, duration: 2.4, ease: "sine.inOut" }, "+=2").set(f, { opacity: 0 });
       });
-      // Begin: a slow glide down to the guide, and a fresh breath from the start.
-      const begin = cta(p, one(p.win, ".v-breathe"), { duration: 2.2, ease: "sine.inOut" }, () => breath.restart());
+      // Begin: a slow glide down to the guide. The breath carries on as it was: restarting it on arrival
+      // would snap the circle back to small, or reverse a breath half taken.
+      const begin = cta(p, one(p.win, ".v-breathe"), { duration: 2.2, ease: "sine.inOut" });
       const loops = ambient(one(p.win, ".v-pause"), [breath, drift]);
       return () => {
         begin();
