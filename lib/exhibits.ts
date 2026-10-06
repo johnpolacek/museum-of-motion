@@ -304,7 +304,7 @@ const DATA: Exhibit[] = [
     group: "scroll",
     builders: "scrollWaypoints",
     src: "scroll-effects",
-    desc: "One element travels onto a marker in each later section."
+    desc: "One element travels onto a marker in each later section, taking on each marker's size, side, and angle."
   },
   {
     name: "Header",

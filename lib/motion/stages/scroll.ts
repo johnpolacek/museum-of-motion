@@ -167,12 +167,21 @@ const run = play(["Run", "Drift"], ["run", "drift"], SCROLL_HINT, (text, p) =>
 
 /* ---------- Waypoints ---------- */
 
+// Seven stops of different sizes, sides, and one tilt: the skill's scrollWaypoints fits the poster to each
+// dock's box and angle, so it shrinks, grows, crosses, and turns as the page scrolls.
+const STOPS: Array<[string, string]> = [
+  ["Sketch", "right small"],
+  ["Draft", "left"],
+  ["Review", "wide"],
+  ["Polish", "right small tilt"],
+  ["Share", "left small"],
+  ["Ship", "center"],
+];
 const waypoints = play(["Waypoints"], ["waypoints"], SCROLL_HINT, (text) =>
   windowed(
     text,
     `<section class="w-way"><div class="w-traveller" data-traveller>${poster(27, 0)}</div><h3>Plan</h3></section>
-     <section class="w-way"><div data-waypoint class="w-dock right"></div><h3>Share</h3></section>
-     <section class="w-way"><div data-waypoint class="w-dock left"></div><h3>Ship</h3></section>${END}`,
+     ${STOPS.map(([name, kind]) => `<section class="w-way"><div data-waypoint class="w-dock ${kind}"></div><h3>${name}</h3></section>`).join("")}${END}`,
     (win) => [scrollWaypoints(one(win, "[data-traveller]"), all(win, "[data-waypoint]"), { scroller: win })],
   ),
 );

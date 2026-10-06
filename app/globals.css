@@ -304,6 +304,11 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win .w-dock.right { grid-column: 2; grid-row: 1; }
 .ex .win .w-way:has(.right) h3 { grid-column: 1; grid-row: 1; }
 .ex .win .w-way:has(.left) h3 { grid-column: 2; grid-row: 1; }
+.ex .win .w-dock.small { width: 55%; justify-self: center; }
+.ex .win .w-dock.tilt { transform: rotate(-8deg); }
+.ex .win .w-dock.wide, .ex .win .w-dock.center { grid-column: 1 / -1; grid-row: 2; }
+.ex .win .w-dock.center { width: 70%; justify-self: center; }
+.ex .win .w-way:has(.wide) h3, .ex .win .w-way:has(.center) h3 { grid-column: 1 / -1; grid-row: 1; }
 .ex .win .w-head { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center; padding: 16px var(--gut); color: var(--ink); background: rgba(255,255,255,0.92); transition: color 0.3s, background-color 0.3s, transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1); }
 .ex .win .w-head b { font-weight: 800; font-stretch: 75%; text-transform: uppercase; }
 .ex .win .w-tallhead { height: 160px; padding: 0 var(--gut); background: none; pointer-events: none; transition: none; }
