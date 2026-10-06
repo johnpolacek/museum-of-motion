@@ -519,14 +519,34 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win.vibe-playful .v-art { border-radius: 14px; }
 .ex .win.vibe-playful .v-quote p { font-weight: 900; font-stretch: 112%; text-transform: uppercase; }
 
-/* Luxury: near black, cream, a gold hairline, a serif set wide and quiet. */
-.ex .win.vibe-luxury { --v-bg: #0f0e0c; --v-fg: #e9dfc9; --v-muted: #a59a84; --v-accent: transparent; --v-on-accent: #e9dfc9; --v-font: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; --v-art: linear-gradient(160deg, #3a3124 0%, #17140f 60%, #0f0e0c 100%); }
-.ex .win.vibe-luxury .v-head { font-weight: 400; letter-spacing: -0.01em; max-width: 12ch; }
-.ex .win.vibe-luxury .v-brand { font-weight: 400; letter-spacing: 0.24em; text-transform: uppercase; font-size: 14px; }
-.ex .win.vibe-luxury .v-kicker { letter-spacing: 0.3em; color: #b89a5e; }
-.ex .win.vibe-luxury .v-btn { padding: 4px 0; letter-spacing: 0.28em; text-transform: uppercase; font-size: 13px; --underline-color: #b89a5e; }
-.ex .win.vibe-luxury .v-art { box-shadow: inset 0 0 0 1px #b89a5e; }
-.ex .win.vibe-luxury .v-art i { box-shadow: inset 0 -40px 60px rgb(184 154 94 / 0.15); }
+/* Luxury: a jeweller's page. Warm black, cream, gold hairlines, Cormorant for display, Jost set wide for labels. */
+.ex .win.vibe-luxury { --v-bg: #0e0c0a; --v-fg: #efe6d2; --v-muted: #a69a83; --v-gold: #c9a15a; --v-accent: transparent; --v-on-accent: #efe6d2; --v-font: var(--font-cormorant), "Cormorant Garamond", Georgia, serif; --v-label: var(--font-jost), "Jost", system-ui, sans-serif; --v-art: radial-gradient(ellipse at 50% 40%, #2a2217, #0e0c0a 70%); font-size: 18px; }
+.ex .win.vibe-luxury .v-nav { border-bottom: 1px solid rgb(201 161 90 / 0.22); }
+.ex .win.vibe-luxury .v-brand { font-family: var(--v-label); font-weight: 400; letter-spacing: 0.42em; text-transform: uppercase; font-size: 12px; }
+@container (max-width: 520px) { .ex .win.vibe-luxury .v-brand { letter-spacing: 0.28em; white-space: nowrap; } .ex .win.vibe-luxury .v-links { gap: 16px; letter-spacing: 0.2em; } }
+.ex .win.vibe-luxury .v-links { font-family: var(--v-label); font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; gap: 28px; color: var(--v-muted); }
+.ex .win.vibe-luxury .v-links a:hover, .ex .win.vibe-luxury .v-links a:focus-visible { color: var(--v-fg); }
+.ex .win.vibe-luxury .v-kicker { font-family: var(--v-label); font-size: 11px; letter-spacing: 0.34em; color: var(--v-gold); }
+.ex .win.vibe-luxury .v-head { font-weight: 300; font-size: clamp(42px, 7.4cqw, 92px); line-height: 1; letter-spacing: -0.015em; max-width: 11ch; }
+.ex .win.vibe-luxury .v-head em { font-style: italic; color: #e9c98a; }
+.ex .win.vibe-luxury .v-sub { font-size: 20px; line-height: 1.45; max-width: 30ch; }
+.ex .win.vibe-luxury .v-btn { font-family: var(--v-label); padding: 6px 0; letter-spacing: 0.32em; text-transform: uppercase; font-size: 11px; --underline-color: var(--v-gold); margin-top: 10px; }
+.ex .win.vibe-luxury .lx-hero { grid-template-columns: 1fr 1fr; align-items: center; justify-items: stretch; gap: 24px; }
+.ex .win.vibe-luxury .lx-copy { display: grid; gap: 20px; justify-items: start; }
+.ex .win.vibe-luxury .lx-hero-art { display: grid; place-items: center; background: radial-gradient(circle at 50% 55%, rgb(201 161 90 / 0.12), transparent 62%); }
+.ex .win.vibe-luxury .lx-hero-art svg { width: min(100%, 520px); height: auto; overflow: visible; }
+@container (max-width: 640px) { .ex .win.vibe-luxury .lx-hero { grid-template-columns: 1fr; } .ex .win.vibe-luxury .lx-hero-art { order: -1; } .ex .win.vibe-luxury .lx-hero-art svg { width: min(70%, 260px); } }
+.ex .win.vibe-luxury .lx-art { width: 100%; height: 100%; display: block; }
+.ex .win.vibe-luxury .v-cards { gap: 28px; padding: 56px 24px; }
+.ex .win.vibe-luxury .v-card { gap: 4px; text-align: center; }
+.ex .win.vibe-luxury .v-card b { font-weight: 400; font-size: 24px; margin-top: 14px; }
+.ex .win.vibe-luxury .v-meta { font-family: var(--v-label); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; }
+.ex .win.vibe-luxury .lx-price { font-size: 17px; font-style: italic; color: var(--v-gold); }
+.ex .win.vibe-luxury .v-art { aspect-ratio: 1; box-shadow: inset 0 0 0 1px rgb(201 161 90 / 0.35); }
+.ex .win.vibe-luxury .v-art i { inset: -10% 0; display: grid; place-items: center; padding: 14%; }
+.ex .win.vibe-luxury .v-quote p { font-weight: 300; font-style: italic; }
+.ex .win.vibe-luxury .v-foot { font-family: var(--v-label); font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; text-align: center; border-top: 1px solid rgb(201 161 90 / 0.22); }
+.ex .win.vibe-luxury .v-caption { font-style: italic; font-size: 19px; }
 
 /* Snappy: white, ink, electric blue, a compact condensed sans, tight corners. */
 .ex .win.vibe-snappy { --v-bg: #ffffff; --v-fg: #0b0b0b; --v-muted: #5c5c66; --v-accent: #0055ff; --v-on-accent: #fff; --v-font: var(--font-archivo), system-ui, sans-serif; --v-art: linear-gradient(90deg, #0055ff 0 62%, #e8ecf7 62%) 0 78% / 100% 10px no-repeat, #f3f5fa; }
@@ -573,21 +593,21 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 
 /* Luxury */
 .ex .win.vibe-luxury .v-curtain { padding: 40px 24px; }
-.ex .win.vibe-luxury .v-curtain-img { position: relative; height: 70cqh; overflow: hidden; box-shadow: inset 0 0 0 1px #b89a5e; }
-.ex .win.vibe-luxury .v-curtain-img i { position: absolute; inset: 0; display: block; background: radial-gradient(ellipse at 70% 30%, rgb(184 154 94 / 0.55), transparent 55%), linear-gradient(160deg, #3a3124, #0f0e0c 70%); }
+.ex .win.vibe-luxury .v-curtain-img { position: relative; height: 70cqh; overflow: hidden; box-shadow: inset 0 0 0 1px rgb(201 161 90 / 0.35); }
+.ex .win.vibe-luxury .v-curtain-img i { position: absolute; inset: 0; display: block; }
+.ex .win.vibe-luxury .lx-scene { width: 100%; height: 100%; display: block; }
 .ex .win.vibe-luxury .v-run { overflow: hidden; }
-.ex .win.vibe-luxury .v-run-track { display: flex; gap: 24px; padding: 40px 24px; width: max-content; }
-.ex .win.vibe-luxury .v-panel { margin: 0; width: min(60cqw, 380px); display: grid; gap: 10px; }
-.ex .win.vibe-luxury .v-panel i { display: block; aspect-ratio: 3 / 4; box-shadow: inset 0 0 0 1px #b89a5e; background: linear-gradient(180deg, #2a241b, #0f0e0c); }
-.ex .win.vibe-luxury .v-panel.p1 i { background: linear-gradient(180deg, #4a3d28, #17140f); }
-.ex .win.vibe-luxury .v-panel.p2 i { background: linear-gradient(180deg, #3a2a20, #0f0e0c); }
-.ex .win.vibe-luxury .v-panel.p3 i { background: linear-gradient(180deg, #1c1a24, #0b0a0e); }
-.ex .win.vibe-luxury .v-panel figcaption { font-size: 13px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--v-muted); }
-.ex .win.vibe-luxury .v-detail { padding: 40px 24px; }
-.ex .win.vibe-luxury .v-spot { position: relative; height: 46cqh; overflow: hidden; box-shadow: inset 0 0 0 1px #b89a5e; }
-.ex .win.vibe-luxury .v-spot-base, .ex .win.vibe-luxury .v-spot-reveal { position: absolute; inset: 0; display: grid; place-items: center; font-size: clamp(26px, 5cqw, 52px); }
-.ex .win.vibe-luxury .v-spot-base { background: #12110e; color: #3b352b; }
-.ex .win.vibe-luxury .v-spot-reveal { background: radial-gradient(circle at 50% 50%, #3a3124, #1a1712); color: #e9c98a; clip-path: circle(0px at 50% 50%); }
+.ex .win.vibe-luxury .v-run-track { display: flex; gap: 28px; padding: 40px 24px; width: max-content; }
+.ex .win.vibe-luxury .v-panel { margin: 0; width: min(56cqw, 340px); display: grid; gap: 12px; }
+.ex .win.vibe-luxury .v-panel i { display: grid; place-items: center; padding: 18%; aspect-ratio: 3 / 4; box-shadow: inset 0 0 0 1px rgb(201 161 90 / 0.35); background: radial-gradient(ellipse at 50% 45%, #2a2217, #0e0c0a 72%); }
+.ex .win.vibe-luxury .v-panel figcaption { font-size: 22px; display: flex; gap: 14px; align-items: baseline; }
+.ex .win.vibe-luxury .v-panel figcaption span { font-family: var(--v-label); font-size: 11px; letter-spacing: 0.3em; color: var(--v-gold); }
+.ex .win.vibe-luxury .v-detail { padding: 56px 24px; display: grid; gap: 18px; justify-items: center; }
+.ex .win.vibe-luxury .v-spot { position: relative; width: 100%; height: 40cqh; overflow: hidden; box-shadow: inset 0 0 0 1px rgb(201 161 90 / 0.35); }
+.ex .win.vibe-luxury .v-spot-base, .ex .win.vibe-luxury .v-spot-reveal { position: absolute; inset: 0; display: grid; place-items: center; }
+.ex .win.vibe-luxury .v-spot-base { background: #0e0c0a; }
+.ex .win.vibe-luxury .v-spot-reveal { background: #0e0c0a; clip-path: circle(0px at 50% 50%); }
+.ex .win.vibe-luxury .lx-band { width: min(90%, 560px); }
 
 /* Snappy */
 .ex .win.vibe-snappy .v-plans { display: grid; gap: 18px; justify-items: start; padding: 40px 24px; }

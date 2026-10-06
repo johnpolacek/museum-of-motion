@@ -37,8 +37,14 @@ type Vibe = {
   copy: Copy;
   /** The vibe's own sections, between the cards and the statement: what only this kind of site would do. */
   extra?: string;
+  /** A page of its own in place of the shared skeleton. It keeps the skeleton's classes for nav, hero, cards, and statement. */
+  page?: string;
   /** Lenis feel for the window, such as a heavier `lerp` for a slower scroll. */
   lenis?: { lerp?: number; wheelMultiplier?: number };
+  /** The vibe's way of moving between sections: the nav links use it. */
+  move: Move;
+  /** Where the two nav links go, as selectors inside the page. */
+  nav: [string, string];
   /** Builds the page's intro on `tl`. Returns its own undo, such as a split's revert. */
   intro: (page: Page, tl: gsap.core.Timeline) => () => void;
   /** Everything after the intro: scroll, press, hover. Returns teardowns. */
@@ -76,23 +82,28 @@ function ambient(button: HTMLElement, loops: gsap.core.Animation[]): () => void 
  * The hero button takes the visitor to the vibe's signature section, moving the way the vibe moves:
  * a slow glide, a hop, a jump in steps. Reduced motion jumps. Returns the teardown.
  */
-function cta(p: Page, target: HTMLElement, move: { duration: number; ease: string; delay?: number }, then?: () => void): () => void {
-  const go = () => {
-    const y = target.getBoundingClientRect().top - p.win.getBoundingClientRect().top + p.win.scrollTop - 24;
-    gsap.to(p.win, {
-      scrollTo: { y, autoKill: true },
-      duration: prefersReducedMotion() ? 0 : move.duration,
-      delay: prefersReducedMotion() ? 0 : (move.delay ?? 0),
-      ease: move.ease,
-      overwrite: true,
-      onComplete: then,
-    });
-  };
+function cta(p: Page, target: HTMLElement, move: Move, then?: () => void): () => void {
+  const go = () => scrollWin(p.win, target, move, then);
   p.btn.addEventListener("click", go);
   return () => {
     p.btn.removeEventListener("click", go);
     gsap.killTweensOf(p.win);
   };
+}
+
+type Move = { duration: number; ease: string; delay?: number };
+
+/** Scrolls the window to a section the way the vibe moves. Reduced motion jumps. */
+function scrollWin(win: HTMLElement, target: HTMLElement, move: Move, then?: () => void) {
+  const y = target.getBoundingClientRect().top - win.getBoundingClientRect().top + win.scrollTop - 24;
+  gsap.to(win, {
+    scrollTo: { y, autoKill: true },
+    duration: prefersReducedMotion() ? 0 : move.duration,
+    delay: prefersReducedMotion() ? 0 : (move.delay ?? 0),
+    ease: move.ease,
+    overwrite: true,
+    onComplete: then,
+  });
 }
 
 /** Runs `enter` once a section scrolls into the window's view. */
@@ -113,7 +124,7 @@ function vibe(key: string, v: Vibe): StageDef {
   return play([key[0]!.toUpperCase() + key.slice(1)], [key], "Scroll the page. Press the button. Replay to see it arrive again.", (text) =>
     windowed(
       text,
-      markup(v.copy, v.extra),
+      v.page ?? markup(v.copy, v.extra),
       (win, layer) => {
         const page: Page = {
           win,
@@ -147,10 +158,21 @@ function vibe(key: string, v: Vibe): StageDef {
         };
         replay.addEventListener("click", again);
         layer.append(replay);
+        // The nav links go to the vibe's own sections, moving the way the vibe moves.
+        const links = all(win, ".v-links a");
+        const goes = links.map((a, i) => {
+          const go = (e: Event) => {
+            e.preventDefault();
+            scrollWin(win, one(win, v.nav[i]!), v.move);
+          };
+          a.addEventListener("click", go);
+          return () => a.removeEventListener("click", go);
+        });
         return [
           () => {
             replay.removeEventListener("click", again);
             replay.remove();
+            goes.forEach((off) => off());
           },
           ...v.wire(page, layer),
           () => {
@@ -190,6 +212,8 @@ const calm = vibe("calm", {
     <p class="v-ambient"><button type="button" class="v-pause">Pause</button></p>
     <i class="v-soft-cursor" aria-hidden="true"></i>`,
   lenis: { lerp: 0.045 },
+  move: { duration: 2.2, ease: "sine.inOut" },
+  nav: [".v-breathe", ".v-quote"],
   intro: (p, tl) => {
     const s = split(p.head, "words");
     tl.from(p.nav, { autoAlpha: 0, duration: 1.2, ease: "sine.out", stagger: 0.15 }, 0)
@@ -253,6 +277,8 @@ const playful = vibe("playful", {
     quote: "Every button deserves a little party.",
     foot: "Bloop! · made for fun",
   },
+  move: { duration: 0.8, ease: "back.inOut(1.4)" },
+  nav: [".v-play", ".v-heap"],
   // Stickers to fling, a heap of shapes to shake, and headline letters that hop when touched.
   extra: `<section class="v-play"><p class="v-play-head">Grab a sticker. Throw it.</p><div class="v-stickers">${["★", "♥", "☺", "✿", "⚡", "●"]
     .map((s, i) => `<span class="v-sticker s${i}">${s}</span>`)
@@ -345,33 +371,128 @@ const playful = vibe("playful", {
 
 /* ---------- Luxury ---------- */
 
-// Slow and exact: lines rise from behind masks on long expo curves, a hairline draws, pictures drift
-// with parallax and zoom slowly under the pointer, the call to action is an underlined word.
+// Gold line art, drawn as SVG. One gradient and one sheen per drawing, so each stands alone.
+const GOLD = (id: string, size = 200) => `<defs>
+  <linearGradient id="${id}-g" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${size}" y2="${size}"><stop offset="0" stop-color="#f6e3b0"/><stop offset=".45" stop-color="#c9a15a"/><stop offset="1" stop-color="#7d5c2c"/></linearGradient>
+  <linearGradient id="${id}-s" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+</defs>`;
+/** A four-point glint. */
+const glint = (x: number, y: number, r: number) =>
+  `<path class="lx-glint" d="M${x} ${y - r}L${x + r * 0.22} ${y - r * 0.22}L${x + r} ${y}L${x + r * 0.22} ${y + r * 0.22}L${x} ${y + r}L${x - r * 0.22} ${y + r * 0.22}L${x - r} ${y}L${x - r * 0.22} ${y - r * 0.22}Z" fill="#fff"/>`;
+/** A ring in three-quarter view with an old-cut diamond: band, setting, crown, and pavilion facets. */
+function ring(id: string, hero = false) {
+  return `<svg viewBox="0 0 200 200" class="lx-art" aria-hidden="true">${GOLD(id)}
+  <clipPath id="${id}-c"><path d="M100 64a62 58 0 1 0 .1 0Zm0 14a48 44 0 1 1-.1 0Z" clip-rule="evenodd"/><path d="M76 60L88 44H112L124 60L100 92Z"/></clipPath>
+  <path class="lx-fill" d="M100 64a62 58 0 1 0 .1 0Zm0 14a48 44 0 1 1-.1 0Z" fill-rule="evenodd" fill="url(#${id}-g)" opacity=".18"/>
+  <ellipse class="lx-line" cx="100" cy="122" rx="62" ry="58" fill="none" stroke="url(#${id}-g)" stroke-width="1.6"/>
+  <ellipse class="lx-line" cx="100" cy="122" rx="48" ry="44" fill="none" stroke="url(#${id}-g)" stroke-width="1.2"/>
+  <path class="lx-line" d="M84 66L80 58M116 66L120 58M92 64L90 56M108 64L110 56" stroke="url(#${id}-g)" stroke-width="1.4" fill="none"/>
+  <path class="lx-line" d="M76 60L88 44H112L124 60L100 92Z" fill="none" stroke="url(#${id}-g)" stroke-width="1.4" stroke-linejoin="round"/>
+  <path class="lx-facet" d="M76 60H124M88 44L94 60L100 44L106 60L112 44M94 60L100 92L106 60M84 60L100 92L116 60" fill="none" stroke="#f6e3b0" stroke-width=".7" opacity=".85"/>
+  ${hero ? `<g clip-path="url(#${id}-c)"><path class="lx-sheen" d="M-40 30H6L-34 200H-80Z" fill="url(#${id}-s)"/></g>${glint(118, 48, 9)}${glint(150, 92, 6)}${glint(70, 150, 5)}` : ""}
+</svg>`;
+}
+/** A pear-cut stone on a fine chain. */
+function pendant(id: string) {
+  return `<svg viewBox="0 0 200 200" class="lx-art" aria-hidden="true">${GOLD(id)}
+  <path class="lx-line" d="M40 10C60 70 84 96 100 104C116 96 140 70 160 10" fill="none" stroke="url(#${id}-g)" stroke-width="1"/>
+  <circle class="lx-line" cx="100" cy="110" r="6" fill="none" stroke="url(#${id}-g)" stroke-width="1.4"/>
+  <path class="lx-line" d="M100 118C84 140 80 160 100 176C120 160 116 140 100 118Z" fill="url(#${id}-g)" fill-opacity=".16" stroke="url(#${id}-g)" stroke-width="1.4"/>
+  <path class="lx-facet" d="M100 118V176M88 150H112M92 136L100 160L108 136" fill="none" stroke="#f6e3b0" stroke-width=".7" opacity=".8"/>
+</svg>`;
+}
+/** A pair of drop earrings with pearls. */
+function earrings(id: string) {
+  const drop = (x: number) => `<path class="lx-line" d="M${x} 40V82" stroke="url(#${id}-g)" stroke-width="1.2"/><circle class="lx-line" cx="${x}" cy="36" r="5" fill="none" stroke="url(#${id}-g)" stroke-width="1.4"/>
+  <circle class="lx-line" cx="${x}" cy="104" r="20" fill="#f3ead8" fill-opacity=".14" stroke="url(#${id}-g)" stroke-width="1.4"/><path class="lx-facet" d="M${x - 8} 96a10 10 0 0 1 10 -6" stroke="#fff" stroke-width="1.2" fill="none" opacity=".7"/>`;
+  return `<svg viewBox="0 0 200 200" class="lx-art" aria-hidden="true">${GOLD(id)}${drop(70)}${drop(130)}</svg>`;
+}
+/** The atelier: an arched window at dawn, its light falling across the bench, a ring on its mandrel. */
+function atelier(id: string) {
+  return `<svg viewBox="0 0 800 400" class="lx-scene" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${GOLD(id, 800)}
+  <defs><radialGradient id="${id}-dawn" cx=".5" cy=".9" r=".9"><stop offset="0" stop-color="#e9c98a" stop-opacity=".55"/><stop offset="1" stop-color="#2a2216" stop-opacity="0"/></radialGradient>
+  <linearGradient id="${id}-beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9c98a" stop-opacity=".22"/><stop offset="1" stop-color="#e9c98a" stop-opacity="0"/></linearGradient></defs>
+  <rect width="800" height="400" fill="#120f0b"/>
+  <g transform="translate(40 22) scale(.9)">
+  <path d="M330 300V140a70 70 0 0 1 140 0V300Z" fill="#1d1810"/>
+  <path d="M330 300V140a70 70 0 0 1 140 0V300Z" fill="url(#${id}-dawn)"/>
+  <path class="lx-beam" d="M330 300L170 400H730L470 300Z" fill="url(#${id}-beam)"/>
+  <path d="M400 70V300M330 160H470M330 230H470" stroke="url(#${id}-g)" stroke-width="1.4" opacity=".75"/>
+  <path d="M330 300V140a70 70 0 0 1 140 0V300" fill="none" stroke="url(#${id}-g)" stroke-width="2.2"/>
+  <path d="M318 300H482" stroke="url(#${id}-g)" stroke-width="2"/>
+  <path d="M60 330H740" stroke="url(#${id}-g)" stroke-width="1.6"/>
+  <path d="M560 330L600 282L612 282L604 330" fill="none" stroke="url(#${id}-g)" stroke-width="1.4"/>
+  <ellipse cx="606" cy="300" rx="12" ry="5" fill="none" stroke="#e9c98a" stroke-width="1.6"/>
+  <path d="M190 330V300M180 300H200M230 330l14 -40l4 2l-10 38" fill="none" stroke="url(#${id}-g)" stroke-width="1.2" opacity=".7"/>
+  ${[[372, 200], [430, 250], [395, 285], [452, 190], [360, 260]].map(([x, y]) => `<circle class="lx-mote" cx="${x}" cy="${y}" r="1.4" fill="#f6e3b0" opacity=".7"/>`).join("")}
+  </g>
+</svg>`;
+}
+/** A wide band in gold. The engraved copy carries the line the spotlight uncovers. */
+function band(id: string, engraved: boolean) {
+  return `<svg viewBox="0 0 400 160" class="lx-band" aria-hidden="true">${GOLD(id, 400)}
+  <path id="${id}-p" d="M30 96C130 58 270 58 370 96" fill="none"/>
+  <path d="M30 78C130 40 270 40 370 78V112C270 74 130 74 30 112Z" fill="url(#${id}-g)" opacity="${engraved ? 1 : 0.5}"/>
+  ${engraved ? `<text font-family="var(--font-cormorant), serif" font-style="italic" font-size="17" letter-spacing="2.5" fill="#4a3518"><textPath href="#${id}-p" startOffset="50%" text-anchor="middle">Pour toujours · A &amp; L · 2026</textPath></text>` : ""}
+</svg>`;
+}
+
+const LUX_PIECES: Array<[string, string, string, (id: string) => string]> = [
+  ["Bague Aube", "Yellow gold, old-cut diamond", "€ 4 800", (id) => ring(id)],
+  ["Pendentif Midi", "Rose gold, pear-cut sapphire", "€ 3 200", pendant],
+  ["Boucles Soir", "White gold, freshwater pearls", "€ 2 650", earrings],
+];
+const LUX_GALLERY: Array<[string, string, (id: string) => string]> = [
+  ["I", "Aube", (id) => ring(id)],
+  ["II", "Midi", pendant],
+  ["III", "Soir", earrings],
+  ["IV", "Nuit", (id) => ring(id)],
+  ["V", "Retour", pendant],
+];
+
+// Slow and exact. The ring draws itself in gold, its facets catch the light, a sheen crosses the stone;
+// lines rise from behind masks on long expo curves; a picture opens from a slit; a pinned gallery moves
+// sideways; a spotlight finds the engraving. Its own page, typeset in Cormorant and Jost.
 const luxury = vibe("luxury", {
-  copy: {
-    brand: "Maison Orée",
-    links: ["Collection", "Atelier"],
-    kicker: "Collection Nº 7",
-    head: "Quiet light, finished by hand.",
-    sub: "Made in small numbers, to be kept.",
-    cta: "Discover",
-    cards: [["Aube", "Nº 7.1"], ["Midi", "Nº 7.2"], ["Crépuscule", "Nº 7.3"]],
-    quote: "What is made slowly is worn for a lifetime.",
-    foot: "Maison Orée · Paris",
-  },
-  // A picture uncovered slowly from the middle as it scrolls in, a pinned gallery that moves sideways,
-  // and a spotlight that finds the detail.
-  extra: `<section class="v-curtain"><div class="v-curtain-img"><i></i></div><p class="v-caption">The atelier, at first light</p></section>
-    <section class="v-run"><div class="v-run-track">${["Aube", "Midi", "Soir", "Nuit", "Aube"].map((n, i) => `<figure class="v-panel p${i}"><i></i><figcaption>${n}</figcaption></figure>`).join("")}</div></section>
-    <section class="v-detail"><div class="v-spot" tabindex="0" aria-label="The clasp, in detail"><div class="v-spot-base"><p>The clasp</p></div><div class="v-spot-reveal"><p>18k gold, hand chased</p></div></div><p class="v-caption">Hold a finger or move the pointer over it</p></section>`,
+  copy: { brand: "", links: ["", ""], kicker: "", head: "", sub: "", cta: "", cards: [], quote: "", foot: "" },
+  move: { duration: 2.4, ease: "expo.inOut" },
+  nav: [".v-cards", ".v-curtain"],
+  page: `<header class="v-nav"><b class="v-brand">Maison Orée</b><span class="v-links"><a href="#v">Collection</a><a href="#v">Atelier</a></span></header>
+    <section class="v-hero lx-hero">
+      <div class="lx-copy"><p class="v-kicker">Collection Nº 7 · Lumière</p><h3 class="v-head">Quiet light, <em>finished by hand.</em></h3><p class="v-sub">Each piece is cast, set, and polished in our Paris atelier, in editions of twelve.</p><button type="button" class="v-btn">Discover the collection</button></div>
+      <div class="lx-hero-art">${ring("lxh", true)}</div>
+    </section>
+    <section class="v-cards">${LUX_PIECES.map(([name, made, price, art], i) => `<article class="v-card"><span class="v-art"><i data-parallax="-18">${art(`lxc${i}`)}</i></span><b>${name}</b><span class="v-meta">${made}</span><span class="lx-price">${price}</span></article>`).join("")}</section>
+    <section class="v-curtain"><div class="v-curtain-img"><i>${atelier("lxa")}</i></div><p class="v-caption">The atelier on rue Saint-Honoré, at first light</p></section>
+    <section class="v-run"><div class="v-run-track">${LUX_GALLERY.map(([n, name, art], i) => `<figure class="v-panel"><i>${art(`lxg${i}`)}</i><figcaption><span>${n}</span>${name}</figcaption></figure>`).join("")}</div></section>
+    <section class="v-detail"><p class="v-kicker">Engraving</p><div class="v-spot" tabindex="0" aria-label="The band, engraved: Pour toujours, A and L, 2026"><div class="v-spot-base">${band("lxb", false)}</div><div class="v-spot-reveal">${band("lxr", true)}</div></div><p class="v-caption">Every band carries a line of your choosing. Hold a finger or move the pointer over it.</p></section>
+    <section class="v-quote"><p>What is made slowly is worn for a lifetime.</p></section>
+    <footer class="v-foot">Maison Orée · 214 rue Saint-Honoré, Paris · By appointment</footer>`,
   intro: (p, tl) => {
     const s = split(p.head, "lines", "lines");
+    const hero = one(p.win, ".lx-hero-art svg");
+    const lines = all(hero, ".lx-line");
+    const facets = all(hero, ".lx-facet");
+    const fill = one(hero, ".lx-fill");
+    const sheen = one(hero, ".lx-sheen");
+    const glints = all(hero, ".lx-glint");
+    gsap.set(glints, { transformOrigin: "50% 50%", scale: 0 });
     tl.from(p.nav, { autoAlpha: 0, duration: 1.6, ease: "power2.out", stagger: 0.2 }, 0)
-      .from(p.kicker, { autoAlpha: 0, letterSpacing: "0.6em", duration: 2, ease: "expo.out" }, 0.2)
-      .from(s.lines, { yPercent: 110, duration: 1.8, ease: "expo.out", stagger: 0.18 }, 0.5)
-      .from(p.sub, { autoAlpha: 0, duration: 1.6, ease: "power2.out" }, 1.4)
-      .from(p.btn, { autoAlpha: 0, y: 8, duration: 1.4, ease: "expo.out" }, 1.8);
-    return () => s.revert();
+      // The ring draws itself in gold, band first, then the setting and the stone.
+      .fromTo(lines, { drawSVG: "0%" }, { drawSVG: "100%", duration: 2.2, ease: "power2.inOut", stagger: 0.18 }, 0.2)
+      .from(fill, { opacity: 0, duration: 1.6, ease: "power1.out" }, 1.2)
+      .from(facets, { opacity: 0, duration: 1.2, ease: "power1.out" }, 1.6)
+      .from(p.kicker, { autoAlpha: 0, letterSpacing: "0.6em", duration: 2, ease: "expo.out" }, 0.3)
+      .from(s.lines, { yPercent: 110, duration: 1.8, ease: "expo.out", stagger: 0.2 }, 0.6)
+      .from(p.sub, { autoAlpha: 0, duration: 1.6, ease: "power2.out" }, 1.5)
+      .from(p.btn, { autoAlpha: 0, y: 8, duration: 1.4, ease: "expo.out" }, 1.9)
+      // Light catches the stone: one sheen across it, then the glints turn on and off.
+      .fromTo(sheen, { x: 0 }, { x: 300, duration: 1.8, ease: "power2.inOut" }, 2.4)
+      .to(glints, { scale: 1, rotation: 45, duration: 0.5, ease: "power2.out", stagger: 0.25, yoyo: true, repeat: 1, repeatDelay: 0.2 }, 3.0);
+    return () => {
+      s.revert();
+      gsap.set([...lines, ...facets, fill, sheen, ...glints], { clearProps: "all" });
+    };
   },
   wire: (p) => [
     (() => {
@@ -383,7 +504,14 @@ const luxury = vibe("luxury", {
         { clipPath: "inset(0% 0% 0% 0%)", ease: "power2.inOut", scrollTrigger: { trigger: box, scroller: p.win, start: "top 90%", end: "center 55%", scrub: 1.2 } },
       );
       const zoom = gsap.fromTo(one(box, "i"), { scale: 1.25 }, { scale: 1, ease: "none", scrollTrigger: { trigger: box, scroller: p.win, start: "top 90%", end: "bottom top", scrub: 1.2 } });
+      // Dawn comes up as you pass: the beam brightens and dust drifts upward in it.
+      const dawn = gsap.timeline({ scrollTrigger: { trigger: box, scroller: p.win, start: "top 70%", end: "bottom top", scrub: 1.6 } })
+        .fromTo(one(box, ".lx-beam"), { opacity: 0.2 }, { opacity: 1, ease: "none" }, 0)
+        .fromTo(all(box, ".lx-mote"), { y: 0 }, { y: -40, ease: "none", stagger: 0.04 }, 0);
       return () => {
+        dawn.scrollTrigger?.kill();
+        dawn.kill();
+        gsap.set([one(box, ".lx-beam"), ...all(box, ".lx-mote")], { clearProps: "all" });
         tween.scrollTrigger?.kill();
         tween.kill();
         zoom.scrollTrigger?.kill();
@@ -391,10 +519,10 @@ const luxury = vibe("luxury", {
         gsap.set([box, one(box, "i")], { clearProps: "all" });
       };
     })(),
-    // Discover: a long, slow glide to the picture.
-    cta(p, one(p.win, ".v-curtain"), { duration: 2.4, ease: "expo.inOut" }),
+    // Discover: a long, slow glide to the pieces.
+    cta(p, p.cardsSection, { duration: 2.4, ease: "expo.inOut" }),
     horizontalRun(one(p.win, ".v-run"), one(p.win, ".v-run-track"), { scroller: p.win, scrub: 1.2 }).revert,
-    spotlight(one(p.win, ".v-spot"), one(p.win, ".v-spot-reveal"), { radius: 70, follow: 0.6, touch: true }),
+    spotlight(one(p.win, ".v-spot"), one(p.win, ".v-spot-reveal"), { radius: 130, follow: 0.6, touch: true }),
     revealOnScroll(p.cards, { scroller: p.win, y: 12, duration: 1.6, stagger: 0.3, ease: "expo.out" }),
     scrubStatement(p.quote, { by: "words", scroller: p.win, scrub: 1.6 }),
     parallax(p.cardsSection, { scroller: p.win }),
@@ -410,7 +538,7 @@ const luxury = vibe("luxury", {
 const snappy = vibe("snappy", {
   copy: {
     brand: "Tasko",
-    links: ["Pricing", "Docs"],
+    links: ["Pricing", "Features"],
     kicker: "v3 is here",
     head: "Ship it today.",
     sub: "Plans, tasks, done. Fast.",
@@ -419,6 +547,8 @@ const snappy = vibe("snappy", {
     quote: "Less waiting. More done. Every click answers at once.",
     foot: "Tasko · ship faster",
   },
+  move: { duration: 0.35, ease: "power3.out" },
+  nav: [".v-plans", ".v-tasks"],
   // Plans that switch instantly under a sliding indicator, a button that answers with a check, a task
   // list to reorder, and numbers that count up the moment they arrive.
   extra: `<section class="v-plans"><div class="v-tablist" role="tablist" aria-label="Billing">${["Monthly", "Yearly", "Team"].map((t, i) => `<button type="button" role="tab" aria-selected="${i === 0}">${t}</button>`).join("")}<span class="v-tab-ind" aria-hidden="true"></span></div><p class="v-price"><b>$8</b> per month</p><button type="button" class="v-state"><span data-state-label>Upgrade</span></button></section>
@@ -505,6 +635,8 @@ const glitchy = vibe("glitchy", {
     quote: "The night is a broken signal. Tune in anyway.",
     foot: "NULL//SET · live",
   },
+  move: { duration: 0.45, ease: "steps(6)" },
+  nav: [".v-cards", ".v-count"],
   // A countdown that ticks in broken steps, a flickering marquee, nav that scrambles under the pointer,
   // pictures that tear on hover, and a trail of symbols behind the pointer or finger.
   extra: `<section class="v-count"><p class="v-kicker">> doors open in</p><p class="v-clock">00:59:59</p></section>
