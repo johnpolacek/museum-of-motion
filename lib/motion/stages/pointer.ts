@@ -47,27 +47,27 @@ const one = <T extends Element = HTMLElement>(root: ParentNode, sel: string) => 
 
 /* ---------- Hover effects ---------- */
 
-const labelRoll = play(["Label roll"], ["roll"], "Hover or tab to a button.", (text) =>
+const labelRoll = play(["Label roll"], ["roll"], "Hover, tab to, or hold a finger on a button.", (text) =>
   live(text, `<div class="btns">${["Start", "View the collection", "Play"].map((l) => `<button type="button" class="pill">${l}</button>`).join("")}</div>`, (layer) =>
-    all(layer, ".pill").map((b) => textRoll(b)),
+    all(layer, ".pill").map((b) => textRoll(b, { touch: true })),
   ),
 );
 
-const underline = play(["Underline sweep"], ["sweep"], "Hover or tab to a link.", (text) =>
+const underline = play(["Underline sweep"], ["sweep"], "Hover, tab to, or hold a finger on a link.", (text) =>
   live(
     text,
     `<nav class="sweeps" aria-label="Sample">${["Collection", "Exhibits", "Recipes", "About"].map((l) => `<button type="button" class="sweep">${l}</button>`).join("")}</nav>`,
-    (layer) => all(layer, ".sweep").map((a) => underlineSweep(a)),
+    (layer) => all(layer, ".sweep").map((a) => underlineSweep(a, { touch: true })),
   ),
 );
 
-const zoom = play(["Zoom"], ["zoom"], "Hover or tab to a card.", (text) =>
+const zoom = play(["Zoom"], ["zoom"], "Hover, tab to, or hold a finger on a card.", (text) =>
   live(
     text,
     `<div class="cards">${[1, 10, 40]
       .map((n, i) => `<article class="card"><button type="button" class="card-hit"><span class="frame"><span data-zoom-image>${poster(n, i)}</span></span><span class="card-title">${NAMES[i]}</span></button></article>`)
       .join("")}</div>`,
-    (layer) => all(layer, ".card").map((c) => imageZoom(c)),
+    (layer) => all(layer, ".card").map((c) => imageZoom(c, { touch: true })),
   ),
 );
 
@@ -83,11 +83,11 @@ const fillTiles = play(["Directional fill"], ["fill"], "Move the mouse across th
 
 /* ---------- Spotlight ---------- */
 
-const spot = play(["Spotlight"], ["spot"], "Move the mouse over the poster. Press and hold on touch. Tab to open it all.", (text) =>
+const spot = play(["Spotlight"], ["spot"], "Move the mouse or a held finger over the poster. Tab to open it all.", (text) =>
   live(
     text,
     `<div class="spot" tabindex="0" aria-label="Poster with a hidden layer"><div class="spot-base"><b>Every way<br>a page<br>can move.</b></div><div class="spot-reveal"><b>Every way<br>a page<br>can move.</b></div></div>`,
-    (layer) => [spotlight(one(layer, ".spot"), one(layer, ".spot-reveal"), { radius: 110 })],
+    (layer) => [spotlight(one(layer, ".spot"), one(layer, ".spot-reveal"), { radius: 110, touch: true })],
   ),
 );
 
@@ -153,58 +153,58 @@ const stateBtn = play(["Success", "Error"], ["success", "error"], "Press Send. T
 
 /* ---------- Hover preview ---------- */
 
-const preview = play(["Hover preview"], ["preview"], "Move the mouse over the list. Touch shows the list alone.", (text) =>
+const preview = play(["Hover preview"], ["preview"], "Move the mouse or a held finger down the list.", (text) =>
   live(
     text,
     `<ul class="works">${NAMES.slice(0, 6)
       .map((n, i) => `<li><button type="button" data-preview="${posterUrl(i + 1, i)}">${n}</button></li>`)
       .join("")}</ul><div class="preview"></div>`,
-    (layer) => [hoverPreview(one(layer, ".works"), one(layer, ".preview"))],
+    (layer) => [hoverPreview(one(layer, ".works"), one(layer, ".preview"), { touch: true })],
   ),
 );
 
 /* ---------- Pointer effects ---------- */
 
-const magnet = play(["Magnetic"], ["magnetic"], "Bring the mouse near a button.", (text) =>
+const magnet = play(["Magnetic"], ["magnetic"], "Bring the mouse near a button, or hold a finger on one and slide.", (text) =>
   live(text, `<div class="btns">${["Start", "Explore", "Play"].map((l) => `<button type="button" class="pill big"><span data-magnetic-inner>${l}</span></button>`).join("")}</div>`, (layer) =>
-    all(layer, ".pill").map((b) => magnetic(b)),
+    all(layer, ".pill").map((b) => magnetic(b, { touch: true })),
   ),
 );
 
-const tiltCards = play(["Tilt"], ["tilt"], "Move the mouse across a card.", (text) =>
+const tiltCards = play(["Tilt"], ["tilt"], "Move the mouse or a held finger across a card.", (text) =>
   live(
     text,
     `<div class="cards">${[42, 43, 44].map((n, i) => `<div class="card tilt-card"><span class="frame">${poster(n, i)}</span><span class="card-title">${NAMES[i]}</span></div>`).join("")}</div>`,
-    (layer) => all(layer, ".tilt-card").map((c) => tilt(c, { max: 10 })),
+    (layer) => all(layer, ".tilt-card").map((c) => tilt(c, { max: 10, touch: true })),
   ),
 );
 
-const follower = play(["Cursor follower"], ["follow"], "Move the mouse. Hover a name to see its label.", (text) =>
+const follower = play(["Cursor follower"], ["follow"], "Move the mouse or a held finger. Over a name, its label shows.", (text) =>
   live(
     text,
     `<div class="cursor" aria-hidden="true"></div><div class="cursor-label" aria-hidden="true"><span data-cursor-label-track></span></div>
      <ul class="works">${NAMES.slice(0, 4).map((n) => `<li><button type="button" data-cursor-text="View exhibit">${n}</button></li>`).join("")}</ul>`,
-    (layer) => [cursorFollower(one(layer, ".cursor"), { label: one<HTMLElement>(layer, ".cursor-label") })],
+    (layer) => [cursorFollower(one(layer, ".cursor"), { label: one<HTMLElement>(layer, ".cursor-label"), touch: layer })],
   ),
 );
 
-const momentum = play(["Momentum hover"], ["momentum"], "Swipe the mouse through the stickers.", (text) =>
+const momentum = play(["Momentum hover"], ["momentum"], "Swipe the mouse or a finger through the stickers.", (text) =>
   live(
     text,
     `<div class="stickers">${["★", "●", "▲", "■", "◆", "✳"].map((g, i) => `<span data-momentum-item><span data-momentum-target class="sticker s${i}">${g}</span></span>`).join("")}</div>`,
-    (layer) => [momentumHover(one(layer, ".stickers"))],
+    (layer) => [momentumHover(one(layer, ".stickers"), { touch: true })],
   ),
 );
 
-const dock = play(["Proximity"], ["dock"], "Run the mouse along the dock.", (text) =>
+const dock = play(["Proximity"], ["dock"], "Run the mouse or a finger along the dock.", (text) =>
   live(
     text,
     `<nav class="dock" aria-label="Sample dock">${Array.from({ length: 9 }, (_, i) => `<button type="button" data-proximity-item aria-label="Exhibit ${i + 38}"><span data-proximity-target class="tile">${i + 38}</span></button>`).join("")}</nav>`,
-    (layer) => [proximity(one(layer, ".dock"), { axis: "x", scale: 1.8, lift: 16, radius: 180 })],
+    (layer) => [proximity(one(layer, ".dock"), { axis: "x", scale: 1.8, lift: 16, radius: 180, touch: true })],
   ),
 );
 
-const trail = play(["Image trail"], ["trail"], "Move the mouse across the stage.", (text) =>
+const trail = play(["Image trail"], ["trail"], "Move the mouse or drag a finger across the stage.", (text) =>
   live(
     text,
     `<div class="trail-layer"></div><p class="lab trail-cue">Move here</p>`,
@@ -215,7 +215,7 @@ const trail = play(["Image trail"], ["trail"], "Move the mouse across the stage.
         img.src = posterUrl(i + 10, i);
         return img;
       });
-      return [imageTrail(layer, one(layer, ".trail-layer"), images)];
+      return [imageTrail(layer, one(layer, ".trail-layer"), images, { touch: true })];
     },
     "trail",
   ),

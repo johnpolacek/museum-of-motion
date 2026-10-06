@@ -99,7 +99,9 @@ const RIPPLE = { duration: 0.6, ease: "power2.out" } as const;
 export function pressFeedback(control: HTMLElement, { squash = 0.94, ripple = true, ink = 0.3 }: PressOptions = {}): Teardown {
   if (prefersReducedMotion()) return () => {};
   return own((dispose, after) => {
-    after(snapshotStyles([control], ["transform", "translate", "scale", "position", "overflow"]));
+    after(snapshotStyles([control], ["transform", "translate", "scale", "position", "overflow", "-webkit-tap-highlight-color"]));
+    // The squash and ripple are the touch response; the browser's own tap highlight would box the control over them.
+    control.style.setProperty("-webkit-tap-highlight-color", "transparent");
     const style = getComputedStyle(control);
     // The ripple needs a positioned, clipping box; set only what the control lacks.
     if (ripple && style.position === "static") control.style.position = "relative";

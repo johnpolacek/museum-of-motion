@@ -185,12 +185,40 @@ export function imageReveal(
 export type HoverPreviewOptions = {
   /** Offset of the preview's top-left corner from the pointer, px. */
   offset?: { x: number; y: number };
+  /**
+   * A finger or pen held on the list moves like the mouse: the preview follows it over the rows and
+   * hides on lift. It claims the list's touch gestures, so a scroll cannot start on it.
+   */
+  touch?: boolean;
 };
 
-export function hoverPreview(list: HTMLElement, preview: HTMLElement, { offset = { x: 24, y: 24 } }: HoverPreviewOptions = {}): Teardown {
-  if (prefersReducedMotion() || !finePointer()) return () => {};
+export function hoverPreview(list: HTMLElement, preview: HTMLElement, { offset = { x: 24, y: 24 }, touch = false }: HoverPreviewOptions = {}): Teardown {
+  if (prefersReducedMotion() || (!finePointer() && !touch)) return () => {};
   return own((dispose, after) => {
     after(snapshotStyles([preview]));
+    // With touch, a held finger moves like the mouse: the list claims its touch gestures, the press is
+    // released from the row it landed on so rows change under the finger, and lifting it is leaving.
+    let finger = -1;
+    if (touch) {
+      after(snapshotStyles([list], ["touch-action"]));
+      list.style.touchAction = "none";
+      listen(dispose, list, "pointerdown", (event) => {
+        if (event.pointerType === "mouse") return;
+        finger = event.pointerId;
+        const pressed = event.target as Element;
+        if (pressed.hasPointerCapture?.(event.pointerId)) pressed.releasePointerCapture(event.pointerId);
+        // The row's over arrived just before the press; show it now, without waiting for a move.
+        over(event);
+      });
+      const lift = (event: PointerEvent) => {
+        if (event.pointerId === finger) finger = -1;
+      };
+      for (const type of ["pointerup", "pointercancel"] as const) {
+        document.addEventListener(type, lift);
+        dispose(() => document.removeEventListener(type, lift));
+      }
+    }
+    const accepts = (event: PointerEvent) => event.pointerType === "mouse" || event.pointerId === finger;
     const hadAria = preview.getAttribute("aria-hidden");
     preview.setAttribute("aria-hidden", "true");
     after(() => (hadAria === null ? preview.removeAttribute("aria-hidden") : preview.setAttribute("aria-hidden", hadAria)));
@@ -240,8 +268,8 @@ export function hoverPreview(list: HTMLElement, preview: HTMLElement, { offset =
       }
     };
 
-    listen(dispose, list, "pointerover", (event) => {
-      if (event.pointerType !== "mouse") return;
+    function over(event: PointerEvent) {
+      if (!accepts(event)) return;
       const item = (event.target as Element | null)?.closest<HTMLElement>("[data-preview]");
       const src = item && list.contains(item) ? item.dataset.preview : undefined;
       if (!src) return;
@@ -254,9 +282,10 @@ export function hoverPreview(list: HTMLElement, preview: HTMLElement, { offset =
         gsap.to(preview, { autoAlpha: 1, duration: SWAP, overwrite: "auto" });
       }
       show(src);
-    });
+    }
+    listen(dispose, list, "pointerover", over);
     listen(dispose, list, "pointermove", (event) => {
-      if (event.pointerType !== "mouse" || !shown) return;
+      if (!accepts(event) || !shown) return;
       xTo(event.clientX + offset.x);
       yTo(event.clientY + offset.y);
     });

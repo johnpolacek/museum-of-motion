@@ -23,12 +23,17 @@ export type HoverDistortionOptions = {
   follow?: number;
   /** Element that takes hover and focus. Defaults to the image's link or button, else the image. */
   target?: HTMLElement;
+  /**
+   * A finger or pen held on the surface moves the lens like the mouse, and lifting it closes the lens. It
+   * claims the surface's touch gestures, so a scroll cannot start on it.
+   */
+  touch?: boolean;
 };
 
-/** A lens that follows the mouse and centers on keyboard focus. Touch and pen never trigger it. */
+/** A lens that follows the mouse and centers on keyboard focus. Touch and pen trigger it only with `touch`. */
 export function hoverDistortion(
   plane: ImagePlane,
-  { strength = 1, duration = 0.6, follow = 0.4, target }: HoverDistortionOptions = {},
+  { strength = 1, duration = 0.6, follow = 0.4, target, touch = false }: HoverDistortionOptions = {},
 ): Teardown {
   if (!plane.webgl) return () => {};
   const { uHover, uMouse } = plane.uniforms;
@@ -40,6 +45,11 @@ export function hoverDistortion(
   const toY = gsap.quickTo(uMouse.value, "1", { duration: follow, ease: "power3" });
   let mouse = false;
   let focus = false;
+  /** The finger holding the lens, with `touch`; -1 when none. */
+  let finger = -1;
+  const previousTouchAction = surface.style.touchAction;
+  if (touch) surface.style.touchAction = "none";
+  const accepts = (event: PointerEvent) => event.pointerType === "mouse" || event.pointerId === finger;
 
   const heat = () =>
     gsap.to(uHover, { value: mouse || focus ? strength : 0, duration, ease: "power3.out", overwrite: true });
@@ -63,7 +73,28 @@ export function hoverDistortion(
     },
     on,
   );
-  surface.addEventListener("pointermove", (event) => event.pointerType === "mouse" && aim(event), on);
+  surface.addEventListener("pointermove", (event) => accepts(event) && aim(event), on);
+  if (touch) {
+    surface.addEventListener(
+      "pointerdown",
+      (event) => {
+        if (event.pointerType === "mouse") return;
+        finger = event.pointerId;
+        mouse = true;
+        aim(event, true);
+        heat();
+      },
+      on,
+    );
+    const lift = (event: PointerEvent) => {
+      if (event.pointerId !== finger) return;
+      finger = -1;
+      mouse = false;
+      heat();
+    };
+    document.addEventListener("pointerup", lift, on);
+    document.addEventListener("pointercancel", lift, on);
+  }
   surface.addEventListener(
     "pointerleave",
     (event) => {
@@ -97,6 +128,7 @@ export function hoverDistortion(
     aborter.abort();
     gsap.killTweensOf([uHover, uMouse.value]);
     [uHover.value, uMouse.value[0], uMouse.value[1]] = start as [number, number, number];
+    if (touch) surface.style.touchAction = previousTouchAction;
   };
 }
 

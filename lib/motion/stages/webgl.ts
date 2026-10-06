@@ -140,14 +140,14 @@ const scrollWaveStage = play(["Scroll wave"], ["wave"], "Scroll the page past th
 
 /* ---------- Hover lens ---------- */
 
-const hoverLens = play(["Hover lens"], ["lens"], "Move the mouse over a poster. Tab to one to center the lens.", (text) =>
+const hoverLens = play(["Hover lens"], ["lens"], "Move the mouse or a held finger over a poster. Tab to one to center the lens.", (text) =>
   live(
     text,
     `<div class="gl-row">${[59, 60, 61].map((n, i) => `<button type="button" class="gl-card" aria-label="Poster ${n}"><img alt="" src="${posterUrl(n, i)}"></button>`).join("")}</div>`,
     (layer) => {
       const ps: ImagePlane[] = planes(Array.from(layer.querySelectorAll("img")));
       // The button takes hover and focus; the recipe finds it from the image.
-      const lenses = ps.map((pl) => hoverDistortion(pl, { strength: 1 }));
+      const lenses = ps.map((pl) => hoverDistortion(pl, { strength: 1, touch: true }));
       return [...ps.map((pl) => () => pl.revert()), ...lenses, () => gsap.killTweensOf(ps.map((pl) => pl.uniforms.uHover))];
     },
   ),

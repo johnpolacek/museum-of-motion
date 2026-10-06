@@ -99,16 +99,66 @@ function listen<K extends keyof HTMLElementEventMap>(
   dispose(() => target.removeEventListener(type, handler as EventListener));
 }
 
+/**
+ * With `touch`, a finger or pen held down in `area` moves like the mouse. The area claims its touch
+ * gestures (`touch-action: none`), so a drag moves the effect instead of the page; the press is released
+ * from the element it landed on, so enter and leave follow the finger; and lifting the finger is leaving.
+ * A finger's enter arrives just before its press, so `onPress` runs the builder's enter work at the press.
+ * Returns the filter each handler uses: the mouse always, and a finger while one is down in the area.
+ */
+function fingerAsMouse(
+  dispose: Register,
+  after: Register,
+  area: HTMLElement | null,
+  touch: boolean,
+  onPress?: (event: PointerEvent) => void,
+): (event: PointerEvent) => boolean {
+  if (!touch || !area) return (event) => event.pointerType === "mouse";
+  after(snapshotStyles([area], ["touch-action"]));
+  area.style.touchAction = "none";
+  let finger = -1;
+  listen(dispose, area, "pointerdown", (event) => {
+    if (event.pointerType === "mouse") return;
+    finger = event.pointerId;
+    const pressed = event.target as Element;
+    if (pressed.hasPointerCapture?.(event.pointerId)) pressed.releasePointerCapture(event.pointerId);
+    onPress?.(event);
+  });
+  const lift = (event: PointerEvent) => {
+    if (event.pointerId === finger) finger = -1;
+  };
+  listen(dispose, document, "pointerup", lift);
+  listen(dispose, document, "pointercancel", lift);
+  return (event) => event.pointerType === "mouse" || event.pointerId === finger;
+}
+
+/** Whether a pointer event is a finger or pen leaving the screen, for builders that rest on lift. */
+const lifted = (event: PointerEvent) => event.pointerType !== "mouse";
+
 export type MagneticOptions = {
   /** Share of the pointer's offset from center the target follows. */
   strength?: number;
   /** Extra share for the inner element, relative to the target. */
   inner?: number;
+  /**
+   * A finger or pen held on it moves like the mouse, and lifting it is leaving. It claims the element's
+   * touch gestures, so a scroll cannot start there: use it on contained surfaces, not on content people scroll past.
+   */
+  touch?: boolean;
 };
 
-export function magnetic(target: HTMLElement, { strength = 0.3, inner = 0.5 }: MagneticOptions = {}): Teardown {
-  if (prefersReducedMotion() || !finePointer()) return () => {};
+export function magnetic(target: HTMLElement, { strength = 0.3, inner = 0.5, touch = false }: MagneticOptions = {}): Teardown {
+  if (prefersReducedMotion() || (!finePointer() && !touch)) return () => {};
   return own((dispose, after) => {
+    let center = { x: 0, y: 0 };
+    // Measure once per visit; the target's own movement must not shift its center.
+    const measure = () => {
+      const rect = target.getBoundingClientRect();
+      const x = Number(gsap.getProperty(target, "x"));
+      const y = Number(gsap.getProperty(target, "y"));
+      center = { x: rect.left - x + rect.width / 2, y: rect.top - y + rect.height / 2 };
+    };
+    const accepts = fingerAsMouse(dispose, after, target, touch, measure);
     const label = target.querySelector<HTMLElement>("[data-magnetic-inner]");
     after(snapshotStyles(label ? [target, label] : [target]));
     const to = (el: HTMLElement, prop: "x" | "y") => gsap.quickTo(el, prop, { duration: FOLLOW, ease: FOLLOW_EASE });
@@ -116,18 +166,11 @@ export function magnetic(target: HTMLElement, { strength = 0.3, inner = 0.5 }: M
     const yTo = to(target, "y");
     const innerX = label ? to(label, "x") : undefined;
     const innerY = label ? to(label, "y") : undefined;
-    let center = { x: 0, y: 0 };
-
     listen(dispose, target, "pointerenter", (event) => {
-      if (event.pointerType !== "mouse") return;
-      // Measure once per visit; the target's own movement must not shift its center.
-      const rect = target.getBoundingClientRect();
-      const x = Number(gsap.getProperty(target, "x"));
-      const y = Number(gsap.getProperty(target, "y"));
-      center = { x: rect.left - x + rect.width / 2, y: rect.top - y + rect.height / 2 };
+      if (accepts(event)) measure();
     });
     listen(dispose, target, "pointermove", (event) => {
-      if (event.pointerType !== "mouse") return;
+      if (!accepts(event)) return;
       const dx = (event.clientX - center.x) * strength;
       const dy = (event.clientY - center.y) * strength;
       xTo(dx);
@@ -144,22 +187,30 @@ export function magnetic(target: HTMLElement, { strength = 0.3, inner = 0.5 }: M
   });
 }
 
-export type TiltOptions = { max?: number; perspective?: number };
+export type TiltOptions = {
+  max?: number;
+  perspective?: number;
+  /**
+   * A finger or pen held on it moves like the mouse, and lifting it is leaving. It claims the element's
+   * touch gestures, so a scroll cannot start there: use it on contained surfaces, not on content people scroll past.
+   */
+  touch?: boolean;
+};
 
-export function tilt(card: HTMLElement, { max = 8, perspective = 800 }: TiltOptions = {}): Teardown {
-  if (prefersReducedMotion() || !finePointer()) return () => {};
+export function tilt(card: HTMLElement, { max = 8, perspective = 800, touch = false }: TiltOptions = {}): Teardown {
+  if (prefersReducedMotion() || (!finePointer() && !touch)) return () => {};
   return own((dispose, after) => {
+    let rect = card.getBoundingClientRect();
+    const accepts = fingerAsMouse(dispose, after, card, touch, () => (rect = card.getBoundingClientRect()));
     after(snapshotStyles([card], [...MOTION_PROPS, "--pointer-x", "--pointer-y"]));
     gsap.set(card, { transformPerspective: perspective });
     const rx = gsap.quickTo(card, "rotationX", { duration: FOLLOW, ease: FOLLOW_EASE });
     const ry = gsap.quickTo(card, "rotationY", { duration: FOLLOW, ease: FOLLOW_EASE });
-    let rect = card.getBoundingClientRect();
-
     listen(dispose, card, "pointerenter", (event) => {
-      if (event.pointerType === "mouse") rect = card.getBoundingClientRect();
+      if (accepts(event)) rect = card.getBoundingClientRect();
     });
     listen(dispose, card, "pointermove", (event) => {
-      if (event.pointerType !== "mouse") return;
+      if (!accepts(event)) return;
       const px = gsap.utils.clamp(0, 1, (event.clientX - rect.left) / rect.width);
       const py = gsap.utils.clamp(0, 1, (event.clientY - rect.top) / rect.height);
       ry((px - 0.5) * 2 * max);
@@ -183,11 +234,17 @@ export type CursorFollowerOptions = {
   label?: HTMLElement;
   /** Label scroll speed in px per second. */
   labelSpeed?: number;
+  /**
+   * An area where a finger or pen held down moves like the mouse, and the follower shows under it until
+   * lifted. It claims the area's touch gestures, so keep it to a contained surface.
+   */
+  touch?: HTMLElement;
 };
 
-export function cursorFollower(cursor: HTMLElement, { label, labelSpeed = 60 }: CursorFollowerOptions = {}): Teardown {
-  if (prefersReducedMotion() || !finePointer()) return () => {};
+export function cursorFollower(cursor: HTMLElement, { label, labelSpeed = 60, touch }: CursorFollowerOptions = {}): Teardown {
+  if (prefersReducedMotion() || (!finePointer() && !touch)) return () => {};
   return own((dispose, after) => {
+    const accepts = fingerAsMouse(dispose, after, touch ?? null, !!touch);
     after(snapshotStyles([cursor]));
     after(() => delete cursor.dataset.cursorState);
     const track = label?.querySelector<HTMLElement>("[data-cursor-label-track]");
@@ -242,7 +299,7 @@ export function cursorFollower(cursor: HTMLElement, { label, labelSpeed = 60 }: 
     const scale = () => (CURSOR_SCALE[state] ?? 1) * (pressed ? 0.75 : 1);
 
     listen(dispose, document, "pointermove", (event) => {
-      if (event.pointerType !== "mouse") return;
+      if (!accepts(event)) return;
       const target = event.target as Element | null;
       const labelled = label ? target?.closest<HTMLElement>("[data-cursor-text]")?.dataset.cursorText ?? "" : "";
       const next = labelled ? "label" : target?.closest<HTMLElement>("[data-cursor]")?.dataset.cursor ?? "";
@@ -264,7 +321,7 @@ export function cursorFollower(cursor: HTMLElement, { label, labelSpeed = 60 }: 
       }
     });
     listen(dispose, document, "pointerdown", (event) => {
-      if (event.pointerType !== "mouse") return;
+      if (!accepts(event)) return;
       pressed = true;
       scaleTo(scale());
     });
@@ -272,12 +329,17 @@ export function cursorFollower(cursor: HTMLElement, { label, labelSpeed = 60 }: 
       pressed = false;
       scaleTo(scale());
     });
-    // Hide when the mouse leaves the window; it reappears at the pointer on return.
-    listen(dispose, document.documentElement, "pointerleave", () => {
+    // Hide when the mouse leaves the window, or a finger lifts; it reappears at the pointer on return.
+    const hide = () => {
       visible = false;
       gsap.set(cursor, { autoAlpha: 0 });
       showLabel("");
-    });
+    };
+    listen(dispose, document.documentElement, "pointerleave", hide);
+    if (touch) {
+      listen(dispose, document, "pointerup", (event) => lifted(event) && hide());
+      listen(dispose, document, "pointercancel", (event) => lifted(event) && hide());
+    }
   });
 }
 
@@ -286,12 +348,22 @@ export type SpotlightOptions = {
   radius?: number;
   /** Seconds the circle takes to catch the mouse. */
   follow?: number;
+  /**
+   * The circle follows a held finger as it drags, not just a still press. It claims the surface's touch
+   * gestures, so a scroll cannot start on it.
+   */
+  touch?: boolean;
 };
 
-export function spotlight(surface: HTMLElement, layer: HTMLElement, { radius = 120, follow = 0.35 }: SpotlightOptions = {}): Teardown {
+export function spotlight(surface: HTMLElement, layer: HTMLElement, { radius = 120, follow = 0.35, touch = false }: SpotlightOptions = {}): Teardown {
   const reduced = prefersReducedMotion();
   return own((dispose, after) => {
     after(snapshotStyles([layer], ["clip-path"]));
+    // Without it, a finger that moves starts a scroll, which cancels the press and closes the circle.
+    if (touch) {
+      after(snapshotStyles([surface], ["touch-action"]));
+      surface.style.touchAction = "none";
+    }
     const spot = { x: 0, y: 0, r: 0 };
     const draw = () => {
       layer.style.clipPath = `circle(${spot.r}px at ${spot.x}px ${spot.y}px)`;
@@ -380,6 +452,11 @@ export type MomentumOptions = {
   spin?: number;
   /** Deceleration of the throw; higher settles sooner. */
   resistance?: number;
+  /**
+   * A finger or pen held on the root sweeps like the mouse. It claims the root's touch gestures, so a
+   * scroll cannot start on it.
+   */
+  touch?: boolean;
 };
 
 /** Caps a single throw in px/s and a spin in degrees/s. */
@@ -390,10 +467,11 @@ const STILL_MS = 100;
 
 export function momentumHover(
   root: HTMLElement,
-  { items = "[data-momentum-item]", carry = 0.4, spin = 0.25, resistance = 160 }: MomentumOptions = {},
+  { items = "[data-momentum-item]", carry = 0.4, spin = 0.25, resistance = 160, touch = false }: MomentumOptions = {},
 ): Teardown {
-  if (prefersReducedMotion() || !finePointer()) return () => {};
+  if (prefersReducedMotion() || (!finePointer() && !touch)) return () => {};
   return own((dispose, after) => {
+    const accepts = fingerAsMouse(dispose, after, root, touch);
     const hits = Array.from(root.querySelectorAll<HTMLElement>(items));
     const targets = hits.map((hit) => hit.querySelector<HTMLElement>("[data-momentum-target]") ?? hit);
     after(snapshotStyles(targets));
@@ -406,7 +484,7 @@ export function momentumHover(
 
     // Track on the document: an item at the root's edge is struck by the same move that enters the root.
     listen(dispose, document, "pointermove", (event) => {
-      if (event.pointerType !== "mouse") return;
+      if (!accepts(event)) return;
       if (last) {
         // Several events can land in one frame; floor the interval and blend to steady the reading.
         const dt = Math.max(event.timeStamp - last.t, 8) / 1000;
@@ -416,10 +494,13 @@ export function momentumHover(
       last = { x: event.clientX, y: event.clientY, t: event.timeStamp };
     });
 
+    // A lifted finger starts its next sweep from rest, not from where it last was.
+    if (touch) listen(dispose, document, "pointerup", (event) => lifted(event) && (last = undefined));
+
     hits.forEach((hit, i) => {
       const target = targets[i]!;
       listen(dispose, hit, "pointerenter", (event) => {
-        if (event.pointerType !== "mouse" || !last || event.timeStamp - last.t > STILL_MS) return;
+        if (!accepts(event) || !last || event.timeStamp - last.t > STILL_MS) return;
         const rect = target.getBoundingClientRect();
         const ox = event.clientX - (rect.left + rect.width / 2);
         const oy = event.clientY - (rect.top + rect.height / 2);
@@ -454,6 +535,11 @@ export type ProximityOptions = {
   falloff?: string;
   /** Seconds each item takes to catch its target size. */
   duration?: number;
+  /**
+   * A finger or pen held on the root moves like the mouse, and lifting it rests every item. It claims the
+   * root's touch gestures, so a scroll cannot start on it.
+   */
+  touch?: boolean;
 };
 
 export function proximity(
@@ -466,10 +552,12 @@ export function proximity(
     axis = "both",
     falloff = "sine.inOut",
     duration = 0.3,
+    touch = false,
   }: ProximityOptions = {},
 ): Teardown {
-  if (prefersReducedMotion() || !finePointer()) return () => {};
+  if (prefersReducedMotion() || (!finePointer() && !touch)) return () => {};
   return own((dispose, after) => {
+    const accepts = fingerAsMouse(dispose, after, root, touch);
     const hits = Array.from(root.querySelectorAll<HTMLElement>(items));
     const targets = hits.map((hit) => hit.querySelector<HTMLElement>("[data-proximity-target]") ?? hit);
     after(snapshotStyles(targets));
@@ -512,7 +600,7 @@ export function proximity(
     };
     // Track on the document: items at the root's edge answer a pointer still outside it.
     listen(dispose, document, "pointermove", (event) => {
-      if (event.pointerType !== "mouse") return;
+      if (!accepts(event)) return;
       // The root's box follows scrolling; the centers are relative to it.
       const box = root.getBoundingClientRect();
       const px = event.clientX - box.left;
@@ -532,6 +620,10 @@ export function proximity(
     listen(dispose, document, "pointerout", (event) => {
       if (event.pointerType === "mouse" && !event.relatedTarget) rest();
     });
+    if (touch) {
+      listen(dispose, document, "pointerup", (event) => lifted(event) && rest());
+      listen(dispose, document, "pointercancel", (event) => lifted(event) && rest());
+    }
   });
 }
 
@@ -544,16 +636,19 @@ export type ImageTrailOptions = {
   max?: number;
   /** Share of the pointer's last movement each image drifts along. */
   drift?: number;
+  /** A finger or pen dragged across the area leaves a trail. It claims the area's touch gestures. */
+  touch?: boolean;
 };
 
 export function imageTrail(
   area: HTMLElement,
   layer: HTMLElement,
   images: HTMLImageElement[],
-  { spacing = 80, life = 0.9, max = 10, drift = 0.6 }: ImageTrailOptions = {},
+  { spacing = 80, life = 0.9, max = 10, drift = 0.6, touch = false }: ImageTrailOptions = {},
 ): Teardown {
-  if (prefersReducedMotion() || !finePointer() || !images.length) return () => {};
-  return own((dispose) => {
+  if (prefersReducedMotion() || (!finePointer() && !touch) || !images.length) return () => {};
+  return own((dispose, after) => {
+    const accepts = fingerAsMouse(dispose, after, area, touch);
     const live: Array<{ image: HTMLImageElement; tl: gsap.core.Timeline }> = [];
     const drop = (entry: { image: HTMLImageElement; tl: gsap.core.Timeline }) => {
       entry.tl.kill();
@@ -585,7 +680,7 @@ export function imageTrail(
     };
 
     listen(dispose, area, "pointermove", (event) => {
-      if (event.pointerType !== "mouse") return;
+      if (!accepts(event)) return;
       const box = layer.getBoundingClientRect();
       const x = event.clientX - box.left;
       const y = event.clientY - box.top;

@@ -94,13 +94,18 @@ function listen<K extends keyof HTMLElementEventMap>(
 
 type HotHandlers = { on: () => void; off: () => void };
 
-/** Mouse hover and `:focus-visible` focus share one hot state: `on` when the first arrives, `off` when the last leaves. */
-function hotState(dispose: Register, control: HTMLElement, { on, off }: HotHandlers): void {
+/**
+ * Mouse hover and `:focus-visible` focus share one hot state: `on` when the first arrives, `off` when the
+ * last leaves. With `touch`, a finger or pen held on the control is hot too, and lifting it, or a scroll
+ * that cancels the press, ends it, so nothing sticks after a tap.
+ */
+function hotState(dispose: Register, control: HTMLElement, { on, off }: HotHandlers, touch = false): void {
   let hovered = false;
   let focused = false;
+  let pressed = false;
   let hot = false;
   const update = () => {
-    const next = hovered || focused;
+    const next = hovered || focused || pressed;
     if (next === hot) return;
     hot = next;
     (hot ? on : off)();
@@ -115,6 +120,20 @@ function hotState(dispose: Register, control: HTMLElement, { on, off }: HotHandl
     hovered = false;
     update();
   });
+  if (touch) {
+    listen(dispose, control, "pointerdown", (event) => {
+      if (event.pointerType === "mouse") return;
+      pressed = true;
+      update();
+    });
+    const lift = (event: PointerEvent) => {
+      if (event.pointerType === "mouse" || !pressed) return;
+      pressed = false;
+      update();
+    };
+    listen(dispose, control, "pointerup", lift);
+    listen(dispose, control, "pointercancel", lift);
+  }
   listen(dispose, control, "focusin", (event) => {
     focused = (event.target as Element).matches(":focus-visible");
     update();
@@ -131,9 +150,11 @@ export type TextRollOptions = {
   /** The text to roll; defaults to `[data-roll-label]` inside the control, else the control itself. */
   label?: HTMLElement | null;
   duration?: number;
+  /** A finger or pen held on the control shows the hover until it lifts. */
+  touch?: boolean;
 };
 
-export function textRoll(control: HTMLElement, { label, duration = ROLL.duration }: TextRollOptions = {}): Teardown {
+export function textRoll(control: HTMLElement, { label, duration = ROLL.duration, touch = false }: TextRollOptions = {}): Teardown {
   if (prefersReducedMotion()) return () => {};
   return own((dispose, after) => {
     const target = label ?? control.querySelector<HTMLElement>("[data-roll-label]") ?? control;
@@ -174,11 +195,16 @@ export function textRoll(control: HTMLElement, { label, duration = ROLL.duration
       gsap.to(line, { yPercent: hot ? -travel : 0, duration, ease: ROLL.ease, overwrite: "auto" });
       gsap.to(copy, { yPercent: hot ? 0 : travel, duration, ease: ROLL.ease, overwrite: "auto" });
     };
-    hotState(dispose, control, { on: () => roll(true), off: () => roll(false) });
+    hotState(dispose, control, { on: () => roll(true), off: () => roll(false) }, touch);
   });
 }
 
-export function underlineSweep(link: HTMLElement): Teardown {
+export type UnderlineSweepOptions = {
+  /** A finger or pen held on the control shows the hover until it lifts. */
+  touch?: boolean;
+};
+
+export function underlineSweep(link: HTMLElement, { touch = false }: UnderlineSweepOptions = {}): Teardown {
   const reduced = prefersReducedMotion();
   return own((dispose, after) => {
     const line = document.createElement("span");
@@ -204,7 +230,7 @@ export function underlineSweep(link: HTMLElement): Teardown {
       }
       gsap.to(line, { scaleX: hot ? 1 : 0, duration: reduced ? 0 : SWEEP.duration, ease: SWEEP.ease, overwrite: "auto" });
     };
-    hotState(dispose, link, { on: () => sweep(true), off: () => sweep(false) });
+    hotState(dispose, link, { on: () => sweep(true), off: () => sweep(false) }, touch);
   });
 }
 
@@ -355,9 +381,11 @@ export type ImageZoomOptions = {
   image?: HTMLElement | null;
   scale?: number;
   duration?: number;
+  /** A finger or pen held on the control shows the hover until it lifts. */
+  touch?: boolean;
 };
 
-export function imageZoom(card: HTMLElement, { image, scale = ZOOM.scale, duration = ZOOM.duration }: ImageZoomOptions = {}): Teardown {
+export function imageZoom(card: HTMLElement, { image, scale = ZOOM.scale, duration = ZOOM.duration, touch = false }: ImageZoomOptions = {}): Teardown {
   if (prefersReducedMotion()) return () => {};
   return own((dispose, after) => {
     const media = image ?? card.querySelector<HTMLElement>("[data-zoom-image]") ?? card.querySelector<HTMLElement>("img, video");
@@ -372,6 +400,6 @@ export function imageZoom(card: HTMLElement, { image, scale = ZOOM.scale, durati
     hotState(dispose, card, {
       on: () => gsap.to(media, { scale, duration, ease: ZOOM.ease, overwrite: "auto" }),
       off: () => gsap.to(media, { scale: 1, duration, ease: ZOOM.ease, overwrite: "auto" }),
-    });
+    }, touch);
   });
 }
