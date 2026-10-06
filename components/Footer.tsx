@@ -3,6 +3,7 @@
 // The footer persists across pages, so it enters once per document, when it first scrolls into view.
 // No outro. Its big wordmark stretches from condensed to its wide rest.
 import { useRef } from "react";
+import { ExternalLink } from "lucide-react";
 import { fontsReady, gsap, prefersReducedMotion, ScrollTrigger, useGSAP } from "@/lib/motion/gsap";
 import { armRecovery, claimVisit, disarm, handOff } from "@/lib/motion/boot";
 
@@ -62,11 +63,23 @@ export function Footer() {
         Museum of Motion
       </div>
       <nav className="lab" aria-label="Credits" data-intro>
-        <a href="https://github.com/johnpolacek/animaxxing-skills">Animaxxing skills ↗</a>
-        <a href="https://github.com/greensock/gsap-skills">Official GSAP skills ↗</a>
-        <a href="https://gsap.com">GSAP ↗</a>
-        <span>Type: Archivo</span>
+        <Out href="https://github.com/johnpolacek/animaxxing-skills">Animaxxing skills</Out>
+        <Out href="https://github.com/greensock/gsap-skills">Official GSAP skills</Out>
+        <Out href="https://gsap.com">GSAP</Out>
+        <span>
+          Created by <Out href="https://johnpolacek.com">John Polacek</Out>
+        </span>
       </nav>
     </footer>
+  );
+}
+
+/** A link off the site, marked with Lucide's external-link icon. */
+function Out({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a href={href} className="out">
+      {children}
+      <ExternalLink aria-hidden="true" focusable="false" strokeWidth={2.25} />
+    </a>
   );
 }

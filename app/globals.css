@@ -421,6 +421,8 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .foot { padding-top: 24px; padding-bottom: 28px; display: grid; gap: 20px; }
 .foot .big { font-weight: 800; font-stretch: 125%; text-transform: uppercase; font-size: clamp(30px, 7vw, 132px); line-height: 0.9; letter-spacing: -0.02em; white-space: nowrap; }
 .foot nav { display: flex; flex-wrap: wrap; gap: 8px 28px; }
+.foot .out { white-space: nowrap; }
+.foot .out svg { display: inline-block; width: 1em; height: 1em; margin-left: 0.3em; vertical-align: -0.12em; }
 
 @media (max-width: 900px) {
   .hero .under { grid-template-columns: 1fr; }
