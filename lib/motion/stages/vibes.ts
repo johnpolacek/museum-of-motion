@@ -72,6 +72,29 @@ function ambient(button: HTMLElement, loops: gsap.core.Animation[]): () => void 
   };
 }
 
+/**
+ * The hero button takes the visitor to the vibe's signature section, moving the way the vibe moves:
+ * a slow glide, a hop, a jump in steps. Reduced motion jumps. Returns the teardown.
+ */
+function cta(p: Page, target: HTMLElement, move: { duration: number; ease: string; delay?: number }, then?: () => void): () => void {
+  const go = () => {
+    const y = target.getBoundingClientRect().top - p.win.getBoundingClientRect().top + p.win.scrollTop - 24;
+    gsap.to(p.win, {
+      scrollTo: { y, autoKill: true },
+      duration: prefersReducedMotion() ? 0 : move.duration,
+      delay: prefersReducedMotion() ? 0 : (move.delay ?? 0),
+      ease: move.ease,
+      overwrite: true,
+      onComplete: then,
+    });
+  };
+  p.btn.addEventListener("click", go);
+  return () => {
+    p.btn.removeEventListener("click", go);
+    gsap.killTweensOf(p.win);
+  };
+}
+
 /** Runs `enter` once a section scrolls into the window's view. */
 const onView = (section: HTMLElement, win: HTMLElement, enter: () => void, start = "top 80%") =>
   ScrollTrigger.create({ trigger: section, scroller: win, start, once: true, onEnter: enter });
@@ -196,7 +219,13 @@ const calm = vibe("calm", {
         const next = fields[(i + 1) % fields.length]!;
         drift.to(next, { opacity: 1, duration: 2.4, ease: "sine.inOut" }, "+=2").set(f, { opacity: 0 });
       });
-      return ambient(one(p.win, ".v-pause"), [breath, drift]);
+      // Begin: a slow glide down to the guide, and a fresh breath from the start.
+      const begin = cta(p, one(p.win, ".v-breathe"), { duration: 2.2, ease: "sine.inOut" }, () => breath.restart());
+      const loops = ambient(one(p.win, ".v-pause"), [breath, drift]);
+      return () => {
+        begin();
+        loops();
+      };
     })(),
     cursorFollower(one(p.win, ".v-soft-cursor"), { touch: p.win }),
     revealOnScroll(p.cards, { scroller: p.win, y: 24, duration: 1.2, stagger: 0.2, ease: "power2.out" }),
@@ -288,10 +317,13 @@ const playful = vibe("playful", {
       }),
     });
     const landed = onView(one(p.win, ".v-heap"), p.win, () => heap.drop(22));
+    // Let's go: confetti first, then a quick hop down to the stickers.
+    const go = cta(p, area, { duration: 0.8, ease: "back.inOut(1.4)", delay: 0.5 });
     const shake = () => heap.shake();
     one(p.win, ".v-shake").addEventListener("click", shake);
     return [
       () => {
+        go();
         p.head.removeEventListener("pointerover", hop);
         stickers.forEach((d) => d.kill());
         landed.kill();
@@ -358,6 +390,8 @@ const luxury = vibe("luxury", {
         gsap.set([box, one(box, "i")], { clearProps: "all" });
       };
     })(),
+    // Discover: a long, slow glide to the picture.
+    cta(p, one(p.win, ".v-curtain"), { duration: 2.4, ease: "expo.inOut" }),
     horizontalRun(one(p.win, ".v-run"), one(p.win, ".v-run-track"), { scroller: p.win, scrub: 1.2 }).revert,
     spotlight(one(p.win, ".v-spot"), one(p.win, ".v-spot-reveal"), { radius: 70, follow: 0.6, touch: true }),
     revealOnScroll(p.cards, { scroller: p.win, y: 12, duration: 1.6, stagger: 0.3, ease: "expo.out" }),
@@ -444,6 +478,8 @@ const snappy = vibe("snappy", {
         ind.revert();
       };
     })(),
+    // Start free: straight to the plans, in a third of a second.
+    cta(p, one(p.win, ".v-plans"), { duration: 0.35, ease: "power3.out" }),
     revealOnScroll(p.cards, { scroller: p.win, y: 16, duration: 0.3, stagger: 0.03, ease: "power3.out" }),
     scrubStatement(p.quote, { by: "words", scroller: p.win, scrub: 0.2 }),
     pressFeedback(p.btn, { squash: 0.95, ripple: false }),
@@ -538,6 +574,8 @@ const glitchy = vibe("glitchy", {
     const run = gsap.to(track, { xPercent: -50, duration: 14, ease: "none", repeat: -1 });
     const flicker = gsap.to(track, { opacity: 0.35, duration: 0.12, ease: "steps(1)", repeat: -1, yoyo: true, repeatDelay: 1.7 });
     const loops = ambient(one(p.win, ".v-pause"), [tick, run, flicker]);
+    // Enter: a jump to the countdown in six hard steps.
+    const enter = cta(p, one(p.win, ".v-count"), { duration: 0.45, ease: "steps(6)" });
     // A trail of symbols behind the pointer, or a finger dragging over the page.
     // Over the whole stage, outside the scrolling page, so it lines up with the pointer at any scroll.
     const glyphs = document.createElement("div");
@@ -569,6 +607,7 @@ const glitchy = vibe("glitchy", {
           delete a.dataset.text;
         });
         tears.forEach((off) => off());
+        enter();
         loops();
         gsap.killTweensOf(clock);
         p.win.removeEventListener("pointermove", trail);
