@@ -2,7 +2,7 @@
 // Each mounts real controls inside the stage and wires the animaxxing recipe to them, unchanged, from
 // lib/motion/recipes. Nothing loops: the stage waits for the visitor, so it shows a hint instead of a scrub.
 import { gsap, SplitText } from "../gsap";
-import { live, merge, play, type StageDef } from "../stage-core";
+import { live, merge, NEXT_TAB, play, type StageDef } from "../stage-core";
 import { directionalFill, imageZoom, textRoll, underlineSweep } from "../recipes/hover-effects";
 import { hoverPreview } from "../recipes/media-effects";
 import { cursorFollower, dragTrack, imageTrail, magnetic, momentumHover, proximity, spotlight, swipeDismiss, tilt } from "../recipes/pointer-effects";
@@ -13,7 +13,7 @@ import { pressFeedback } from "../recipes/press-feedback";
 import { shake } from "../recipes/accents";
 import { dialogMotion, disclosure, enterExit, menuOverlay, stateButton, tabIndicator } from "../recipes/component-motion";
 import { captureLayout, captureShared, playShared } from "../recipes/layout-flip";
-import { burstFrom, rain } from "../recipes/physics-effects";
+import { burstFrom, pile, rain } from "../recipes/physics-effects";
 import { blastOff } from "../recipes/blast-off";
 import { dragGrid, dragLoop, flickCards } from "../recipes/endless-drag";
 import { attachParticleEffect, type ParticleEffectDefinition } from "../recipes/particles/attach";
@@ -441,7 +441,7 @@ const tabs = play(["Tab indicator"], ["tabs"], "Pick a tab, by click or arrow ke
 
 const GROUPED: [string, string][] = [
   ["Line mask", "type"], ["Scramble", "type"], ["Marquee", "play"], ["Parallax", "scroll"], ["Pinned", "scroll"], ["Attract", "pointer"],
-  ["Cursor", "pointer"], ["Drag track", "drag"], ["Card stack", "drag"], ["Timeline", "play"],
+  ["Cursor", "pointer"], ["Throw", "drag"], ["Card stack", "drag"], ["Timeline", "play"],
 ];
 
 const layoutFlip = play(["Layout Flip"], ["flip"], "Filter the tiles.", (text) =>
@@ -452,6 +452,10 @@ const layoutFlip = play(["Layout Flip"], ["flip"], "Filter the tiles.", (text) =
     (layer) => {
       const tiles = all(layer, ".tile-card");
       const buttons = all(layer, "[data-filter]");
+      // The tile area keeps the height of every tile shown, so a short filter never re-centers the
+      // stage and moves the buttons under your finger.
+      const area = one(layer, ".tiles");
+      area.style.minHeight = `${area.getBoundingClientRect().height}px`;
       const click = (e: Event) => {
         const f = (e.currentTarget as HTMLElement).dataset.filter!;
         buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.filter === f)));
@@ -511,7 +515,7 @@ const PARTICLES: Record<string, ParticleEffectDefinition> = { marquee: runners, 
 const particles = play(
   ["Marquee", "Reactor", "Resolve", "Slipstream", "Ignite"],
   ["marquee", "reactor", "resolve", "slipstream", "ignite"],
-  "Hover, focus, or press the button. Click it to blast.",
+  "Hover, focus, or press the button. Click it to blast and move to the next.",
   (text, p) => {
     const effect = PARTICLES[p.variation] ?? runners;
     const bleed = effect.bleed;
@@ -524,12 +528,11 @@ const particles = play(
         const controls = attachParticleEffect(root, one<HTMLCanvasElement>(root, "canvas"), button, effect);
         controls.enter(0.1);
         let timer: ReturnType<typeof setTimeout> | undefined;
+        // After the blast, the next treatment takes the button: the tabs cycle through all five.
         const click = () => {
           controls.blast();
           clearTimeout(timer);
-          timer = setTimeout(() => {
-            controls.enter(0);
-          }, 1400);
+          timer = setTimeout(() => layer.dispatchEvent(new CustomEvent(NEXT_TAB, { bubbles: true })), 1100);
         };
         button.addEventListener("click", click);
         return [() => button.removeEventListener("click", click), () => clearTimeout(timer), controls.destroy];
@@ -538,12 +541,58 @@ const particles = play(
   },
 );
 
+// Pile: the skill's pile, pieces that fall into the stage, bounce off its floor and each other, and heap up.
+const PILE_PIECES = () =>
+  [
+    ["#ffffff", 44, "50%"],
+    ["#0b0b0b", 36, "50%"],
+    ["#9aa2ff", 52, "50%"],
+    ["#ffffff", 28, "50%"],
+    ["#0b0b0b", 40, "28%"],
+  ].map(([color, size, round]) => {
+    const s = document.createElement("span");
+    s.className = "pile-piece";
+    Object.assign(s.style, { background: String(color), width: `${size}px`, height: `${size}px`, borderRadius: String(round) });
+    return s;
+  });
+const pileStage = (text: HTMLElement) =>
+  live(
+    text,
+    `<div class="pile-box" aria-hidden="true"></div><div class="pile-btns"><button type="button" class="pill" data-shake>Shake</button><button type="button" class="pill" data-clear>Clear</button></div>`,
+    (layer) => {
+      const box = one(layer, ".pile-box");
+      const heap = pile(box, { pieces: PILE_PIECES() });
+      heap.drop(28);
+      // A tap or click anywhere in the stage drops a handful where it landed.
+      const drop = (e: PointerEvent) => {
+        if ((e.target as Element).closest("button")) return;
+        heap.drop(6, e.clientX - box.getBoundingClientRect().left);
+      };
+      const shake = () => heap.shake();
+      const clear = () => heap.clear();
+      layer.addEventListener("pointerdown", drop);
+      one(layer, "[data-shake]").addEventListener("click", shake);
+      one(layer, "[data-clear]").addEventListener("click", clear);
+      return [
+        () => {
+          layer.removeEventListener("pointerdown", drop);
+          one(layer, "[data-shake]").removeEventListener("click", shake);
+          one(layer, "[data-clear]").removeEventListener("click", clear);
+        },
+        heap.stop,
+      ];
+    },
+    "piled",
+  );
+
 const confetti = play(
-  ["Confetti", "Emoji", "Rain"],
-  ["confetti", "emoji", "rain"],
-  "Press the button.",
+  ["Pile", "Confetti", "Emoji", "Rain"],
+  ["pile", "confetti", "emoji", "rain"],
+  "Tap or click anywhere to drop more. Shake the heap, or clear it.",
   (text, p) =>
-    p.variation === "rain"
+    p.variation === "pile"
+      ? pileStage(text)
+      : p.variation === "rain"
       ? live(text, `<div class="rain-layer" aria-hidden="true"></div><button type="button" class="pill big rain-btn">Make it rain</button>`, (layer) => {
           // Rain falls inside the stage: the skill's rain, from above its top edge to below its bottom.
           const sky = one(layer, ".rain-layer");
@@ -774,11 +823,19 @@ export const POINTER_STAGES: Record<string, StageDef> = {
   "icon-morph": iconMorph,
   "tab-indicator": tabs,
   particles,
-  physics: confetti,
+  physics: {
+    ...confetti,
+    hints: { pile: "Tap or click anywhere to drop more. Shake the heap, or clear it.", confetti: "Press the button.", emoji: "Press the button.", rain: "Press the button." },
+  },
   "blast-off": blast,
-  "drag-track": track,
-  "endless-loop": loop,
-  "wrapping-grid": grid,
+  // Throw: content you drag and throw, bounded, endless, or wrapping both ways.
+  throw: merge([
+    { def: track, label: "Track", key: "track", variation: "snap" },
+    { def: track, label: "Track free", key: "track-free", variation: "free" },
+    { def: loop, label: "Loop", key: "loop", variation: "snap" },
+    { def: loop, label: "Loop drift", key: "drift", variation: "drift" },
+    { def: grid, label: "Grid", key: "grid" },
+  ]),
   "card-stack": deck,
   sortable: sortList,
   "swipe-to-dismiss": swipe,

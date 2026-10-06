@@ -222,7 +222,7 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .tab-panel > span:not(.on) { visibility: hidden; }
 .ex .stage-art .filters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 20px; }
 .ex .stage-art.live:has(.tiles) { align-content: center; }
-.ex .stage-art .tiles { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 760px; }
+.ex .stage-art .tiles { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-content: flex-start; max-width: 760px; }
 .ex .stage-art .tile-card { padding: 18px 20px; background: #fff; color: var(--blue); font-weight: 700; font-stretch: 82%; font-size: clamp(16px, 2vw, 22px); }
 .ex .stage-art .thumbs { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 150px)); gap: 14px; }
 .ex .stage-art .thumb { display: block; width: 100%; aspect-ratio: 4 / 3; padding: 0; border: 0; cursor: pointer; background: var(--ink); }
@@ -238,6 +238,10 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .physics-layer > * { position: absolute; left: 0; top: 0; }
 .physics-layer .confetto { display: block; width: 10px; height: 14px; }
 .ex .stage-art .rain-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.ex .stage-art.piled { place-items: end center; padding-bottom: 16px; touch-action: manipulation; }
+.ex .stage-art .pile-box { position: absolute; inset: 0; overflow: hidden; }
+.ex .stage-art .pile-box > * { position: absolute; left: 0; top: 0; display: block; will-change: transform; }
+.ex .stage-art .pile-btns { position: relative; z-index: 1; display: flex; gap: 10px; align-self: start; margin-top: 16px; }
 .ex .stage-art .rain-layer > * { position: absolute; left: 0; top: 0; font-size: clamp(22px, 3vw, 40px); line-height: 1; }
 .ex .stage-art .rain-layer .confetto { display: block; width: 10px; height: 14px; font-size: 0; }
 .ex .stage-art .mini-hero { display: grid; gap: 14px; justify-items: start; width: min(100%, 760px); }

@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { prefersReducedMotion } from "@/lib/motion/gsap";
 import { createLoop, isLoop, STAGES, type Knob, type KnobSpec, type Loop, type LoopParams } from "@/lib/motion/stage";
+import { NEXT_TAB } from "@/lib/motion/stage-core";
 import { useExhibitPhase } from "./ExhibitMotion";
 
 const EASES = ["signature", "power3.out", "expo.out", "back.out(1.8)", "elastic.out(1, 0.5)", "none"];
@@ -52,6 +53,21 @@ export function ExhibitStage({ slug, desc }: Props) {
     if (playingRef.current && !scrubbing.current && !offscreen.current && !waiting.current) l.timeline.play();
     else l.timeline.pause();
   };
+
+  // A demo may ask for the next tab, such as Particles after its blast: the tabs cycle, wrapping at the end.
+  useEffect(() => {
+    const el = stage.current;
+    if (!el) return;
+    const next = () =>
+      setParams((p) => {
+        const i = def.variations.indexOf(p.variation);
+        const v = def.variations[(i + 1) % def.variations.length]!;
+        history.replaceState(history.state, "", v === def.variations[0] ? location.pathname : `#${v}`);
+        return def.defaults(v);
+      });
+    el.addEventListener(NEXT_TAB, next);
+    return () => el.removeEventListener(NEXT_TAB, next);
+  }, [def]);
 
   // An address naming a tab, such as #underline, opens on it. Read after hydration, so the server's
   // first tab and the client's agree; the stage builds later, on cue, with the chosen tab.

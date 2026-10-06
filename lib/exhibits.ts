@@ -440,10 +440,11 @@ const DATA: Exhibit[] = [
   {
     name: "Physics",
     group: "pointer",
-    builders: "burst, burstFrom, rain",
+    builders: "pile, burst, burstFrom, rain",
     src: "physics-effects",
-    desc: "Pieces thrown under gravity: a cone of confetti arcs up and falls away, or it rains from above.",
+    desc: "Pieces under gravity: they fall, bounce off the floor and each other, and heap up, or a cone of confetti arcs up and falls away, or it rains from above.",
     vars: [
+      "Confetti",
       "Emoji",
       "Rain"
     ]
@@ -464,26 +465,21 @@ const DATA: Exhibit[] = [
     gl: true
   },
   {
-    name: "Drag track",
+    name: "Throw",
     group: "drag",
-    builders: "dragTrack",
-    src: "pointer-effects",
-    desc: "Drag a row and throw it. It snaps to the nearest item."
-  },
-  {
-    name: "Endless loop",
-    group: "drag",
-    builders: "dragLoop",
+    builders: "dragTrack, dragLoop, dragGrid",
     src: "endless-drag",
-    desc: "A wrapping loop with snap, wheel, and drift."
+    desc: "Drag content and throw it: a track that stops at its ends, a loop that never ends, or a grid that wraps both ways.",
+    vars: [
+      "Track free",
+      "Loop",
+      "Loop drift",
+      "Grid"
+    ]
   },
-  {
-    name: "Wrapping grid",
-    group: "drag",
-    builders: "dragGrid",
-    src: "endless-drag",
-    desc: "A grid that wraps on both axes."
-  },
+
+
+
   {
     name: "Card stack",
     group: "drag",

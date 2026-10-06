@@ -29,6 +29,9 @@ export type Loop = {
 export type KnobSpec = { label: string; min: number; max: number; step: number; unit: string };
 
 /** An interactive stage: it waits for the visitor instead of looping. Only teardown. */
+/** Dispatched from inside a stage, bubbling, to move the exhibit to its next tab. */
+export const NEXT_TAB = "stage:next-tab";
+
 export type Play = { destroy: () => void };
 
 export type StageDef = {
