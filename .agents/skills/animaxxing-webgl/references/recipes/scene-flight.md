@@ -38,6 +38,8 @@ export type FlightOptions = {
   /** Distance at which images have faded into the dark. */
   fog?: number;
   poster?: HTMLImageElement | null;
+  /** An element the drawing never paints outside, such as a scrolling box. See framed views. */
+  clip?: Element | null;
   stage?: StageOptions;
 };
 
@@ -100,7 +102,7 @@ async function cardSource(image: HTMLImageElement | string, signal: AbortSignal)
 
 export function flight(
   host: HTMLElement,
-  { images, size = 1.5, spacing = 3.4, radius = 2.2, turn = 2.39996, fov = 50, fog = 16, poster, stage }: FlightOptions,
+  { images, size = 1.5, spacing = 3.4, radius = 2.2, turn = 2.39996, fov = 50, fog = 16, poster, clip, stage }: FlightOptions,
 ): Flight {
   const uniforms = { uTravel: { value: 0 }, uLean: { value: [0, 0] } };
   let sources: HTMLImageElement[] = [];
@@ -148,6 +150,7 @@ export function flight(
   const view = framedView(host, {
     draw,
     poster,
+    clip,
     stage,
     async prepare(signal) {
       const loaded = await Promise.all(images.map((image) => cardSource(image, signal)));

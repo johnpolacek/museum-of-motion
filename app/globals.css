@@ -821,3 +821,80 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win.vibe-glitchy .v-foot { display: flex; justify-content: space-between; gap: 12px; text-transform: uppercase; letter-spacing: 0.1em; border-top: 1px solid rgb(57 255 20 / 0.3); }
 .ex .stage-art .v-glyphs { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; font-family: var(--font-jetbrains), ui-monospace, monospace; }
 .ex .stage-art .v-glyphs span { position: absolute; left: 0; top: 0; font-size: 16px; color: #39ff14; text-shadow: 1px 0 #ff2bd6; }
+
+/* Handmade: a riso studio. Warm paper, fluorescent pink and blue, black ink. Bowlby One, Plex Mono, Caveat. */
+.ex .win.vibe-handmade { --v-bg: #f3ede0; --v-fg: #141414; --v-muted: #5d5850; --v-accent: #141414; --v-on-accent: #f3ede0; --v-pink: #ff48b0; --v-blue: #0078bf; --v-font: var(--font-plex-mono), "IBM Plex Mono", ui-monospace, monospace; --v-display: var(--font-bowlby), "Bowlby One", Impact, sans-serif; font-size: 15px; }
+.ex .win.vibe-handmade .v-nav { border-bottom: 2px solid var(--v-fg); }
+.ex .win.vibe-handmade .v-brand { font-family: var(--v-display); font-weight: 400; font-size: 18px; letter-spacing: 0.01em; }
+.ex .win.vibe-handmade .v-links { text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px; }
+.ex .win.vibe-handmade .v-links a:hover, .ex .win.vibe-handmade .v-links a:focus-visible { color: var(--v-blue); }
+.ex .win.vibe-handmade .v-kicker { font-size: 12px; letter-spacing: 0.12em; color: var(--v-blue); }
+.ex .win.vibe-handmade .v-head { font-family: var(--v-display); font-size: clamp(38px, 6.6cqw, 84px); line-height: 0.98; letter-spacing: -0.01em; text-transform: uppercase; max-width: 12ch; }
+.ex .win.vibe-handmade .v-sub { font-size: 15px; line-height: 1.55; max-width: 38ch; }
+.ex .win.vibe-handmade .v-btn { font-weight: 500; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; border-radius: 0; box-shadow: 4px 4px 0 var(--v-pink); }
+.ex .win.vibe-handmade .hm-hero { grid-template-columns: 1.1fr 1fr; align-items: center; justify-items: stretch; gap: 32px; }
+.ex .win.vibe-handmade .hm-copy { position: relative; display: grid; gap: 18px; justify-items: start; }
+.ex .win.vibe-handmade .hm-sheet { position: relative; overflow: hidden; background: var(--v-bg); }
+.ex .win.vibe-handmade .hm-print { margin: 0; aspect-ratio: 300 / 380; width: min(100%, 380px); justify-self: center; box-shadow: 0 18px 40px -26px rgb(20 20 20 / 0.6); rotate: 1.5deg; }
+.ex .win.vibe-handmade .hm-plate { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ex .win.vibe-handmade .hm-pink { position: absolute; inset: 0; mix-blend-mode: multiply; }
+.ex .win.vibe-handmade .hm-brayer { position: absolute; top: -4%; bottom: -4%; left: 0; width: 22px; border-radius: 11px; background: linear-gradient(90deg, #2c2c2c, #6b6b6b 45%, #1d1d1d); visibility: hidden; z-index: 2; }
+@container (max-width: 640px) { .ex .win.vibe-handmade .hm-hero { grid-template-columns: 1fr; } .ex .win.vibe-handmade .hm-print { order: -1; width: min(70%, 260px); } }
+.ex .win.vibe-handmade .hm-zines, .ex .win.vibe-handmade .hm-rack { padding: 48px 24px 24px; }
+.ex .win.vibe-handmade .hm-title { position: relative; margin: 0 0 8px; font-family: var(--v-display); font-weight: 400; font-size: clamp(26px, 4cqw, 44px); line-height: 1; text-transform: uppercase; }
+.ex .win.vibe-handmade .v-cards { padding: 16px 0 0; gap: 22px; }
+.ex .win.vibe-handmade .v-card { gap: 4px; }
+.ex .win.vibe-handmade .v-art { aspect-ratio: 300 / 380; box-shadow: 0 1px 0 rgb(20 20 20 / 0.2), 0 12px 30px -24px rgb(20 20 20 / 0.6); }
+.ex .win.vibe-handmade .hm-name { font-family: var(--v-display); font-size: 20px; margin-top: 10px; text-transform: uppercase; }
+.ex .win.vibe-handmade .hm-name:hover, .ex .win.vibe-handmade .hm-name:focus-visible { color: var(--v-blue); }
+.ex .win.vibe-handmade .hm-price { font-weight: 500; color: var(--v-pink); }
+.ex .win.vibe-handmade .hm-hint { font-size: 13px; color: var(--v-muted); max-width: 44ch; }
+.ex .win.vibe-handmade .hm-rack { display: grid; justify-items: center; gap: 14px; text-align: center; padding-bottom: 48px; }
+.ex .win.vibe-handmade .hm-stack { position: relative; width: min(300px, 64cqw); aspect-ratio: 300 / 380; margin: 18px 0 8px; }
+.ex .win.vibe-handmade .hm-slot { position: absolute; inset: 0; pointer-events: none; }
+.ex .win.vibe-handmade .hm-slot:nth-child(1) { rotate: -4deg; }
+.ex .win.vibe-handmade .hm-slot:nth-child(2) { rotate: 3deg; }
+.ex .win.vibe-handmade .hm-slot:nth-child(3) { rotate: -1.5deg; }
+.ex .win.vibe-handmade .hm-rack-sheet { position: absolute; inset: 0; margin: 0; cursor: grab; box-shadow: 0 12px 28px -18px rgb(20 20 20 / 0.7); outline-offset: 6px; }
+.ex .win.vibe-handmade .hm-rack-sheet:focus-visible { outline: 2px solid var(--v-blue); }
+.ex .win.vibe-handmade .hm-restack { font: inherit; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; padding: 10px 18px; border: 2px solid var(--v-fg); background: none; color: inherit; }
+.ex .win.vibe-handmade .hm-note { display: grid; place-items: center; padding: 40px 24px; }
+.ex .win.vibe-handmade .hm-card { background: #fffaf0; padding: 28px 32px 24px; max-width: 460px; rotate: -1.2deg; box-shadow: 0 16px 34px -24px rgb(20 20 20 / 0.6); background-image: repeating-linear-gradient(transparent 0 37px, rgb(0 120 191 / 0.2) 37px 38px); background-position: 0 22px; }
+.ex .win.vibe-handmade .hm-hand { font-family: var(--font-caveat), "Caveat", cursive; font-size: 30px; line-height: 38px; color: var(--v-blue); }
+.ex .win.vibe-handmade .hm-sign { font-family: var(--font-caveat), "Caveat", cursive; font-size: 32px; line-height: 38px; color: var(--v-pink); text-align: right; }
+.ex .win.vibe-handmade .v-quote p { font-family: var(--v-display); font-size: clamp(30px, 5.4cqw, 64px); line-height: 1.02; text-transform: uppercase; }
+.ex .win.vibe-handmade .v-foot { display: flex; justify-content: space-between; gap: 12px; border-top: 2px solid var(--v-fg); text-transform: uppercase; letter-spacing: 0.06em; }
+.ex .win.vibe-handmade button:focus-visible, .ex .win.vibe-handmade a:focus-visible { outline: 2px solid var(--v-blue); outline-offset: 4px; }
+
+/* Liquid: a fragrance house. Near black, chrome, a lilac accent. Unbounded and Manrope. */
+.ex .win.vibe-liquid { --v-bg: #0d0c12; --v-fg: #e9eaf0; --v-muted: #9a98a8; --v-accent: #c7b8ff; --v-on-accent: #0d0c12; --v-chrome: #d9dde6; --v-font: var(--font-manrope), "Manrope", system-ui, sans-serif; --v-display: var(--font-unbounded), "Unbounded", system-ui, sans-serif; font-size: 16px; }
+/* The WebGL canvas sits above the page, so nothing may scroll under a sticky nav: this one scrolls away. */
+.ex .win.vibe-liquid .v-nav { position: relative; }
+.ex .win.vibe-liquid .v-brand { font-family: var(--v-display); font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; font-size: 13px; }
+.ex .win.vibe-liquid .v-links { font-size: 13px; letter-spacing: 0.08em; gap: 26px; --underline-color: var(--v-accent); }
+.ex .win.vibe-liquid .v-kicker { font-size: 12px; letter-spacing: 0.3em; color: var(--v-accent); }
+.ex .win.vibe-liquid .lq-hero { justify-items: center; text-align: center; gap: 22px; }
+.ex .win.vibe-liquid .lq-melt { position: relative; width: 100%; display: grid; place-items: center; min-height: clamp(110px, 22cqw, 240px); color: var(--v-chrome); }
+.ex .win.vibe-liquid .v-head { font-family: var(--v-display); font-weight: 800; font-size: clamp(48px, 13cqw, 168px); line-height: 1; letter-spacing: -0.03em; max-width: none; color: var(--v-chrome); }
+.ex .win.vibe-liquid .v-sub { max-width: 34ch; }
+.ex .win.vibe-liquid .v-btn { font-weight: 600; letter-spacing: 0.04em; border-radius: 999px; padding: 16px 30px; }
+.ex .win.vibe-liquid .lq-scents { padding: 56px 24px 40px; }
+.ex .win.vibe-liquid .lq-index { position: relative; display: grid; grid-template-columns: 34px 1fr; gap: 12px; margin-top: 18px; }
+.ex .win.vibe-liquid .lq-gutter { position: relative; color: var(--v-chrome); }
+.ex .win.vibe-liquid .lq-rows { list-style: none; margin: 0; padding: 0; }
+.ex .win.vibe-liquid .lq-rows li { display: grid; grid-template-columns: 3ch 1fr auto auto; align-items: center; gap: 18px; min-height: 96px; border-top: 1px solid rgb(217 221 230 / 0.16); }
+.ex .win.vibe-liquid .lq-no { font-size: 12px; color: var(--v-muted); }
+.ex .win.vibe-liquid .lq-name { display: grid; gap: 4px; }
+.ex .win.vibe-liquid .lq-name b { font-family: var(--v-display); font-weight: 500; font-size: clamp(18px, 2.6cqw, 28px); letter-spacing: -0.01em; }
+.ex .win.vibe-liquid .lq-name small { font-size: 13px; color: var(--v-muted); }
+.ex .win.vibe-liquid .lq-price { font-size: 14px; color: var(--v-muted); }
+.ex .win.vibe-liquid .lq-go { position: relative; isolation: isolate; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; overflow: hidden; border: 1px solid rgb(217 221 230 / 0.5); font-size: 18px; }
+.ex .win.vibe-liquid .lq-fill { position: absolute; inset: 0; z-index: -1; border-radius: 50%; background: var(--v-accent); }
+.ex .win.vibe-liquid .lq-go[data-poured] { color: var(--v-on-accent); }
+@container (max-width: 560px) { .ex .win.vibe-liquid .lq-rows li { grid-template-columns: 1fr auto; gap: 10px; } .ex .win.vibe-liquid .lq-no, .ex .win.vibe-liquid .lq-price { display: none; } .ex .win.vibe-liquid .lq-index { grid-template-columns: 22px 1fr; } }
+.ex .win.vibe-liquid .lq-bottle { padding: 40px 24px; }
+.ex .win.vibe-liquid .lq-glass { margin: 0 auto; width: min(100%, 420px); aspect-ratio: 300 / 366; }
+.ex .win.vibe-liquid .lq-glass img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 18px; }
+.ex .win.vibe-liquid .v-quote p { font-family: var(--v-display); font-weight: 300; font-size: clamp(26px, 4.6cqw, 52px); line-height: 1.15; letter-spacing: -0.02em; }
+.ex .win.vibe-liquid .v-foot { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid rgb(217 221 230 / 0.16); }
+.ex .win.vibe-liquid button:focus-visible, .ex .win.vibe-liquid a:focus-visible { outline: 2px solid var(--v-accent); outline-offset: 4px; }

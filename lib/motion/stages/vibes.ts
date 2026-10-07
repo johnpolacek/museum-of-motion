@@ -7,7 +7,10 @@ import { play, type StageDef } from "../stage-core";
 import { windowed } from "./scroll";
 import { parallax, revealOnScroll, scrubStatement } from "../recipes/scroll-effects";
 import { pressFeedback } from "../recipes/press-feedback";
-import { imageZoom, textRoll, underlineSweep } from "../recipes/hover-effects";
+import { beadUnderline, imageZoom, jelly, pourFill, textRoll, underlineSweep } from "../recipes/hover-effects";
+import { dragPull, inkText, paintReveal, pullCorner, registrationSlip, writeOn, type Pull } from "../recipes/print-effects";
+import { liquidImage } from "../recipes/webgl/liquid-image";
+import { drawText, melt, pourStream, type Melt } from "../recipes/webgl/metaballs";
 import { cursorFollower, spotlight, tilt } from "../recipes/pointer-effects";
 import { burstFrom, pile } from "../recipes/physics-effects";
 import { horizontalRun } from "../recipes/scroll-effects";
@@ -990,6 +993,309 @@ const glitchy = vibe("glitchy", {
   },
 });
 
+/* ---------- Handmade ---------- */
+
+// Riso inks: a fluorescent pink and a blue, printed one plate at a time on warm paper. The pink plate
+// multiplies over the blue, as the inks do, so where they cross they make a deep violet.
+const RISO_PINK = "#ff48b0";
+const RISO_BLUE = "#0078bf";
+const PAPER = "#f3ede0";
+/** A dot screen, the texture of a riso tone. */
+const dots = (id: string, color: string, gap = 7) =>
+  `<pattern id="${id}" width="${gap}" height="${gap}" patternUnits="userSpaceOnUse" patternTransform="rotate(22)"><circle cx="${gap / 2}" cy="${gap / 2}" r="${gap * 0.3}" fill="${color}"/></pattern>`;
+/** One two-color print: the blue plate, then the pink plate over it in its own layer, so each can be inked alone. */
+const riso = (id: string, blue: string, pink: string) =>
+  `<svg class="hm-plate" viewBox="0 0 300 380" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs>${dots(`${id}-b`, RISO_BLUE)}</defs>${blue.replaceAll("DOTS", `url(#${id}-b)`)}</svg>` +
+  `<div class="hm-pink"><svg class="hm-plate" viewBox="0 0 300 380" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs>${dots(`${id}-p`, RISO_PINK, 6)}</defs>${pink.replaceAll("DOTS", `url(#${id}-p)`)}</svg></div>`;
+const HM_ART: Record<string, [string, string]> = {
+  moon: [
+    `<path d="M0 260C60 220 110 236 160 214C210 192 250 210 300 196V380H0Z" fill="DOTS"/><path d="M0 300C70 276 130 300 190 286C240 274 270 280 300 272V380H0Z" fill="${RISO_BLUE}"/><text x="24" y="356" fill="${PAPER}" font-family="var(--font-bowlby), Impact, sans-serif" font-size="30" letter-spacing="1">PAPER MOON</text>`,
+    `<circle cx="188" cy="118" r="70" fill="${RISO_PINK}"/><circle cx="96" cy="70" r="5" fill="${RISO_PINK}"/><circle cx="54" cy="128" r="3" fill="${RISO_PINK}"/><circle cx="262" cy="52" r="4" fill="${RISO_PINK}"/><path d="M0 238C80 222 140 246 210 230C250 222 280 228 300 224V258C240 268 180 250 110 266C60 276 30 268 0 272Z" fill="DOTS"/>`,
+  ],
+  bus: [
+    `<rect x="30" y="150" width="240" height="120" rx="18" fill="${RISO_BLUE}"/>${[0, 1, 2, 3].map((i) => `<rect x="${46 + i * 54}" y="168" width="42" height="40" rx="4" fill="${PAPER}"/>`).join("")}<circle cx="86" cy="276" r="20" fill="${RISO_BLUE}"/><circle cx="214" cy="276" r="20" fill="${RISO_BLUE}"/><rect y="296" width="300" height="84" fill="DOTS"/>`,
+    `<circle cx="230" cy="80" r="40" fill="${RISO_PINK}"/>${[0, 1, 2, 3].map((i) => `<rect x="${46 + i * 54}" y="168" width="42" height="40" rx="4" fill="DOTS"/>`).join("")}<rect x="30" y="226" width="240" height="10" fill="${RISO_PINK}"/>`,
+  ],
+  fern: [
+    `<path d="M150 360C150 260 140 160 120 40" fill="none" stroke="${RISO_BLUE}" stroke-width="6"/>${Array.from({ length: 9 }, (_, i) => `<ellipse cx="${150 - i * 3.4 + (i % 2 ? 40 : -40)}" cy="${330 - i * 32}" rx="${44 - i * 3}" ry="12" transform="rotate(${i % 2 ? -28 : 28} ${150 - i * 3.4 + (i % 2 ? 40 : -40)} ${330 - i * 32})" fill="${RISO_BLUE}"/>`).join("")}`,
+    `<rect width="300" height="380" fill="DOTS"/><circle cx="70" cy="300" r="46" fill="${RISO_PINK}"/>`,
+  ],
+  stars: [
+    `<rect width="300" height="380" fill="${RISO_BLUE}"/>${Array.from({ length: 22 }, (_, i) => `<circle cx="${(i * 97) % 280 + 10}" cy="${(i * 61) % 300 + 12}" r="${1.5 + (i % 3)}" fill="${PAPER}"/>`).join("")}`,
+    `<path d="M150 70L170 140L240 150L184 190L204 262L150 220L96 262L116 190L60 150L130 140Z" fill="${RISO_PINK}"/><rect y="300" width="300" height="80" fill="DOTS"/>`,
+  ],
+  hand: [
+    `<path d="M110 360V210C110 196 130 196 130 210V120C130 104 152 104 152 120V200V100C152 84 174 84 174 100V200V114C174 98 196 98 196 114V220V160C196 146 216 146 216 160V270C216 320 190 360 150 360Z" fill="${RISO_BLUE}"/>`,
+    `<circle cx="150" cy="150" r="110" fill="DOTS"/><path d="M40 40L90 40M40 52L76 52" stroke="${RISO_PINK}" stroke-width="6"/>`,
+  ],
+};
+const HM_ZINES: Array<[string, string, string, string]> = [
+  ["Night Bus", "Zine · 24 pages · edition of 150", "$12", "bus"],
+  ["Fern Study", "Zine · 16 pages · edition of 100", "$10", "fern"],
+  ["Small Hours", "Zine · 20 pages · edition of 120", "$12", "stars"],
+];
+const HM_RACK = ["hand", "stars", "fern", "moon"];
+
+// Ink and paper: the headline inks on and its second plate slips into register, the hero print is brushed
+// on with a roller and then gets its pink, covers print as they scroll in, prints peel off a drying rack,
+// and a note is written by hand. Bowlby One, IBM Plex Mono, and Caveat for the hand.
+const handmade = vibe("handmade", {
+  copy: { brand: "", links: ["", ""], kicker: "", head: "", sub: "", cta: "", cards: [], quote: "", foot: "" },
+  move: { duration: 1.1, ease: "power3.inOut" },
+  nav: [".v-cards", ".hm-rack"],
+  page: `<header class="v-nav"><b class="v-brand">Paper Moon Press</b><span class="v-links"><a href="#v">Zines</a><a href="#v">Drying rack</a></span></header>
+    <section class="v-hero hm-hero">
+      <div class="hm-copy"><p class="v-kicker">Risograph studio · Leeds</p><h3 class="v-head">Printed by hand, two colors at a time.</h3><p class="v-sub">Zines, posters, and small runs, inked one plate at a time on a drum that smells faintly of soy.</p><button type="button" class="v-btn">See the drying rack</button></div>
+      <figure class="hm-print hm-sheet" role="img" aria-label="A riso print of a pink moon over blue hills">${riso("hmh", ...HM_ART.moon!)}<i class="hm-brayer" aria-hidden="true"></i></figure>
+    </section>
+    <section class="hm-zines"><h4 class="hm-title">This season’s zines</h4><div class="v-cards">${HM_ZINES.map(([name, meta, price, art], i) => `<article class="v-card"><span class="v-art hm-sheet">${riso(`hmz${i}`, ...HM_ART[art]!)}</span><a href="#v" class="hm-name">${name}</a><span class="v-meta">${meta}</span><span class="hm-price">${price}</span></article>`).join("")}</div></section>
+    <section class="hm-rack"><h4 class="hm-title">The drying rack</h4><p class="hm-hint">Grab a print anywhere and pull it off the rack. Or press Enter on it.</p><div class="hm-stack">${HM_RACK.map((art, i) => `<div class="hm-slot"><figure class="hm-sheet hm-rack-sheet" tabindex="-1" aria-label="Print ${HM_RACK.length - i} of ${HM_RACK.length}: drag or press Enter to pull it off">${riso(`hmr${i}`, ...HM_ART[art]!)}</figure></div>`).join("")}</div><button type="button" class="hm-restack">Hang them back up</button></section>
+    <section class="hm-note"><div class="hm-card"><p class="hm-hand">Open studio every Thursday. Bring a drawing, leave with fifty prints. Wear something you don’t mind getting pink.</p><p class="hm-sign">Mo &amp; Iris</p></div></section>
+    <section class="v-quote"><p>Every copy comes out a little different. That’s the point.</p></section>
+    <footer class="v-foot"><span>Paper Moon Press</span><span>Unit 4, Sovereign Street, Leeds</span></footer>`,
+  intro: (p, tl) => {
+    // The pink plate is down; the black inks on over it, then the pink slides into register.
+    const slip = registrationSlip(p.head, { ink: RISO_PINK, x: 10, y: 5, duration: 0.6 });
+    const ink = inkText([p.head], { duration: 1 });
+    const sheet = one(p.win, ".hm-print");
+    const pink = one(sheet, ".hm-pink");
+    // Build the pink plate's mask first, so it stays hidden while the blue is brushed on.
+    const second = inkText([pink], { duration: 1.2, direction: "down" });
+    const first = paintReveal(sheet, { paper: PAPER, duration: 1.8, roller: one<HTMLElement>(sheet, ".hm-brayer") });
+    tl.from(p.nav, { autoAlpha: 0, y: -8, duration: 0.4, ease: "power2.out", stagger: 0.06 }, 0)
+      .from(p.kicker, { autoAlpha: 0, duration: 0.4 }, 0.1)
+      .add(ink.timeline, 0.2)
+      .add(slip.timeline, 1.2)
+      .add(first.timeline, 0.3)
+      .add(second.timeline, 1.6)
+      .from(p.sub, { autoAlpha: 0, y: 10, duration: 0.5, ease: "power2.out" }, 0.9)
+      .from(p.btn, { autoAlpha: 0, y: 10, duration: 0.5, ease: "back.out(1.8)" }, 1.1);
+    return () => [slip, ink, first, second].forEach((e) => e.revert());
+  },
+  wire: (p) => {
+    const offs: Array<() => void> = [];
+    // Each cover prints as it scrolls in: its blue plate brushed on, then its pink.
+    const covers = p.cards.map((card, i) => {
+      const art = one(card, ".v-art");
+      const pink = inkText([one(art, ".hm-pink")], { duration: 0.9, direction: "down" });
+      const blue = paintReveal(art, { paper: PAPER, duration: 1.2, direction: i % 2 ? "down" : "right" });
+      const tl = gsap.timeline({ paused: true }).add(blue.timeline, 0).add(pink.timeline, 0.8);
+      return { tl, revert: () => [blue, pink].forEach((e) => e.revert()) };
+    });
+    const printing = onView(p.cardsSection, p.win, () => covers.forEach((c, i) => gsap.delayedCall(i * 0.25, () => c.tl.play())), "top 75%");
+    offs.push(() => {
+      printing.kill();
+      covers.forEach((c) => {
+        gsap.killTweensOf(c.tl.play);
+        c.tl.kill();
+        c.revert();
+      });
+    });
+    // The section titles slip into register as they arrive.
+    const titles = all(p.win, ".hm-title").map((title) => {
+      let run: { revert: () => void } | undefined;
+      const st = onView(title, p.win, () => {
+        run = registrationSlip(title, { ink: RISO_PINK, x: -8, y: 4, duration: 0.6 });
+      }, "top 85%");
+      return () => {
+        st.kill();
+        run?.revert();
+      };
+    });
+    offs.push(...titles);
+    // A cover slips out of register under the pointer or focus, and back.
+    p.cards.forEach((card) => {
+      const pink = one(card, ".hm-pink");
+      const shift = () => !prefersReducedMotion() && gsap.to(pink, { x: 5, y: -3, duration: 0.25, ease: "power2.out", overwrite: true });
+      const back = () => gsap.to(pink, { x: 0, y: 0, duration: 0.35, ease: "back.out(3)", overwrite: true });
+      const events: Array<[string, () => void]> = [["pointerenter", shift], ["pointerleave", back], ["focusin", shift], ["focusout", back]];
+      events.forEach(([e, f]) => card.addEventListener(e, f));
+      offs.push(() => {
+        events.forEach(([e, f]) => card.removeEventListener(e, f));
+        gsap.killTweensOf(pink);
+        gsap.set(pink, { clearProps: "transform" });
+      });
+    });
+    // The drying rack: the top print peels off under the hand, showing the next.
+    const sheets = all(p.win, ".hm-rack-sheet");
+    const restack = one(p.win, ".hm-restack");
+    let pulls: Pull[] = [];
+    let drags: Array<() => void> = [];
+    const arm = (index: number) => {
+      sheets.forEach((sheet, i) => {
+        sheet.tabIndex = i === index ? 0 : -1;
+        sheet.style.pointerEvents = i === index ? "auto" : "none";
+      });
+      if (index < 0) return;
+      const sheet = sheets[index]!;
+      const pull = pullCorner(sheet, { back: PAPER });
+      pulls.push(pull);
+      drags.push(
+        dragPull(sheet, pull, {
+          onPulled: () => {
+            sheet.style.visibility = "hidden";
+            arm(index - 1);
+            (index > 0 ? sheets[index - 1]! : restack).focus({ preventScroll: true });
+          },
+        }),
+      );
+    };
+    const clear = () => {
+      drags.forEach((off) => off());
+      pulls.forEach((pull) => pull.revert());
+      drags = [];
+      pulls = [];
+      sheets.forEach((sheet) => sheet.style.removeProperty("visibility"));
+    };
+    const hang = () => {
+      clear();
+      arm(sheets.length - 1);
+      if (!prefersReducedMotion()) gsap.from(sheets.map((s) => s.parentElement!), { y: -30, autoAlpha: 0, duration: 0.5, ease: "back.out(1.6)", stagger: 0.06, clearProps: "transform,opacity,visibility" });
+    };
+    arm(sheets.length - 1);
+    restack.addEventListener("click", hang);
+    offs.push(() => {
+      restack.removeEventListener("click", hang);
+      gsap.killTweensOf(sheets.map((s) => s.parentElement!));
+      clear();
+    });
+    // The note is written by hand as it comes into view, then the signature.
+    const note = one(p.win, ".hm-hand");
+    const sign = one(p.win, ".hm-sign");
+    let written: Array<{ revert: () => void }> = [];
+    gsap.set(sign, { autoAlpha: 0 });
+    const writing = onView(one(p.win, ".hm-note"), p.win, () => {
+      const hand = writeOn(note, { duration: 2.4 });
+      gsap.set(sign, { autoAlpha: 1 });
+      const name = writeOn(sign, { duration: 0.6 });
+      name.timeline.pause(0);
+      hand.timeline.eventCallback("onComplete", () => name.timeline.play());
+      written = [hand, name];
+    }, "top 70%");
+    offs.push(() => {
+      writing.kill();
+      written.forEach((w) => w.revert());
+      gsap.set(sign, { clearProps: "all" });
+    });
+    // The statement inks on, a line at a time.
+    let inked: { revert: () => void } | undefined;
+    const quoteSt = onView(p.quoteSection, p.win, () => {
+      const lines = SplitText.create(p.quote, { type: "lines", aria: "auto" });
+      const run = inkText(lines.lines as HTMLElement[], { duration: 0.8, stagger: 0.25 });
+      run.timeline.call(() => lines.revert());
+      inked = { revert: () => (run.revert(), lines.revert()) };
+    }, "top 60%");
+    offs.push(() => {
+      quoteSt.kill();
+      inked?.revert();
+    });
+    return [
+      ...offs,
+      cta(p, one(p.win, ".hm-rack"), { duration: 1.1, ease: "power3.inOut" }),
+      revealOnScroll(p.cards, { scroller: p.win, y: 18, duration: 0.5, stagger: 0.1, ease: "back.out(1.4)" }),
+      pressFeedback(p.btn, { squash: 0.96, ink: 0.25 }),
+    ];
+  },
+});
+
+/* ---------- Liquid ---------- */
+
+const LQ_SCENTS: Array<[string, string, string]> = [
+  ["Mercure", "Aldehydes, cold iris, wet stone", "€140"],
+  ["Lac Noir", "Black tea, fig leaf, cedar", "€140"],
+  ["Pluie d’Argent", "Rain, violet, white musk", "€150"],
+  ["Verre", "Vetiver, grapefruit peel, glass", "€130"],
+  ["Mercredi", "Neroli, linen, warm skin", "€130"],
+  ["Nuit Fondue", "Oud, plum, melted amber", "€180"],
+  ["Ozone", "Sea air, sage, mineral salt", "€140"],
+  ["Lune Liquide", "Pear, magnolia, sandalwood", "€150"],
+];
+/** The bottle, as an image the liquid view can read: a data URL never taints the canvas. */
+const lqBottle = (() => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1100" viewBox="0 0 300 366"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#2b2a35"/><stop offset=".45" stop-color="#d9dde6"/><stop offset=".55" stop-color="#f5f6fa"/><stop offset="1" stop-color="#3a3946"/></linearGradient><linearGradient id="l" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c7b8ff"/><stop offset="1" stop-color="#6e5bd6"/></linearGradient><radialGradient id="bg" cx=".5" cy=".55" r=".7"><stop offset="0" stop-color="#2a2733"/><stop offset="1" stop-color="#0d0c12"/></radialGradient></defs><rect width="300" height="366" fill="url(#bg)"/>${Array.from({ length: 12 }, (_, i) => `<line x1="0" x2="300" y1="${18 + i * 30}" y2="${18 + i * 30}" stroke="#ffffff" stroke-opacity=".05"/>`).join("")}<rect x="126" y="62" width="48" height="40" rx="4" fill="url(#g)"/><rect x="72" y="110" width="156" height="196" rx="30" fill="#ffffff" fill-opacity=".08" stroke="#d9dde6" stroke-opacity=".5"/><rect x="80" y="170" width="140" height="128" rx="24" fill="url(#l)" opacity=".85"/><rect x="96" y="118" width="10" height="170" rx="5" fill="#fff" opacity=".25"/><text x="150" y="232" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="17" letter-spacing="5" fill="#0d0c12">MERCURE</text></svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+})();
+/** The melts, by window, so the intro can form the one its page built. */
+const LQ_MELTS = new WeakMap<HTMLElement, { metal: Melt | null; ready: boolean; asked: boolean }>();
+
+// Molten and slow: the name pours together from liquid metal, a stream runs down the scents as you read,
+// links draw a bead into a line, the button wobbles like jelly, arrows fill like a glass, and the bottle
+// stirs under the hand. Unbounded and Manrope on near black.
+const liquid = vibe("liquid", {
+  copy: { brand: "", links: ["", ""], kicker: "", head: "", sub: "", cta: "", cards: [], quote: "", foot: "" },
+  lenis: { lerp: 0.06 },
+  move: { duration: 1.6, ease: "power3.inOut" },
+  nav: [".lq-scents", ".lq-bottle"],
+  page: `<header class="v-nav"><b class="v-brand">Mercure</b><span class="v-links"><a href="#v">Scents</a><a href="#v">The bottle</a></span></header>
+    <section class="v-hero lq-hero"><p class="v-kicker">Eaux de parfum · Paris</p><div class="lq-melt"><h3 class="v-head">Mercure</h3></div><p class="v-sub">Eight scents that move like quicksilver: cold at first, then warm on the skin.</p><button type="button" class="v-btn">Find your scent</button></section>
+    <section class="lq-scents"><p class="v-kicker">The collection</p><div class="lq-index"><div class="lq-gutter" aria-hidden="true"></div><ol class="lq-rows">${LQ_SCENTS.map(([name, notes, price], i) => `<li><span class="lq-no">${String(i + 1).padStart(2, "0")}</span><span class="lq-name"><b>${name}</b><small>${notes}</small></span><span class="lq-price">${price}</span><a href="#v" class="lq-go" aria-label="${name}, ${price}"><i class="lq-fill" aria-hidden="true"></i><span aria-hidden="true">→</span></a></li>`).join("")}</ol></div></section>
+    <section class="lq-bottle"><figure class="lq-glass"><img alt="The Mercure bottle, lilac liquid in clear glass with a chrome cap" src="${lqBottle}"></figure><p class="v-caption">Stir the glass with the pointer, or a held finger.</p></section>
+    <section class="v-quote"><p>Wear it the way mercury holds a shape: only for a moment.</p></section>
+    <footer class="v-foot"><span>Mercure Parfums</span><span>12 rue de Turenne, Paris</span></footer>`,
+  intro: (p, tl) => {
+    tl.from(p.nav, { autoAlpha: 0, duration: 0.8, ease: "power2.out", stagger: 0.1 }, 0)
+      .from(p.kicker, { autoAlpha: 0, letterSpacing: "0.5em", duration: 1.2, ease: "power3.out" }, 0.1)
+      // The name pours together; without WebGL the live heading is simply there.
+      .call(() => {
+        const m = LQ_MELTS.get(p.win);
+        if (!m) return;
+        m.asked = true;
+        if (m.ready) m.metal?.form({ duration: 2 });
+      }, [], 0.2)
+      // Not split into lines: the face may still be loading, and lines split early would break wrong.
+      .from(p.sub, { autoAlpha: 0, y: 16, duration: 0.9, ease: "power3.out" }, 1.2)
+      .from(p.btn, { autoAlpha: 0, scale: 0.6, duration: 1, ease: "elastic.out(1, 0.5)" }, 1.6);
+    return () => {};
+  },
+  wire: (p, layer) => {
+    const host = one(p.win, ".lq-melt");
+    const css = getComputedStyle(p.head);
+    const font = `${css.fontWeight} ${parseFloat(css.fontSize) * 2}px ${css.fontFamily}`;
+    const state: { metal: Melt | null; ready: boolean; asked: boolean } = { metal: null, ready: false, asked: false };
+    LQ_MELTS.set(p.win, state);
+    let gone = false;
+    // The melt draws the word once, so it waits for the face; otherwise it would pour a fallback font.
+    document.fonts.load(font).finally(() => {
+      if (gone) return;
+      const metal = (state.metal = melt(host, { draw: drawText(p.head.textContent ?? "", font), poster: p.head, drops: 14, clip: p.win }));
+      metal.view.ready.then((drawn) => {
+        if (!drawn || gone) return;
+        state.ready = true;
+        if (state.asked) metal.form({ duration: 2 });
+      });
+    });
+    // Replay drips the old name away first, so it pours again.
+    const replay = layer.querySelector(".v-replay");
+    const drip = () => state.ready && state.metal?.drip({ duration: 0 });
+    replay?.addEventListener("click", drip, { capture: true });
+    const stream = pourStream(one(p.win, ".lq-gutter"), { rows: all(p.win, ".lq-rows li"), width: 5, lead: 0.55, scroller: p.win });
+    // The bottle stirs under the hand, and one stroke pours across it as it scrolls in.
+    const glass = liquidImage(one<HTMLImageElement>(p.win, ".lq-glass img"), { touch: true, clip: p.win });
+    glass.uniforms.uStrength.value = 0.1;
+    const pouring = onView(one(p.win, ".lq-bottle"), p.win, () => glass.view.ready.then((drawn) => {
+      if (drawn && !gone) glass.pour({ duration: 1.6 });
+    }), "top 55%");
+    return [
+      () => {
+        gone = true;
+        replay?.removeEventListener("click", drip, { capture: true });
+        LQ_MELTS.delete(p.win);
+        pouring.kill();
+        stream.revert();
+        glass.revert();
+        state.metal?.revert();
+      },
+      cta(p, one(p.win, ".lq-scents"), { duration: 1.6, ease: "power3.inOut" }),
+      jelly(p.btn, { highlight: "rgb(255 255 255 / 0.5)", touch: true }),
+      ...all(p.win, ".v-links a").map((a) => beadUnderline(a, { bead: 6, thickness: 1, touch: true })),
+      ...all(p.win, ".lq-go").map((a) => pourFill(a, one(a, ".lq-fill"), { touch: true })),
+      revealOnScroll(all(p.win, ".lq-rows li"), { scroller: p.win, y: 16, duration: 0.9, stagger: 0.06, ease: "power3.out" }),
+      scrubStatement(p.quote, { by: "words", scroller: p.win, scrub: 1.2 }),
+      pressFeedback(p.btn, { squash: 0.97, ink: 0.15 }),
+    ];
+  },
+});
+
 /** The title tears: magenta and cyan copies jump out of register in sliced bands, then snap back. */
 function tear(ghosts: HTMLElement[], head: HTMLElement) {
   const slice = () => `inset(${gsap.utils.random(0, 70, 1)}% 0 ${gsap.utils.random(0, 70, 1)}% 0)`;
@@ -1006,4 +1312,6 @@ export const VIBE_STAGES: Record<string, StageDef> = {
   luxury,
   snappy,
   glitchy,
+  handmade,
+  liquid,
 };

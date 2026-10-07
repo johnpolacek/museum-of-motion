@@ -40,6 +40,12 @@ export type FramedViewOptions = {
   poster?: HTMLElement | null;
   /** A depth buffer for drawings whose surfaces overlap in 3D. */
   depth?: boolean;
+  /**
+   * An element the drawing never paints outside, such as the scrolling box the view sits in. The canvas is
+   * fixed to the viewport, above the page, so without it a view scrolled half out of a box draws over what
+   * surrounds the box.
+   */
+  clip?: Element | null;
   /** Used only if this view creates the stage. */
   stage?: StageOptions;
 };
@@ -74,9 +80,15 @@ void main() {
 const COMPOSITE_FRAGMENT = /* glsl */ `
 precision highp float;
 uniform sampler2D uTexture;
+uniform vec4 uClip;
+uniform vec2 uViewport;
+uniform float uDpr;
 varying vec2 vUv;
 
 void main() {
+  // Outside the clip box, in CSS pixels from the viewport's top left, nothing draws.
+  vec2 css = vec2(gl_FragCoord.x, uViewport.y * uDpr - gl_FragCoord.y) / uDpr;
+  if (css.x < uClip.x || css.y < uClip.y || css.x > uClip.z || css.y > uClip.w) discard;
   // The drawing wrote premultiplied color; pass it through.
   gl_FragColor = texture2D(uTexture, vUv);
 }
@@ -122,7 +134,7 @@ export function freeTree(gl: OGLRenderingContext, root: Transform) {
 
 export function framedView(
   host: HTMLElement,
-  { draw, prepare, poster: posterOption, depth = false, stage: stageOptions }: FramedViewOptions,
+  { draw, prepare, poster: posterOption, depth = false, clip = null, stage: stageOptions }: FramedViewOptions,
 ): FramedView {
   const poster: HTMLElement | null = posterOption === undefined ? (host.querySelector<HTMLImageElement>("img[data-poster]") ?? host.querySelector("img")) : posterOption;
   let settle: (live: boolean) => void = () => {};
@@ -142,7 +154,13 @@ export function framedView(
   let geometry: Plane | undefined;
   let remove: (() => void) | undefined;
   let observer: IntersectionObserver | undefined;
-  const uniforms = { uTexture: { value: null as Texture | null }, uRect: { value: [0, 0, 1, 1] }, uViewport: { value: [1, 1] } };
+  const uniforms = {
+    uTexture: { value: null as Texture | null },
+    uRect: { value: [0, 0, 1, 1] },
+    uViewport: { value: [1, 1] },
+    uDpr: { value: 1 },
+    uClip: { value: [-1e5, -1e5, 1e5, 1e5] },
+  };
 
   const showPoster = () => {
     if (!poster || !opacity) return;
@@ -187,6 +205,11 @@ export function framedView(
       const rect = uniforms.uRect.value;
       [rect[0], rect[1], rect[2], rect[3]] = [box.left, box.top, box.width, box.height];
       [uniforms.uViewport.value[0], uniforms.uViewport.value[1]] = [stage.width, stage.height];
+      uniforms.uDpr.value = stage.dpr;
+      if (clip) {
+        const c = clip.getBoundingClientRect();
+        [uniforms.uClip.value[0], uniforms.uClip.value[1], uniforms.uClip.value[2], uniforms.uClip.value[3]] = [c.left, c.top, c.right, c.bottom];
+      }
       const width = Math.max(1, Math.round(box.width * stage.dpr));
       const height = Math.max(1, Math.round(box.height * stage.dpr));
       if (target.width !== width || target.height !== height) target.setSize(width, height);

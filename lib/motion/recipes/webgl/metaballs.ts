@@ -102,6 +102,8 @@ export type MeltOptions = {
   tint?: string;
   /** The element shown until the first drawn frame and without WebGL, such as the live text the melt draws. */
   poster?: HTMLElement | null;
+  /** An element the drawing never paints outside, such as a scrolling box. See framed views. */
+  clip?: Element | null;
   stage?: StageOptions;
 };
 
@@ -143,7 +145,7 @@ void main() {
 }
 `;
 
-export function melt(host: HTMLElement, { draw, drops: count = 14, tint, poster = null, stage }: MeltOptions): Melt {
+export function melt(host: HTMLElement, { draw, drops: count = 14, tint, poster = null, clip, stage }: MeltOptions): Melt {
   const n = Math.min(MAX_DROPS, Math.max(1, count));
   const uniforms = { uForm: { value: 0 } };
   const drops: Drop[] = Array.from({ length: n }, () => ({ x: 0, y: 0, r: 0 }));
@@ -201,7 +203,7 @@ export function melt(host: HTMLElement, { draw, drops: count = 14, tint, poster 
     };
   };
 
-  const view = framedView(host, { draw: build, poster, stage });
+  const view = framedView(host, { draw: build, poster, clip, stage });
 
   /** Every drop sits in one bead at the shape's middle, too small to see. */
   const gather = () => {
@@ -288,6 +290,8 @@ export type PourStreamOptions = {
   /** How far down the viewport the stream's head sits, as a fraction. */
   lead?: number;
   tint?: string;
+  /** The scrolling box the column reads in, when it is not the page; the head follows that box's view, and the drawing stays inside it. */
+  scroller?: Element | null;
   stage?: StageOptions;
 };
 
@@ -329,7 +333,7 @@ void main() {
 }
 `;
 
-export function pourStream(column: HTMLElement, { rows, width = 6, lead = 0.6, tint, stage }: PourStreamOptions): PourStream {
+export function pourStream(column: HTMLElement, { rows, width = 6, lead = 0.6, tint, scroller = null, stage }: PourStreamOptions): PourStream {
   const drops: Drop[] = rows.slice(0, MAX_DROPS).map(() => ({ x: 0, y: 0, r: 0 }));
   const reached = drops.map(() => false);
   const own = { uHead: { value: 0 }, uPool: { value: 0 }, uHalf: { value: width } };
@@ -348,7 +352,8 @@ export function pourStream(column: HTMLElement, { rows, width = 6, lead = 0.6, t
         shader.uSize.value[1] = h;
         const box = column.getBoundingClientRect();
         // The head eases toward the reader's line, never past the column's ends.
-        const target = gsap.utils.clamp(0, h, window.innerHeight * lead - box.top);
+        const frame = scroller?.getBoundingClientRect() ?? { top: 0, height: window.innerHeight };
+        const target = gsap.utils.clamp(0, h, frame.top + frame.height * lead - box.top);
         own.uHead.value += (target - own.uHead.value) * 0.12;
         const lane = (y: number) => w * 0.32 + w * 0.08 * Math.sin(y * 0.011);
         rows.slice(0, MAX_DROPS).forEach((row, i) => {
@@ -373,7 +378,7 @@ export function pourStream(column: HTMLElement, { rows, width = 6, lead = 0.6, t
     };
   };
 
-  const view = framedView(column, { draw, poster: null, stage });
+  const view = framedView(column, { draw, poster: null, clip: scroller, stage });
   return {
     view,
     get webgl() {

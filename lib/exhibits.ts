@@ -618,6 +618,21 @@ const DATA: Exhibit[] = [
     builders: "scrambleText, revealOnScroll, pressFeedback",
     src: "motion-vocabulary",
     desc: "Broken on purpose: the headline decodes from noise, a countdown ticks in broken steps, a marquee flickers, pictures tear, and symbols trail the pointer."
+  },
+  {
+    name: "Handmade",
+    group: "vibes",
+    builders: "paintReveal, inkText, registrationSlip, pullCorner, dragPull, writeOn",
+    src: "print-effects",
+    desc: "Ink and paper: the headline inks on and slips into register, a roller brushes the print on, covers print as they scroll in, prints peel off a drying rack, and a note is written by hand."
+  },
+  {
+    name: "Liquid",
+    group: "vibes",
+    builders: "melt, pourStream, liquidImage, beadUnderline, pourFill, jelly",
+    src: "metaballs",
+    desc: "Molten and slow: the name pours together from liquid metal, a stream runs down the scents as you read, links draw a bead into a line, and the bottle stirs under the hand.",
+    gl: true
   }
 ];
 

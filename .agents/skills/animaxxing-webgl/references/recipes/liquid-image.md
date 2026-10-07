@@ -28,6 +28,8 @@ export type LiquidImageOptions = {
   touch?: boolean;
   /** Element that takes the pointer. Defaults to the image's link or button, else the image. */
   target?: HTMLElement;
+  /** An element the drawing never paints outside, such as a scrolling box. See framed views. */
+  clip?: Element | null;
   stage?: StageOptions;
 };
 
@@ -109,7 +111,7 @@ void main() {
 
 export function liquidImage(
   image: HTMLImageElement,
-  { size = 128, falloff = 0.22, linger = 0.25, touch = false, target, stage }: LiquidImageOptions = {},
+  { size = 128, falloff = 0.22, linger = 0.25, touch = false, target, clip, stage }: LiquidImageOptions = {},
 ): LiquidImage {
   const uniforms = { uStrength: { value: 0.08 }, uShift: { value: 0.012 } };
   const surface = target ?? image.closest<HTMLElement>("a[href], button") ?? image;
@@ -200,6 +202,7 @@ export function liquidImage(
   const view = framedView(image, {
     draw,
     poster: image,
+    clip,
     stage,
     async prepare(signal) {
       source = (await textureSource(image, signal)) ?? undefined;

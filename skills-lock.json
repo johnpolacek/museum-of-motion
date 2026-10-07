@@ -11,7 +11,7 @@
       "source": "johnpolacek/animaxxing-skills",
       "sourceType": "github",
       "skillPath": "skills/animaxxing-webgl/SKILL.md",
-      "computedHash": "9134a59fc12a62c539978d8d92bb64de12dc14dee934edc910fa3fcb748a8599"
+      "computedHash": "4cc682460dd5f18db5e2ad4be99e19bc26b8e10871b8786260d672cc0172b057"
     },
     "gsap-core": {
       "source": "greensock/gsap-skills",

@@ -119,6 +119,8 @@ export type ParticleMorphOptions = {
   /** Point color. Defaults to the element's computed `color`. */
   color?: string;
   poster?: HTMLImageElement | null;
+  /** An element the drawing never paints outside, such as a scrolling box. See framed views. */
+  clip?: Element | null;
   stage?: StageOptions;
 };
 
@@ -213,7 +215,7 @@ function rgb(color: string): number[] {
 
 export function particleMorph(
   host: HTMLElement,
-  { shapes, count, size = 2.2, fill = 0.8, color, poster, stage }: ParticleMorphOptions,
+  { shapes, count, size = 2.2, fill = 0.8, color, poster, clip, stage }: ParticleMorphOptions,
 ): ParticleMorph {
   const total = count ?? (window.matchMedia("(pointer: coarse)").matches ? 3000 : 6000);
   const uniforms = { uShape: { value: 0 }, uScatter: { value: 0 }, uSpin: { value: 0 }, uPointer: { value: [9, 9] }, uPush: { value: 0 } };
@@ -259,7 +261,8 @@ export function particleMorph(
     };
   };
 
-  const view = framedView(host, { draw, poster, stage });
+  const view = framedView(host, { draw, poster,
+    clip, stage });
   const last = Math.max(0, shapes.length - 1);
 
   return {

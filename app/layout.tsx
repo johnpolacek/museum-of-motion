@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Archivo, Bricolage_Grotesque, Cormorant_Garamond, Fraunces, Geist, Geist_Mono, JetBrains_Mono, Jost, Manrope, VT323 } from "next/font/google";
+import { Archivo, Bowlby_One, Bricolage_Grotesque, Caveat, Cormorant_Garamond, Fraunces, Geist, Geist_Mono, IBM_Plex_Mono, JetBrains_Mono, Jost, Manrope, Unbounded, VT323 } from "next/font/google";
 import { Footer } from "@/components/Footer";
 import { Masthead } from "@/components/Masthead";
 import { TransitionProvider } from "@/components/motion/TransitionProvider";
@@ -29,6 +29,10 @@ const geist = Geist({ variable: "--font-geist", subsets: ["latin"], preload: fal
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"], preload: false });
 const vt323 = VT323({ variable: "--font-vt323", subsets: ["latin"], weight: "400", preload: false });
 const jetbrains = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin"], preload: false });
+const bowlby = Bowlby_One({ variable: "--font-bowlby", subsets: ["latin"], weight: "400", preload: false });
+const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500"], preload: false });
+const caveat = Caveat({ variable: "--font-caveat", subsets: ["latin"], preload: false });
+const unbounded = Unbounded({ variable: "--font-unbounded", subsets: ["latin"], preload: false });
 
 export const metadata: Metadata = {
   title: "Museum of Motion",
@@ -38,7 +42,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${archivo.variable} ${cormorant.variable} ${jost.variable} ${fraunces.variable} ${manrope.variable} ${bricolage.variable} ${geist.variable} ${geistMono.variable} ${vt323.variable} ${jetbrains.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${archivo.variable} ${cormorant.variable} ${jost.variable} ${fraunces.variable} ${manrope.variable} ${bricolage.variable} ${geist.variable} ${geistMono.variable} ${vt323.variable} ${jetbrains.variable} ${bowlby.variable} ${plexMono.variable} ${caveat.variable} ${unbounded.variable}`} suppressHydrationWarning>
       <body>
         {/* Sets the motion marker before content paints. The marker itself is never in server HTML. */}
         <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
