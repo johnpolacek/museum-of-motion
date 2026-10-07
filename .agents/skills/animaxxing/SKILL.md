@@ -93,4 +93,5 @@ Copy only the selected recipe and its named local helpers. Return shapes differ 
 - One effect per target: two owners must never write one element's transform. Stop pointer and ambient effects before an outro moves their target.
 - Ambient effects expose controls so the owner can pause them off screen and stop them on exit. Loops past five seconds need a user-facing pause ([WCAG 2.2.2](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide)).
 - Particle input and density follow the [field contract](references/recipes/particle-field.md#input-and-density). Controls work without hover.
+- Text keeps its line breaks from first paint to rest. Wait for the faces before measuring or splitting, keep text hidden until they load (briefly at most), never tween letter-spacing, width, or weight on text that wraps, and animate a paragraph as one block unless its split lines match the resting breaks. [Verification](references/verification.md) has the check.
 - Width changes can invalidate split measurements ([resize](references/motion-vocabulary.md#resize)). The controller decides whether to rebuild; recipes never remount pages.
