@@ -10,6 +10,11 @@ Reference demo: [Animaxxing](https://github.com/johnpolacek/animaxxing) exercise
 - Particle color follows the canvas's computed `color`, including theme changes, with enough contrast on the actual background.
 - Weight effects run on a loaded variable face within its axis, at the target's resting weight. A static face gets transform-only effects.
 - Timing, spread, intensity, and stagger suit the actual surface and viewport. Layout boxes stay stable.
+- Line breaks never move while text animates. Check by pausing GSAP, switching off every transform (transforms never change layout), and recording which line each word starts on, throughout the entrance and at rest. Three causes to look for:
+  - A face that loads after the text is laid out: wait for the faces before the first measure or split, and keep the text hidden until then, briefly at most.
+  - Text split into lines that wraps differently from the resting text: words set as separate boxes can break a line one word early. Prefer one effect over the whole block, or check the split's breaks against the rest's.
+  - Letter-spacing, width, or weight tweened on text that wraps, or on a copy without `white-space: nowrap`.
+- A reveal triggered by a section fires when that section's top crosses the line. Trigger on the element itself when it sits well below its section's top, or it plays before it can be seen.
 - In a data-driven app, run the framework's data-readiness checks: no guest or empty content flashes before the effect, and reserved regions keep siblings still.
 
 ## Motion

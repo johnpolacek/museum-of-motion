@@ -623,7 +623,7 @@ const DATA: Exhibit[] = [
     desc: "Broken on purpose: the headline decodes from noise, a countdown ticks in broken steps, a marquee flickers, pictures tear, and symbols trail the pointer."
   },
   {
-    name: "Handmade",
+    name: "Printed",
     group: "vibes",
     builders: "paintReveal, inkText, registrationSlip, pullCorner, dragPull, writeOn",
     src: "print-effects",

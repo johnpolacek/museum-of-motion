@@ -133,8 +133,11 @@ export type Melt = {
   /** Tween these with GSAP; they survive a context loss and restore. */
   readonly uniforms: { uForm: Uniform<number> };
   readonly webgl: boolean;
-  /** One bead becomes the shape. Completes at once without WebGL. */
-  form(vars?: { duration?: number }): gsap.core.Timeline;
+  /**
+   * One bead becomes the shape. With `from: "top"`, drops swell on the element's top edge, let go, and
+   * fall into the shape instead. Completes at once without WebGL.
+   */
+  form(vars?: { duration?: number; from?: "bead" | "top" }): gsap.core.Timeline;
   /** The shape lets go and falls apart in drops. Completes at once without WebGL. */
   drip(vars?: { duration?: number }): gsap.core.Timeline;
   revert(): void;
@@ -241,12 +244,25 @@ export function melt(host: HTMLElement, { draw, drops: count = 14, tint, poster 
     get webgl() {
       return view.webgl;
     },
-    form({ duration = 1.8 } = {}) {
+    form({ duration = 1.8, from = "bead" } = {}) {
       const instant = !view.webgl;
       const timeline = gsap.timeline();
       gsap.killTweensOf([...drops, uniforms.uForm]);
       gather();
       uniforms.uForm.value = 0;
+      const at = (i: number) => targets[i % Math.max(1, targets.length)];
+      if (from === "top") {
+        // Each drop hangs from the top edge above its place, swells until it lets go, and falls in.
+        drops.forEach((d, i) => Object.assign(d, { x: at(i)?.x ?? width / 2, y: 0, r: 0 }));
+        const order = { each: instant ? 0 : (duration * 0.3) / n, from: "random" as const };
+        timeline
+          .to(drops, { r: (i: number) => (at(i)?.r ?? 0) * 1.2, y: (i: number) => (at(i)?.r ?? 0) * 0.6, duration: instant ? 0 : duration * 0.3, ease: "power1.in", stagger: order }, 0)
+          // Gravity: slow to let go, fast at the end.
+          .to(drops, { y: (i: number) => at(i)?.y ?? height / 2, r: (i: number) => at(i)?.r ?? 0, duration: instant ? 0 : duration * 0.4, ease: "power2.in", stagger: order }, instant ? 0 : duration * 0.28)
+          .to(uniforms.uForm, { value: 1, duration: instant ? 0 : duration * 0.35, ease: "power2.in" }, instant ? 0 : duration * 0.6)
+          .to(drops, { r: 0, duration: instant ? 0 : duration * 0.25, ease: "power2.in" }, instant ? 0 : duration * 0.8);
+        return timeline;
+      }
       const lead = drops[0]!;
       // A bead swells in the middle, then drops run out to their places, and the shape fills in under them.
       timeline

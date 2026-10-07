@@ -10,7 +10,7 @@ import { pressFeedback } from "../recipes/press-feedback";
 import { beadUnderline, imageZoom, jelly, pourFill, textRoll, underlineSweep } from "../recipes/hover-effects";
 import { dragPull, inkText, paintReveal, pullCorner, registrationSlip, writeOn, type Pull } from "../recipes/print-effects";
 import { liquidImage } from "../recipes/webgl/liquid-image";
-import { drawText, melt, pourStream, type Melt } from "../recipes/webgl/metaballs";
+import { melt, pourStream, type Melt } from "../recipes/webgl/metaballs";
 import { cursorFollower, spotlight, tilt } from "../recipes/pointer-effects";
 import { burstFrom, pile } from "../recipes/physics-effects";
 import { horizontalRun } from "../recipes/scroll-effects";
@@ -129,58 +129,22 @@ function vibe(key: string, v: Vibe): StageDef {
       text,
       v.page ?? markup(v.copy, v.extra),
       (win, layer) => {
-        const page: Page = {
-          win,
-          nav: all(win, ".v-brand, .v-links a"),
-          kicker: one(win, ".v-kicker"),
-          head: one(win, ".v-head"),
-          sub: one(win, ".v-sub"),
-          btn: one(win, ".v-btn"),
-          cards: all(win, ".v-card"),
-          quote: one(win, ".v-quote p"),
-          quoteSection: one(win, ".v-quote"),
-          cardsSection: one(win, ".v-cards"),
-        };
-        let undo = () => {};
-        let tl: gsap.core.Timeline | undefined;
-        const start = () => {
-          tl?.kill();
-          undo();
-          tl = gsap.timeline({ defaults: { overwrite: "auto" } });
-          undo = v.intro(page, tl);
-          if (prefersReducedMotion()) tl.progress(1);
-        };
-        start();
-        const replay = document.createElement("button");
-        replay.type = "button";
-        replay.className = "pill v-replay";
-        replay.textContent = "Replay";
-        const again = () => {
-          win.scrollTo({ top: 0 });
-          start();
-        };
-        replay.addEventListener("click", again);
-        layer.append(replay);
-        // The nav links go to the vibe's own sections, moving the way the vibe moves.
-        const links = all(win, ".v-links a");
-        const goes = links.map((a, i) => {
-          const go = (e: Event) => {
-            e.preventDefault();
-            scrollWin(win, one(win, v.nav[i]!), v.move);
-          };
-          a.addEventListener("click", go);
-          return () => a.removeEventListener("click", go);
+        // A vibe's faces load on first use. Laid out in a fallback first, its lines would break one way and
+        // then jump when the face arrives, so the page stays hidden until its faces are in, briefly at most.
+        let alive = true;
+        let teardowns: Array<() => void> = [];
+        win.style.visibility = "hidden";
+        facesIn(win).then(() => {
+          if (!alive) return;
+          win.style.removeProperty("visibility");
+          teardowns = setup(win, layer);
+          ScrollTrigger.refresh();
         });
         return [
           () => {
-            replay.removeEventListener("click", again);
-            replay.remove();
-            goes.forEach((off) => off());
-          },
-          ...v.wire(page, layer),
-          () => {
-            tl?.kill();
-            undo();
+            alive = false;
+            win.style.removeProperty("visibility");
+            teardowns.forEach((off) => off());
           },
         ];
       },
@@ -188,6 +152,76 @@ function vibe(key: string, v: Vibe): StageDef {
       v.lenis,
     ),
   );
+
+  function setup(win: HTMLElement, layer: HTMLElement): Array<() => void> {
+    const page: Page = {
+      win,
+      nav: all(win, ".v-brand, .v-links a"),
+      kicker: one(win, ".v-kicker"),
+      head: one(win, ".v-head"),
+      sub: one(win, ".v-sub"),
+      btn: one(win, ".v-btn"),
+      cards: all(win, ".v-card"),
+      quote: one(win, ".v-quote p"),
+      quoteSection: one(win, ".v-quote"),
+      cardsSection: one(win, ".v-cards"),
+    };
+    let undo = () => {};
+    let tl: gsap.core.Timeline | undefined;
+    const start = () => {
+      tl?.kill();
+      undo();
+      tl = gsap.timeline({ defaults: { overwrite: "auto" } });
+      undo = v.intro(page, tl);
+      if (prefersReducedMotion()) tl.progress(1);
+    };
+    start();
+    const replay = document.createElement("button");
+    replay.type = "button";
+    replay.className = "pill v-replay";
+    replay.textContent = "Replay";
+    const again = () => {
+      win.scrollTo({ top: 0 });
+      start();
+    };
+    replay.addEventListener("click", again);
+    layer.append(replay);
+    // The nav links go to the vibe's own sections, moving the way the vibe moves.
+    const links = all(win, ".v-links a");
+    const goes = links.map((a, i) => {
+      const go = (e: Event) => {
+        e.preventDefault();
+        scrollWin(win, one(win, v.nav[i]!), v.move);
+      };
+      a.addEventListener("click", go);
+      return () => a.removeEventListener("click", go);
+    });
+    return [
+      () => {
+        replay.removeEventListener("click", again);
+        replay.remove();
+        goes.forEach((off) => off());
+      },
+      ...v.wire(page, layer),
+      () => {
+        tl?.kill();
+        undo();
+      },
+    ];
+  }
+}
+
+/** Resolves once every face the window's text uses has loaded, or after a second and a half. */
+function facesIn(win: HTMLElement): Promise<void> {
+  if (!document.fonts) return Promise.resolve();
+  const faces = new Set<string>();
+  for (const el of win.querySelectorAll<HTMLElement>("*")) {
+    if (!el.childNodes.length || el.closest("svg")) continue;
+    const s = getComputedStyle(el);
+    faces.add(`${s.fontStyle} ${s.fontWeight} 16px ${s.fontFamily}`);
+  }
+  const loads = Promise.all([...faces].map((face) => document.fonts.load(face).catch(() => [])));
+  return Promise.race([loads.then(() => undefined), new Promise<void>((resolve) => setTimeout(resolve, 1500))]);
 }
 
 /** Splits for an intro, undone by the returned revert. */
@@ -618,7 +652,7 @@ const luxury = vibe("luxury", {
       .fromTo(lines, { drawSVG: "0%" }, { drawSVG: "100%", duration: 2.2, ease: "power2.inOut", stagger: 0.18 }, 0.2)
       .from(fill, { opacity: 0, duration: 1.6, ease: "power1.out" }, 1.2)
       .from(facets, { opacity: 0, duration: 1.2, ease: "power1.out" }, 1.6)
-      .from(p.kicker, { autoAlpha: 0, letterSpacing: "0.6em", duration: 2, ease: "expo.out" }, 0.3)
+      .from(p.kicker, { autoAlpha: 0, y: 10, duration: 2, ease: "expo.out" }, 0.3)
       .from(s.lines, { yPercent: 110, duration: 1.8, ease: "expo.out", stagger: 0.2 }, 0.6)
       .from(p.sub, { autoAlpha: 0, duration: 1.6, ease: "power2.out" }, 1.5)
       .from(p.btn, { autoAlpha: 0, y: 8, duration: 1.4, ease: "expo.out" }, 1.9)
@@ -993,7 +1027,7 @@ const glitchy = vibe("glitchy", {
   },
 });
 
-/* ---------- Handmade ---------- */
+/* ---------- Printed ---------- */
 
 // Riso inks: a fluorescent pink and a blue, printed one plate at a time on warm paper. The pink plate
 // multiplies over the blue, as the inks do, so where they cross they make a deep violet.
@@ -1039,7 +1073,7 @@ const HM_RACK = ["hand", "stars", "fern", "moon"];
 // Ink and paper: the headline inks on and its second plate slips into register, the hero print is brushed
 // on with a roller and then gets its pink, covers print as they scroll in, prints peel off a drying rack,
 // and a note is written by hand. Bowlby One, IBM Plex Mono, and Caveat for the hand.
-const handmade = vibe("handmade", {
+const printed = vibe("printed", {
   copy: { brand: "", links: ["", ""], kicker: "", head: "", sub: "", cta: "", cards: [], quote: "", foot: "" },
   move: { duration: 1.1, ease: "power3.inOut" },
   nav: [".v-cards", ".hm-rack"],
@@ -1177,14 +1211,12 @@ const handmade = vibe("handmade", {
       written.forEach((w) => w.revert());
       gsap.set(sign, { clearProps: "all" });
     });
-    // The statement inks on, a line at a time.
+    // The statement inks on as its words come into view. One mask over the whole paragraph: split into
+    // lines, the words wrap a little differently from the resting text, and a line break jumps as it ends.
     let inked: { revert: () => void } | undefined;
-    const quoteSt = onView(p.quoteSection, p.win, () => {
-      const lines = SplitText.create(p.quote, { type: "lines", aria: "auto" });
-      const run = inkText(lines.lines as HTMLElement[], { duration: 0.8, stagger: 0.25 });
-      run.timeline.call(() => lines.revert());
-      inked = { revert: () => (run.revert(), lines.revert()) };
-    }, "top 60%");
+    const quoteSt = onView(p.quote, p.win, () => {
+      inked = inkText([p.quote], { duration: 1.4, direction: "right" });
+    }, "top 85%");
     offs.push(() => {
       quoteSt.kill();
       inked?.revert();
@@ -1226,7 +1258,7 @@ const liquid = vibe("liquid", {
   lenis: { lerp: 0.06 },
   move: { duration: 1.6, ease: "power3.inOut" },
   nav: [".lq-scents", ".lq-bottle"],
-  page: `<header class="v-nav"><b class="v-brand">Mercure</b><span class="v-links"><a href="#v">Scents</a><a href="#v">The bottle</a></span></header>
+  page: `<div class="lq-pour" aria-hidden="true"></div><header class="v-nav"><b class="v-brand">Mercure</b><span class="v-links"><a href="#v">Scents</a><a href="#v">The bottle</a></span></header>
     <section class="v-hero lq-hero"><p class="v-kicker">Eaux de parfum · Paris</p><div class="lq-melt"><h3 class="v-head">Mercure</h3></div><p class="v-sub">Eight scents that move like quicksilver: cold at first, then warm on the skin.</p><button type="button" class="v-btn">Find your scent</button></section>
     <section class="lq-scents"><p class="v-kicker">The collection</p><div class="lq-index"><div class="lq-gutter" aria-hidden="true"></div><ol class="lq-rows">${LQ_SCENTS.map(([name, notes, price], i) => `<li><span class="lq-no">${String(i + 1).padStart(2, "0")}</span><span class="lq-name"><b>${name}</b><small>${notes}</small></span><span class="lq-price">${price}</span><a href="#v" class="lq-go" aria-label="${name}, ${price}"><i class="lq-fill" aria-hidden="true"></i><span aria-hidden="true">→</span></a></li>`).join("")}</ol></div></section>
     <section class="lq-bottle"><figure class="lq-glass"><img alt="The Mercure bottle, lilac liquid in clear glass with a chrome cap" src="${lqBottle}"></figure><p class="v-caption">Stir the glass with the pointer, or a held finger.</p></section>
@@ -1234,13 +1266,13 @@ const liquid = vibe("liquid", {
     <footer class="v-foot"><span>Mercure Parfums</span><span>12 rue de Turenne, Paris</span></footer>`,
   intro: (p, tl) => {
     tl.from(p.nav, { autoAlpha: 0, duration: 0.8, ease: "power2.out", stagger: 0.1 }, 0)
-      .from(p.kicker, { autoAlpha: 0, letterSpacing: "0.5em", duration: 1.2, ease: "power3.out" }, 0.1)
+      .from(p.kicker, { autoAlpha: 0, y: 10, duration: 1.2, ease: "power3.out" }, 0.1)
       // The name pours together; without WebGL the live heading is simply there.
       .call(() => {
         const m = LQ_MELTS.get(p.win);
         if (!m) return;
         m.asked = true;
-        if (m.ready) m.metal?.form({ duration: 2 });
+        if (m.ready) m.metal?.form({ duration: 2.4, from: "top" });
       }, [], 0.2)
       // Not split into lines: the face may still be loading, and lines split early would break wrong.
       .from(p.sub, { autoAlpha: 0, y: 16, duration: 0.9, ease: "power3.out" }, 1.2)
@@ -1248,20 +1280,40 @@ const liquid = vibe("liquid", {
     return () => {};
   },
   wire: (p, layer) => {
-    const host = one(p.win, ".lq-melt");
+    // The melt draws in a layer from the window's top down to the name, so drops fall from the top of the
+    // frame. The name is drawn where the live heading sits in that layer.
+    const host = one(p.win, ".lq-pour");
     const css = getComputedStyle(p.head);
-    const font = `${css.fontWeight} ${parseFloat(css.fontSize) * 2}px ${css.fontFamily}`;
+    const font = `${css.fontWeight} ${css.fontSize} ${css.fontFamily}`;
+    const place = () => {
+      const top = p.win.getBoundingClientRect().top - p.win.scrollTop;
+      host.style.height = `${p.head.getBoundingClientRect().bottom - top + 12}px`;
+    };
+    /** The name, where the heading's text sits in the layer, at the canvas's scale. */
+    const drawName = (c: CanvasRenderingContext2D, w: number) => {
+      const scale = w / host.clientWidth;
+      const range = document.createRange();
+      range.selectNodeContents(p.head);
+      const text = range.getBoundingClientRect();
+      const layer = host.getBoundingClientRect();
+      c.font = `${css.fontWeight} ${parseFloat(css.fontSize) * scale}px ${css.fontFamily}`;
+      c.textAlign = "center";
+      c.textBaseline = "middle";
+      c.fillStyle = "#fff";
+      c.fillText(p.head.textContent ?? "", (text.left + text.width / 2 - layer.left) * scale, (text.top + text.height / 2 - layer.top) * scale);
+    };
     const state: { metal: Melt | null; ready: boolean; asked: boolean } = { metal: null, ready: false, asked: false };
     LQ_MELTS.set(p.win, state);
     let gone = false;
     // The melt draws the word once, so it waits for the face; otherwise it would pour a fallback font.
     document.fonts.load(font).finally(() => {
       if (gone) return;
-      const metal = (state.metal = melt(host, { draw: drawText(p.head.textContent ?? "", font), poster: p.head, drops: 14, clip: p.win }));
+      place();
+      const metal = (state.metal = melt(host, { draw: drawName, poster: p.head, drops: 16, clip: p.win }));
       metal.view.ready.then((drawn) => {
         if (!drawn || gone) return;
         state.ready = true;
-        if (state.asked) metal.form({ duration: 2 });
+        if (state.asked) metal.form({ duration: 2.4, from: "top" });
       });
     });
     // Replay drips the old name away first, so it pours again.
@@ -1312,6 +1364,6 @@ export const VIBE_STAGES: Record<string, StageDef> = {
   luxury,
   snappy,
   glitchy,
-  handmade,
+  printed,
   liquid,
 };

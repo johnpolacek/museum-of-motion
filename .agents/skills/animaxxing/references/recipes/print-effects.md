@@ -148,6 +148,8 @@ To paint in two passes, as a print does with charcoal and then color, stack a se
 
 Live text inks in through grain: an SVG mask made from the same thresholds covers each target, and GSAP raises its alpha until every pixel is inked. The HTML is untouched: it stays selectable, readable to assistive technology, and in its own font and color.
 
+Ink a paragraph as one target. Split into lines first, its words can wrap one word differently from the resting text, and the break jumps when the split reverts.
+
 ```ts
 let maskId = 0;
 
