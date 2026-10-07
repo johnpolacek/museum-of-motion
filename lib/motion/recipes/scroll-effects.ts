@@ -641,13 +641,15 @@ export function stackCards(
 }
 
 export type ZoomOptions = {
-  mode?: "scale" | "clip";
+  mode?: "scale" | "clip" | "push" | "pull";
   /** `scale` mode: the part of `target` to fly into, HTML or SVG. Defaults to its center. */
   focus?: Element;
   /** `scale` mode: the final scale. */
   scale?: number;
   /** `clip` mode: the starting window, as `inset()` arguments. Give all four sides and a radius, so each value tweens to its pair. */
   inset?: string;
+  /** `push` and `pull` modes: the grid that holds `target`. Defaults to its parent. */
+  grid?: HTMLElement;
   /** Pinned distance, in section heights. */
   length?: number;
   scrub?: number | boolean;
@@ -657,10 +659,10 @@ export type ZoomOptions = {
 export function zoomThrough(
   section: HTMLElement,
   target: HTMLElement,
-  { mode = "scale", focus, scale = 30, inset = "30% 34% 30% 34% round 12px", length = 1.5, scrub = SCRUB, scroller }: ZoomOptions = {},
+  { mode = "scale", focus, scale = 30, inset = "30% 34% 30% 34% round 12px", grid, length = 1.5, scrub = SCRUB, scroller }: ZoomOptions = {},
 ): Teardown {
   if (prefersReducedMotion()) return () => {};
-  return own((_dispose, after) => {
+  return own((dispose, after) => {
     after(snapshotStyles([...new Set([target, ...gsap.utils.toArray<HTMLElement>(section.children)])]));
     const behind = Array.from(section.children).filter((child): child is HTMLElement => child !== target && child instanceof HTMLElement);
     const timeline = gsap.timeline({
@@ -669,6 +671,35 @@ export function zoomThrough(
     });
     if (mode === "clip") {
       timeline.fromTo(target, { clipPath: `inset(${inset})` }, { clipPath: "inset(0% 0% 0% 0% round 0px)", ease: "power2.inOut" }, 0);
+      return;
+    }
+    if (mode === "push" || mode === "pull") {
+      const plate = grid ?? target.parentElement!;
+      after(snapshotStyles([plate]));
+      // Where the grid must sit for the tile to fill the section. Measured at rest, before GSAP reads any
+      // value: resetting the transform while a tween parses its values splits its scale.
+      const measure = () => {
+        const held = { x: gsap.getProperty(plate, "x"), y: gsap.getProperty(plate, "y"), scale: gsap.getProperty(plate, "scale") };
+        gsap.set(plate, { x: 0, y: 0, scale: 1 });
+        const s = section.getBoundingClientRect();
+        const t = target.getBoundingClientRect();
+        const g = plate.getBoundingClientRect();
+        gsap.set(plate, held);
+        return {
+          x: s.left + s.width / 2 - (t.left + t.width / 2),
+          y: s.top + s.height / 2 - (t.top + t.height / 2),
+          scale: Math.max(s.width / t.width, s.height / t.height),
+          origin: `${t.left + t.width / 2 - g.left}px ${t.top + t.height / 2 - g.top}px`,
+        };
+      };
+      let spot = measure();
+      const remeasure = () => (spot = measure());
+      ScrollTrigger.addEventListener("refreshInit", remeasure);
+      dispose(() => ScrollTrigger.removeEventListener("refreshInit", remeasure));
+      const rest = { x: 0, y: 0, scale: 1, transformOrigin: () => spot.origin };
+      const filled = { x: () => spot.x, y: () => spot.y, scale: () => spot.scale, transformOrigin: () => spot.origin };
+      if (mode === "push") timeline.fromTo(plate, rest, { ...filled, ease: "power2.in" }, 0);
+      else timeline.fromTo(plate, filled, { ...rest, ease: "power2.out" }, 0);
       return;
     }
     // The origin is the focus's center within the target, measured at scale 1. It is measured again at

@@ -211,8 +211,21 @@ export const characters = def(
 
 /* ---------- Slide ---------- */
 
-export const wordSlide = def(["Word slide"], ["slide"], ["duration", "stagger", "hold", "ease"], { duration: 0.5, stagger: 0.05, hold: 2, ease: "signature" }, (text, p) => {
+export const wordSlide = def(["Words", "Letters"], ["words", "letters"], ["duration", "stagger", "hold", "ease"], { duration: 0.5, stagger: 0.05, hold: 2, ease: "signature" }, (text, p) => {
   const splits: SplitText[] = [];
+  // From split-entrances' wordsSlideIn and charsSlideIn: words zip in from alternating sides, letters
+  // from alternating above and below, and each leaves the opposite way.
+  if (p.variation === "letters") {
+    const chars = split(text, { type: "words,chars", smartWrap: true }, splits).chars as HTMLElement[];
+    const lean = (i: number) => (i % 2 === 0 ? -1 : 1);
+    return assemble(text, p, splits, {
+      enter: (tl) => (
+        tl.fromTo(chars, { autoAlpha: 0, yPercent: (i: number) => lean(i) * 110 }, { autoAlpha: 1, yPercent: 0, duration: p.duration, ease: p.ease, stagger: p.stagger }, 0),
+        end(chars.length, p)
+      ),
+      exit: (tl, at) => tl.to(chars, { autoAlpha: 0, yPercent: (i: number) => -lean(i) * 110, duration: Math.max(0.2, p.duration * 0.4), ease: EXIT, stagger: 0.012 }, at),
+    });
+  }
   const words = split(text, { type: "words" }, splits).words as HTMLElement[];
   const side = (i: number) => (i % 2 === 0 ? -1 : 1);
   return assemble(text, p, splits, {
@@ -222,7 +235,7 @@ export const wordSlide = def(["Word slide"], ["slide"], ["duration", "stagger", 
     ),
     exit: (tl, at) => tl.to(words, { autoAlpha: 0, xPercent: (i: number) => -side(i) * 40, duration: Math.max(0.2, p.duration * 0.4), ease: EXIT, stagger: 0.03 }, at),
   });
-});
+}, { letters: { stagger: 0.025, duration: 0.6 } });
 
 /* ---------- Scramble ---------- */
 
@@ -680,6 +693,38 @@ function glitchLayers(text: HTMLElement, cells: Cell[]) {
   };
 }
 
+/* ---------- Slip ---------- */
+
+// From print-effects' registrationSlip: a second impression in black lands out of register behind the
+// line, drifts, and snaps true under it. The line never moves; the impression is an aria-hidden copy.
+const slip = def(["Slip"], ["slip"], ["duration", "hold"], { duration: 0.6, stagger: 0, hold: 1.6, ease: "none" }, (text, p) => {
+  const copy = text.cloneNode(true) as HTMLElement;
+  copy.removeAttribute("id");
+  copy.setAttribute("aria-hidden", "true");
+  copy.classList.add("slip-copy");
+  text.after(copy);
+  // Over the line exactly: same box, from the same offset parent.
+  gsap.set(copy, { left: text.offsetLeft, top: text.offsetTop, width: text.offsetWidth, margin: 0 });
+  const held = text.style.cssText;
+  gsap.set(text, { position: "relative", zIndex: 1 });
+  return assemble(
+    text,
+    p,
+    [],
+    {
+      enter: (tl) => {
+        tl.fromTo(copy, { autoAlpha: 1, x: 14, y: 6 }, { x: 7, y: -2, duration: p.duration * 0.5, ease: "power2.out" }, 0).to(copy, { x: 0, y: 0, duration: p.duration * 0.3, ease: "back.out(3)" });
+        return p.duration * 0.8;
+      },
+      exit: (tl, at) => tl.to(copy, { x: -10, y: 4, autoAlpha: 0, duration: 0.3, ease: EXIT }, at),
+    },
+    () => {
+      copy.remove();
+      text.style.cssText = held;
+    },
+  );
+});
+
 export const glitch = def(
   ["Slice", "Blocks", "Skew", "Ghost", "Weight", "Scanline"],
   ["slice", "blocks", "skew", "ghost", "weight", "scanline"],
@@ -797,7 +842,7 @@ export const TEXT_STAGES: Record<string, StageDef> = {
   characters: merge(["rise", "cascade", "flip", "spring", "scatter", "fall"].map((v, i) => ({ def: characters, variation: v, key: v, label: characters.labels[i + 1]! }))),
   "slide": wordSlide,
   scramble,
-  glitch,
+  glitch: merge([{ def: glitch, all: true }, { def: slip, label: "Slip", key: "slip" }]),
   "speak": merge([{ def: typewriter, all: true }, { def: speakIn, label: "Speak", key: "speak" }]),
   wave: merge([{ def: weightWave, label: "Weight", key: "weight" }, { def: letterWave, all: true }]),
   "route": routeLetters,

@@ -382,6 +382,8 @@ export function pathLoop(textPath: SVGTextPathElement, { duration = 16, directio
   const sync = () => (paused || !visible ? tween?.pause() : tween?.play());
   const revert = own((dispose, after) => {
     after(snapshot([textPath], ["startOffset"], []));
+    // GSAP reads the attribute as its starting value; a missing one is an invalid empty length.
+    if (!textPath.hasAttribute("startOffset")) textPath.setAttribute("startOffset", "0%");
     // Half the two-lap path is one lap, so 0% and 50% look the same.
     const [a, b] = direction > 0 ? [0, 50] : [50, 0];
     tween = gsap.fromTo(textPath, { attr: { startOffset: `${a}%` } }, { attr: { startOffset: `${b}%` }, duration, ease: "none", repeat: -1 });

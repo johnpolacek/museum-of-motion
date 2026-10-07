@@ -191,6 +191,19 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .icon-btn { display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.6); background: none; color: #fff; cursor: pointer; }
 .ex .stage-art .icon-btn svg { width: 36px; height: 36px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .ex .stage-art .morph-art { width: min(calc(56svh - 110px), 380px); height: auto; aspect-ratio: 1; fill: #fff; }
+/* Slip: the second impression sits exactly over the line, in black, behind it. */
+.ex .stage > .slip-copy { position: absolute; color: #0b0b0b; pointer-events: none; }
+/* Paint: a white sheet on the blue field, printed in black and blue. */
+.ex .stage-art .print-stage { display: grid; gap: 18px; justify-items: center; }
+.ex .stage-art .print-sheet { position: relative; margin: 0; width: min(560px, 80vw); aspect-ratio: 4 / 3; max-height: calc(52svh - 110px); background: #fff; color: #0b0b0b; overflow: hidden; }
+.ex .stage-art .print-sheet .plate, .ex .stage-art .plate-color { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.ex .stage-art .print-type { display: grid; align-content: center; gap: 10px; padding: 7%; text-transform: none; letter-spacing: 0; }
+.ex .stage-art .print-type h3 { margin: 0; font-size: clamp(28px, 4vw, 52px); line-height: 0.95; font-weight: 800; font-stretch: 75%; text-transform: uppercase; }
+.ex .stage-art .print-type p { margin: 0; font-size: 16px; line-height: 1.4; }
+.ex .stage-art .print-roll { display: grid; place-items: center; }
+.ex .stage-art .print-block { position: relative; width: 78%; height: 56%; display: grid; place-items: center; background: #2130ff; color: #fff; }
+.ex .stage-art .print-block p { margin: 0; font-size: clamp(22px, 3vw, 40px); font-weight: 800; font-stretch: 75%; text-transform: uppercase; }
+.ex .stage-art .brayer { position: absolute; left: 0; top: -8%; width: 16px; height: 116%; border-radius: 8px; background: #0b0b0b; z-index: 2; opacity: 0; }
 .ex .stage-art .menu-panel { position: absolute; inset: 0; z-index: 5; visibility: hidden; background: var(--ink); color: #fff; display: grid; align-content: center; justify-items: start; gap: 18px; padding: 24px var(--gut); }
 .ex .stage-art .menu-panel nav { display: grid; gap: 4px; }
 .ex .stage-art .menu-panel a { font: 700 clamp(28px, 4vw, 56px)/1.05 var(--sans); font-stretch: 82%; }
@@ -361,6 +374,10 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win .w-zoomback, .ex .win .w-zoomclip { width: 100%; height: 100%; }
 .ex .win .w-zoomback svg, .ex .win .w-zoomclip svg { display: block; width: 100%; height: 100%; }
 .ex .win .w-zoomplate { display: block; width: 100%; height: 100%; }
+/* Three tiles across and down, sized from the section itself: container units shift once the section pins. */
+.ex .win .w-zoom > .w-zoomwall { inset: auto; top: 50%; left: 50%; height: 78%; max-width: 90%; aspect-ratio: 4 / 3; translate: -50% -50%; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); gap: 3%; }
+.ex .win .w-zoomtile { position: relative; overflow: hidden; }
+.ex .win .w-zoomtile svg { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
 .ex .stage-art .path-ride { display: grid; justify-items: center; gap: 16px; width: min(92%, 900px); }
 .ex .stage-art .path-ride svg { width: 100%; overflow: visible; }
 .ex .stage-art .path-ride text { fill: currentColor; font-weight: 800; font-stretch: 75%; font-size: 56px; letter-spacing: -0.01em; }

@@ -310,16 +310,23 @@ const stacking = play(["Stacking"], ["stack"], SCROLL_HINT, (text) =>
 const WORD = `font-family="var(--font-archivo), Arial, sans-serif" font-weight="800" font-stretch="75%" font-size="220" letter-spacing="-4" text-anchor="middle" x="500" y="275"`;
 const PLATE = `<svg class="w-zoomplate" viewBox="0 0 1000 400" preserveAspectRatio="xMidYMid slice" aria-label="move."><defs><mask id="zoom-cut"><rect width="1000" height="400" fill="#fff"/><text ${WORD} fill="#000">move.</text></mask></defs><rect width="1000" height="400" fill="#2130ff" mask="url(#zoom-cut)"/><text ${WORD} fill="transparent"><tspan data-zoom-focus>m</tspan>ove.</text></svg>`;
 
-const zoom = play(["Scale", "Clip"], ["scale", "clip"], SCROLL_HINT, (text, p) =>
+// A three by three wall of posters; the middle one is the tile the camera pushes into or pulls back from.
+const WALL = `<div class="w-zoomwall">${Array.from({ length: 9 }, (_, i) => `<div class="w-zoomtile"${i === 4 ? " data-zoom-tile" : ""}>${poster(i + 1, i)}</div>`).join("")}</div>`;
+
+const zoom = play(["Through", "Window", "Push", "Pull"], ["through", "window", "push", "pull"], SCROLL_HINT, (text, p) =>
   windowed(
     text,
-    p.variation === "clip"
+    p.variation === "window"
       ? `${CUE}<section class="w-zoom"><div class="w-zoomclip">${poster(7, 0)}</div></section>${END}`
-      : `${CUE}<section class="w-zoom"><div class="w-zoomback">${poster(7, 0)}</div>${PLATE}</section>${END}`,
+      : p.variation === "push" || p.variation === "pull"
+        ? `${CUE}<section class="w-zoom">${WALL}</section>${END}`
+        : `${CUE}<section class="w-zoom"><div class="w-zoomback">${poster(7, 0)}</div>${PLATE}</section>${END}`,
     (win) => [
-      p.variation === "clip"
+      p.variation === "window"
         ? zoomThrough(one(win, ".w-zoom"), one(win, ".w-zoomclip"), { mode: "clip", scroller: win, length: 1.2 })
-        : zoomThrough(one(win, ".w-zoom"), one(win, ".w-zoomplate"), { focus: one(win, "[data-zoom-focus]"), scale: 60, scroller: win, length: 1.2 }),
+        : p.variation === "push" || p.variation === "pull"
+          ? zoomThrough(one(win, ".w-zoom"), one(win, "[data-zoom-tile]"), { mode: p.variation, scroller: win, length: 1.2 })
+          : zoomThrough(one(win, ".w-zoom"), one(win, ".w-zoomplate"), { focus: one(win, "[data-zoom-focus]"), scale: 60, scroller: win, length: 1.2 }),
     ],
   ),
 );

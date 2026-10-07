@@ -153,6 +153,7 @@ Character effects are for display type. Keep reading text immediately readable; 
 | `charsImplodeIn` / `charsExplodeOut` | chars | in: from straight out of the line's center, `(reach + distance) × 0.7–1.3`, `rotation ±120`, `scale 1.6–2.6`, 0.9s `power4.out`, edges first; out: the same way, 0.45s `power3.in`, center first | A headline that slams together from all around, or blows apart. The loudest character move; one per screen. |
 | `charsWeightWave` | chars, widths pinned | `fontWeight` dips to the far end of the axis and back, stagger 0.03 | A wave of weight through a line. |
 | `wordsSlideIn` / `Out` | words | `x ±40` alternating sides, `power2.out`, stagger 0.05 | Words zip together. |
+| `charsSlideIn` / `Out` | chars | `yPercent ±110` alternating above and below, `power2.out`, stagger 0.03 | Letters zip together. |
 | `linesMaskIn` / `Out` | lines, masked | `yPercent: 110 → 0`, 0.28s, `power3.out`, stagger 0.05 | Whole lines wiped up behind masks. |
 | `linesEllipseIn` / `Out` | lines, masked | mask `clip-path: ellipse(20% 0%)` swells to cover the line from its bottom edge while the line rises `yPercent 40 → 0`, 0.8s, `power3.out`, stagger 0.05 | A softer, rounder line reveal for display copy. |
 | `linesHighlightIn` / `Out` | lines, words | a `--line-highlight` bar sweeps `scaleX 0 → 1` over each line's words, the words appear, the bar retracts toward the line end; 0.12s between lines | A marker pass across a statement or pull quote. |

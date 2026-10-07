@@ -6,6 +6,7 @@ import { gsap, prefersReducedMotion, ScrollTrigger, SplitText } from "../gsap";
 import { art, assemble, def, EXIT, live, merge, pinWidths, play, type StageDef } from "../stage-core";
 import { drawIn, pathLoop } from "../recipes/svg-effects";
 import { pinnedScene } from "../recipes/scroll-effects";
+import { inkText, paintReveal } from "../recipes/print-effects";
 import { lenisScroll } from "../recipes/smooth/lenis-scroll";
 import { EXHIBITS } from "../../exhibits";
 
@@ -66,6 +67,51 @@ const imageReveal = def(
       remove,
     );
   },
+);
+
+/* ---------- Paint ---------- */
+
+// A sheet of paper takes a print. Image: the black key plate is brushed on with a dry edge, then the blue
+// plate inks in over it. Type: a heading and its lines ink in through grain, the HTML untouched. Roller: a
+// brayer rolls a block of ink across. Each prints once; the button pulls another.
+const PLATE_KEY = (n: string) => `<svg class="plate" viewBox="0 0 400 300" aria-hidden="true"><g stroke="#0b0b0b" stroke-width="2">${Array.from({ length: 9 }, (_, k) => `<line x1="24" x2="376" y1="${40 + k * 22}" y2="${40 + k * 22}" opacity="0.35"/>`).join("")}</g><text x="22" y="276" fill="#0b0b0b" font-family="var(--font-archivo), Arial, sans-serif" font-weight="800" font-size="200" font-stretch="75%" letter-spacing="-8">${n}</text></svg>`;
+const PLATE_COLOR = `<svg class="plate" viewBox="0 0 400 300" aria-hidden="true"><circle cx="292" cy="118" r="86" fill="#2130ff"/><circle cx="292" cy="118" r="40" fill="#fff"/><rect x="248" y="232" width="128" height="22" fill="#2130ff"/></svg>`;
+const PAINT_HTML: Record<string, (n: string) => string> = {
+  image: (n) => `<figure class="print-sheet" role="img" aria-label="A print of the number ${n}, in black and blue">${PLATE_KEY(n)}<div class="plate-color">${PLATE_COLOR}</div></figure>`,
+  type: () => `<div class="print-sheet print-type"><h3>Every way a page can move.</h3><p>Pulled one sheet at a time, in black ink on white paper.</p><p>The text stays text: select it, read it aloud.</p></div>`,
+  roller: () => `<div class="print-sheet print-roll"><div class="print-block"><p>Pulled by hand</p><i class="brayer" aria-hidden="true"></i></div></div>`,
+};
+const paint = play(["Image", "Type", "Roller"], ["image", "type", "roller"], "Pull another print with the button.", (text, p) =>
+  live(
+    text,
+    `<div class="print-stage">${(PAINT_HTML[p.variation] ?? PAINT_HTML.image!)(String(EXHIBITS.find((e) => e.slug === "paint")?.no ?? 0).padStart(2, "0"))}<button type="button" class="pill print-again">Pull another</button></div>`,
+    (layer) => {
+      const sheet = layer.querySelector<HTMLElement>(".print-sheet")!;
+      let reverts: Array<() => void> = [];
+      const print = () => {
+        reverts.forEach((revert) => revert());
+        if (p.variation === "type") {
+          const ink = inkText(Array.from(sheet.querySelectorAll<HTMLElement>("h3, p")), { duration: 1.1, stagger: 0.35 });
+          reverts = [ink.revert];
+        } else if (p.variation === "roller") {
+          const block = sheet.querySelector<HTMLElement>(".print-block")!;
+          const roll = paintReveal(block, { paper: "#fff", duration: 2, roller: block.querySelector<HTMLElement>(".brayer")! });
+          reverts = [roll.revert];
+        } else {
+          // Build the color plate's mask first, so it stays hidden while the key plate is brushed on.
+          const color = inkText([sheet.querySelector<HTMLElement>(".plate-color")!], { duration: 1.6, direction: "down" });
+          const key = paintReveal(sheet, { paper: "#fff", duration: 2.2 });
+          color.timeline.pause(0);
+          gsap.delayedCall(1.5, () => color.timeline.play());
+          reverts = [key.revert, color.revert, () => gsap.killTweensOf(color.timeline)];
+        }
+      };
+      print();
+      const again = layer.querySelector<HTMLButtonElement>(".print-again")!;
+      again.addEventListener("click", print);
+      return [() => again.removeEventListener("click", print), () => reverts.forEach((revert) => revert())];
+    },
+  ),
 );
 
 /* ---------- Line draw ---------- */
@@ -685,6 +731,7 @@ const timelineStage: StageDef = { ...timeline, hints: TL_HINTS };
 
 export const TIME_STAGES: Record<string, StageDef> = {
   timeline: timelineStage,
+  paint,
   unveil: imageReveal,
   path: merge([{ def: lineDraw, label: "Draw", key: "draw" }, { def: pathFollow, all: true }, { def: textOnPath, all: true }]),
   count: merge([{ def: countUp, label: "Count-up", key: "count" }, { def: odometer, label: "Odometer", key: "odometer" }]),

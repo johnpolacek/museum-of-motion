@@ -85,9 +85,12 @@ const DATA: Exhibit[] = [
   {
     name: "Slide",
     group: "type",
-    builders: "wordsSlideIn, wordsSlideOut",
+    builders: "wordsSlideIn, wordsSlideOut, charsSlideIn, charsSlideOut",
     src: "split-entrances",
-    desc: "Words zip together from alternating sides."
+    desc: "Words zip together from alternating sides, or letters from above and below.",
+    vars: [
+      "Letters"
+    ]
   },
   {
     name: "Scramble",
@@ -107,7 +110,8 @@ const DATA: Exhibit[] = [
       "Skew",
       "Ghost",
       "Weight",
-      "Scanline"
+      "Scanline",
+      "Slip"
     ]
   },
   {
@@ -267,6 +271,17 @@ const DATA: Exhibit[] = [
     ]
   },
   {
+    name: "Paint",
+    group: "play",
+    builders: "paintReveal, inkText",
+    src: "print-effects",
+    desc: "A print is pulled: an image brushed on with a dry edge, text inked in through grain, a block rolled on by a brayer.",
+    vars: [
+      "Type",
+      "Roller"
+    ]
+  },
+  {
     name: "Timeline",
     group: "play",
     builders: "gsap.timeline, drawIn",
@@ -313,9 +328,11 @@ const DATA: Exhibit[] = [
     group: "scroll",
     builders: "zoomThrough",
     src: "scroll-effects",
-    desc: "A word grows until you pass through it into the image, or a window opens to full bleed.",
+    desc: "A word grows until you pass through it, a window opens to full bleed, or the camera pushes into one tile of a wall and pulls back out.",
     vars: [
-      "Clip"
+      "Window",
+      "Push",
+      "Pull"
     ]
   },
   {

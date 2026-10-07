@@ -395,6 +395,35 @@ export const wordsSlideOut: SplitRunner = (element, options = {}) =>
     { autoAlpha: 0 },
   );
 
+/** Letters zip together from above and below, alternating. */
+export const charsSlideIn: SplitRunner = (element, options = {}) =>
+  withSplit(element, options, { type: "chars", smartWrap: true }, (split, tl) => {
+    tl.from(split.chars, {
+      autoAlpha: 0,
+      yPercent: (index: number) => (index % 2 === 0 ? -110 : 110),
+      duration: DURATION.page,
+      ease: EASE.entrance,
+      stagger: STAGGER.tight,
+    });
+  });
+
+export const charsSlideOut: SplitRunner = (element, options = {}) =>
+  withSplit(
+    element,
+    options,
+    { type: "chars", smartWrap: true },
+    (split, tl) => {
+      tl.to(split.chars, {
+        autoAlpha: 0,
+        yPercent: (index: number) => (index % 2 === 0 ? 110 : -110),
+        duration: DURATION.component,
+        ease: EASE.exit,
+        stagger: STAGGER.tight,
+      }).set(element, { autoAlpha: 0 });
+    },
+    { autoAlpha: 0 },
+  );
+
 /** Whole lines wiped up behind masks. */
 export const linesMaskIn: SplitRunner = (element, options = {}) =>
   withSplit(element, options, { type: "lines", mask: "lines" }, (split, tl) => {
