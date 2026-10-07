@@ -1,6 +1,6 @@
 # Verification
 
-Automated suite: `motion/` in [animaxxing-skills-test](https://github.com/johnpolacek/animaxxing-skills-test) type-checks every recipe straight from this skill and runs `motion/tests/webgl.spec.ts` against `motion/fixtures/webgl.html` in headless Chromium, drawing through SwiftShader (`--use-angle=swiftshader --enable-unsafe-swiftshader`). Run `npx playwright test -c motion/playwright.config.ts webgl` from that repository after changing any recipe. Checks cover lifecycle state, DOM fallbacks, counted GL resources, uniforms, and sampled pixels for wrapper visibility and lens distortion. Keep usage snippets under a `## Wiring` heading or starting with `// Example` so the suite skips them.
+Automated suite: `motion/` in [animaxxing-skills-test](https://github.com/johnpolacek/animaxxing-skills-test) type-checks every recipe straight from this skill and runs `motion/tests/webgl.spec.ts` and `motion/tests/webgl-views.spec.ts` against their fixtures in headless Chromium, drawing through SwiftShader (`--use-angle=swiftshader --enable-unsafe-swiftshader`). Run `npx playwright test -c motion/playwright.config.ts webgl` from that repository after changing any recipe. Checks cover lifecycle state, DOM fallbacks, counted GL resources, uniforms, and sampled pixels for wrapper visibility and lens distortion. Keep usage snippets under a `## Wiring` heading or starting with `// Example` so the suite skips them.
 
 Reference demo: none yet. Check visual quality, shader tuning, and frame pacing in the consuming app, alongside the framework skill's checks.
 
@@ -39,12 +39,26 @@ Reference demo: none yet. Check visual quality, shader tuning, and frame pacing 
 - Dissolve, pixelate, ripple: each builds hidden, changes sampled pixels early in `enter()`, ends with every sample inked and its uniform at rest, hides on `exit()`, and revert restores its uniforms. Without WebGL all timelines finish at once.
 - Glitch: builds hidden, `enter()` shows the plane and settles `uGlitch` at 0, sampled rows jump while it is high and match the clean frame at 0, `exit()` ends hidden, and revert restores both uniforms.
 
+## Framed views
+
+- A view draws only inside its element's box; its poster turns transparent after the first frame and stays in the accessibility tree with its alt text.
+- Revert every view: GL deletes match creations for textures, programs, shaders, buffers, vertex arrays, framebuffers, and renderbuffers, and the poster's inline style matches its pre-build state.
+- Lose the context: every poster shows at once. Restore it: each view builds its drawing, render target, and quad again, and keeps its uniform values.
+- Off screen, a view lets the stage sleep; scrolling back wakes it.
+- Without WebGL or with reduced motion: no canvas, `ready` resolves `false`, posters untouched, and a morph's `to()` and a liquid's `pour()` complete at once with their callbacks.
+- Flight: the nearest image draws right of center at rest; `uTravel` changes the rendering; `scrollFlight` follows the scroll range and leaves no ScrollTrigger after revert; `pointerLean` follows the mouse, settles on leave, and ignores touch. A flight whose images cannot be read keeps its poster and creates no texture.
+- Morph: gathering into a sphere concentrates ink in the element's color; `uScatter` thins it; `pointerPush` rises under the mouse and falls on leave.
+- Liquid: a mouse trail changes sampled pixels across the image, and the image returns to exactly its clean rendering once the trail fades; `pour()` does the same in one stroke.
+- Every submitted shader's constant `smoothstep` edges increase.
+
 ## Manual checks
 
 - On a real phone at 4x CPU throttling, scroll a page of planes: frame pacing holds, or lower `maxDpr`, `maxPixels`, `segments`, or the number of planes.
 - Pinch-zoom, rotate, and show and hide the browser's URL bar: planes stay on their images.
 - With a smooth scroller, pass its scroller to `scrollWave` and confirm the planes follow the eased position.
 - Navigate several routes with the framework's transitions: one canvas throughout, and no image flashes back before its page unmounts.
+- Compare each view's poster with its drawing at rest: the swap at the first frame should not jump. Retake the poster after changing a drawing's defaults.
+- On a 120 Hz display, drag a liquid trail and stop: the image comes fully back to rest.
 
 ## Report
 

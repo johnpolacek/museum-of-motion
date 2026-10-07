@@ -377,6 +377,16 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art.flow { position: relative; inset: auto; padding: 0; }
 .ex .stage-art .gl-column { display: grid; gap: 48px; justify-items: center; width: 100%; }
 .ex .stage-art .gl-column .gl-frame { width: min(70%, 640px); }
+/* Framed views: a drawing in the element's box, over a poster <img> of its resting frame. */
+.ex .stage-art .gl-view { position: relative; margin: 0; color: #fff; }
+.ex .stage-art .gl-view img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ex .stage-art .gl-morph { width: min(96%, 960px); max-height: calc(60svh - 110px); aspect-ratio: 16 / 9; touch-action: pan-y; }
+.ex .stage-art .gl-morph img { object-fit: contain; }
+@media (max-width: 600px) { .ex .stage-art .gl-morph { aspect-ratio: 1; } }
+/* The live layer pads to the gutter, so the frame fills it on phones rather than 92% of the stage. */
+@media (max-width: 600px) { .ex .stage-art.live .gl-liquid { width: 100%; height: auto; } }
+.ex .stage-art .gl-flight-track { width: 100%; height: 340svh; }
+.ex .stage-art .gl-flight { position: sticky; top: 12svh; width: 100%; height: 76svh; }
 .ex .stage .replay { position: absolute; right: 0; bottom: 16px; font-family: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid currentColor; border-radius: 0; padding: 0; cursor: pointer; }
 .ex .stage .replay:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .ex .scrub { display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; }

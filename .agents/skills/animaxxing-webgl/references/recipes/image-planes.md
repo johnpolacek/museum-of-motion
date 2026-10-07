@@ -173,8 +173,8 @@ function readable(image: HTMLImageElement): boolean {
   }
 }
 
-/** The image itself when readable, else a CORS-mode copy, else null. */
-async function textureSource(image: HTMLImageElement, signal: AbortSignal): Promise<HTMLImageElement | null> {
+/** The image itself when readable, else a CORS-mode copy, else null. Other recipes load textures through it too. */
+export async function textureSource(image: HTMLImageElement, signal: AbortSignal): Promise<HTMLImageElement | null> {
   if (!(await loaded(image, signal))) return null;
   // Decode off the main thread so the texture upload does not.
   await image.decode().catch(() => {});

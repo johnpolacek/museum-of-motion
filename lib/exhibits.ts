@@ -243,6 +243,18 @@ const DATA: Exhibit[] = [
     gl: true
   },
   {
+    name: "Morph",
+    group: "play",
+    builders: "particleMorph",
+    src: "particle-morph",
+    desc: "Dust gathers into a shape, then blows away.",
+    vars: [
+      "Number",
+      "Sphere"
+    ],
+    gl: true
+  },
+  {
     name: "Timeline",
     group: "play",
     builders: "gsap.timeline, drawIn",
@@ -341,6 +353,14 @@ const DATA: Exhibit[] = [
     builders: "scrollWave",
     src: "uniform-effects",
     desc: "Images ripple with scroll speed.",
+    gl: true
+  },
+  {
+    name: "Flight",
+    group: "scroll",
+    builders: "flight",
+    src: "scene-flight",
+    desc: "Scrolling flies a camera through a spiral of posters.",
     gl: true
   },
   {
@@ -467,6 +487,14 @@ const DATA: Exhibit[] = [
     builders: "hoverDistortion",
     src: "uniform-effects",
     desc: "A lens bends the image under the pointer.",
+    gl: true
+  },
+  {
+    name: "Liquid",
+    group: "pointer",
+    builders: "liquidImage",
+    src: "liquid-image",
+    desc: "The pointer drags a trail through the image like water.",
     gl: true
   },
   {

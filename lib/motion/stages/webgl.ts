@@ -1,11 +1,15 @@
-// WebGL stages: Shader, Scroll wave, Hover lens. Each draws real <img> posters as planes on
-// the animaxxing-webgl skill's one shared canvas (OGL), and GSAP tweens the planes' uniforms. The <img>
-// stays the page: without WebGL, under reduced motion, or after a lost context, the poster shows as is.
+// WebGL stages: Shader, Morph, Flight, Scroll wave, Hover lens, Liquid. Each draws on the animaxxing-webgl
+// skill's one shared canvas (OGL), and GSAP tweens shader uniforms. Images draw as planes; Morph and Flight
+// draw framed views. The DOM stays the page: without WebGL, under reduced motion, or after a lost context,
+// each <img> or poster <img> shows as is.
 import { gsap } from "../gsap";
 import { art, assemble, def, live, play, type LoopParams, type StageDef } from "../stage-core";
 import { EXHIBITS } from "../../exhibits";
 import { imagePlane, type ImagePlane } from "../recipes/webgl/image-planes";
 import { hoverDistortion, scrollWave } from "../recipes/webgl/uniform-effects";
+import { flight, pointerLean, scrollFlight } from "../recipes/webgl/scene-flight";
+import { particleMorph, pointerPush, scatterShape, sphereShape, textShape, type PointShape } from "../recipes/webgl/particle-morph";
+import { liquidImage } from "../recipes/webgl/liquid-image";
 
 const TONES: [string, string][] = [
   ["#0b0b0b", "#2130ff"],
@@ -19,9 +23,9 @@ const two = (n: number) => String(n).padStart(2, "0");
  * A poster as a data URI, so WebGL can read it without CORS. Explicit width and height make the
  * browser rasterize the SVG at full size for the texture. Images cannot reach the page font.
  */
-export function posterUrl(n: number, i: number) {
+export function posterUrl(n: number, i: number, width = 1600) {
   const [bg, fg] = TONES[i % TONES.length];
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 400 300"><rect width="400" height="300" fill="${bg}"/><g fill="none" stroke="${fg}" stroke-width="2" opacity="0.5"><circle cx="300" cy="140" r="90"/><circle cx="300" cy="140" r="56"/><circle cx="300" cy="140" r="22"/></g><g stroke="${fg}" stroke-width="1" opacity="0.25">${Array.from({ length: 14 }, (_, k) => `<line x1="0" y1="${k * 22}" x2="400" y2="${k * 22}"/>`).join("")}</g><text x="24" y="270" fill="${fg}" font-family="Arial Narrow, Arial, sans-serif" font-weight="700" font-size="190" letter-spacing="-8">${two(n)}</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${(width * 3) / 4}" viewBox="0 0 400 300"><rect width="400" height="300" fill="${bg}"/><g fill="none" stroke="${fg}" stroke-width="2" opacity="0.5"><circle cx="300" cy="140" r="90"/><circle cx="300" cy="140" r="56"/><circle cx="300" cy="140" r="22"/></g><g stroke="${fg}" stroke-width="1" opacity="0.25">${Array.from({ length: 14 }, (_, k) => `<line x1="0" y1="${k * 22}" x2="400" y2="${k * 22}"/>`).join("")}</g><text x="24" y="270" fill="${fg}" font-family="Arial Narrow, Arial, sans-serif" font-weight="700" font-size="190" letter-spacing="-8">${two(n)}</text></svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
@@ -119,6 +123,90 @@ const shader = def(
   { dissolve: { duration: 1.1 }, pixelate: { duration: 1 }, ripple: { duration: 1.4 }, glitch: { duration: 0.6 } },
 );
 
+/* ---------- Morph ---------- */
+
+// Dust gathers into a shape, rests, and blows back into dust: a word in the page's own face, the exhibit's
+// number, a sphere. One uniform, uShape, carries it; each point leaves on its own delay. The pointer parts
+// the points. A poster per tab shows the gathered shape whenever WebGL cannot draw.
+const MORPH_SHAPES: Record<string, (text: HTMLElement, n: number) => PointShape> = {
+  word: (text) => textShape("MOTION", { font: `800 200px ${getComputedStyle(text).fontFamily}` }),
+  number: (text, n) => textShape(two(n), { font: `800 320px ${getComputedStyle(text).fontFamily}` }),
+  sphere: () => sphereShape(5000, 0.95),
+};
+const morph = def(
+  ["Word", "Number", "Sphere"],
+  ["word", "number", "sphere"],
+  ["duration", "hold"],
+  { duration: 2, stagger: 0, hold: 1.6, ease: "power2.inOut" },
+  (text, p) => {
+    const n = EXHIBITS.find((e) => e.slug === "morph")?.no ?? 0;
+    const { layer, remove } = art(
+      text,
+      `<figure class="gl-view gl-morph"><img data-poster alt="" src="/exhibits/morph-${p.variation}.jpg"></figure>`,
+    );
+    const host = layer.querySelector<HTMLElement>(".gl-morph")!;
+    // The gathered shape is the poster; hide it until the dust is ready, so the loop starts scattered.
+    layer.style.visibility = "hidden";
+    const shape = (MORPH_SHAPES[p.variation] ?? MORPH_SHAPES.word)(text, n);
+    const m = particleMorph(host, { shapes: [scatterShape(4000, 1.1), shape], size: 2, fill: 0.86 });
+    const push = pointerPush(m, { touch: true });
+    const u = m.uniforms;
+    const spin = p.variation === "sphere";
+    let deadline: ReturnType<typeof setTimeout> | undefined;
+    const ready = Promise.race([m.view.ready, new Promise((resolve) => (deadline = setTimeout(resolve, 2000)))]).then(() => {
+      clearTimeout(deadline);
+      layer.style.removeProperty("visibility");
+    });
+    const loop = assemble(
+      text,
+      p,
+      [],
+      {
+        enter: (tl) => {
+          tl.fromTo(u.uShape, { value: 0 }, { value: 1, duration: p.duration, ease: p.ease }, 0);
+          if (spin) tl.fromTo(u.uSpin, { value: -1.2 }, { value: 0, duration: p.duration, ease: "power2.out" }, 0);
+          return p.duration;
+        },
+        exit: (tl, at) => {
+          tl.to(u.uShape, { value: 0, duration: p.duration * 0.6, ease: "power2.in" }, at);
+          if (spin) tl.to(u.uSpin, { value: 1.2, duration: p.duration * 0.6, ease: "power2.in" }, at);
+        },
+      },
+      () => {
+        clearTimeout(deadline);
+        push();
+        m.revert();
+        remove();
+      },
+    );
+    return { ...loop, ready };
+  },
+  { number: { duration: 1.8 }, sphere: { duration: 2.4 } },
+);
+
+/* ---------- Flight ---------- */
+
+/**
+ * A camera flies down a spiral of posters as the page scrolls. Like the scroll wave, the stage scrolls the
+ * page itself: a tall track holds the view in place with `position: sticky` while the scroll drives the flight.
+ */
+const FLIGHT_POSTERS = Array.from({ length: 12 }, (_, i) => i + 1);
+const flightStage = play(["Flight"], ["flight"], "Scroll the page to fly through the posters. Move the mouse to lean.", (text) =>
+  live(
+    text,
+    `<div class="gl-flight-track"><figure class="gl-view gl-flight"><img data-poster alt="Twelve posters receding down a spiral" src="/exhibits/flight.jpg"></figure></div>`,
+    (layer) => {
+      const ride = flight(layer.querySelector<HTMLElement>(".gl-flight")!, { images: FLIGHT_POSTERS.map((n, i) => posterUrl(n, i, 800)), fog: 24 });
+      return [
+        () => ride.revert(),
+        scrollFlight(ride, { trigger: layer.querySelector(".gl-flight-track")!, start: "top top", end: "bottom bottom", scrub: 1 }),
+        pointerLean(ride),
+      ];
+    },
+    "flow",
+  ),
+);
+
 /* ---------- Scroll wave ---------- */
 
 /**
@@ -153,8 +241,38 @@ const hoverLens = play(["Hover lens"], ["lens"], "Move the mouse or a held finge
   ),
 );
 
+/* ---------- Liquid ---------- */
+
+// The poster is water: the pointer, or a held finger, drags a trail through it that bends the picture and
+// fades back to rest. On arrival one stroke pours across it. The <img> is the content and the fallback.
+const LIQUID_NO = () => EXHIBITS.find((e) => e.slug === "liquid")?.no ?? 0;
+const liquid = play(["Liquid"], ["liquid"], "Drag the mouse or a held finger across the poster.", (text) =>
+  live(
+    text,
+    `<figure class="gl-frame gl-liquid"><img alt="Poster ${two(LIQUID_NO())}, its surface stirred like water" src="${posterUrl(LIQUID_NO(), 2)}"></figure>`,
+    (layer) => {
+      const water = liquidImage(layer.querySelector("img")!, { touch: true });
+      // A touch stronger than the recipe's default: the poster's thin lines need a firmer bend to read.
+      water.uniforms.uStrength.value = 0.12;
+      let cancelled = false;
+      water.view.ready.then((drawn) => {
+        if (drawn && !cancelled) water.pour({ duration: 1.6 });
+      });
+      return [
+        () => {
+          cancelled = true;
+          water.revert();
+        },
+      ];
+    },
+  ),
+);
+
 export const WEBGL_STAGES: Record<string, StageDef> = {
   shader,
+  morph,
+  flight: flightStage,
+  liquid,
   "scroll-wave": scrollWaveStage,
   "hover-lens": hoverLens,
 };
