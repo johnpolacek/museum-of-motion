@@ -2,13 +2,13 @@
 // Each mounts real controls inside the stage and wires the animaxxing recipe to them, unchanged, from
 // lib/motion/recipes. Nothing loops: the stage waits for the visitor, so it shows a hint instead of a scrub.
 import { gsap, SplitText } from "../gsap";
-import { live, merge, NEXT_TAB, play, type StageDef } from "../stage-core";
+import { art, assemble, def, live, merge, NEXT_TAB, play, type StageDef } from "../stage-core";
 import { directionalFill, imageZoom, textRoll, underlineSweep } from "../recipes/hover-effects";
 import { hoverPreview } from "../recipes/media-effects";
 import { cursorFollower, dragTrack, imageTrail, magnetic, momentumHover, proximity, spotlight, swipeDismiss, tilt } from "../recipes/pointer-effects";
 import { sortable } from "../recipes/sortable";
 import { COUNT_WORDS } from "../../exhibits";
-import { morphToggle } from "../recipes/svg-effects";
+import { morphSequence, morphToggle } from "../recipes/svg-effects";
 import { pressFeedback } from "../recipes/press-feedback";
 import { shake } from "../recipes/accents";
 import { dialogMotion, disclosure, enterExit, menuOverlay, stateButton, tabIndicator } from "../recipes/component-motion";
@@ -246,6 +246,72 @@ const iconMorph = play(["Icon morph"], ["morph"], "Click or press an icon.", (te
       }),
   ),
 );
+
+/* ---------- Morph ---------- */
+
+// A filled mark flows from shape to shape and back: circle, star, heart, bolt. Blob runs the same loop
+// through soft, uneven outlines. Icons is the press-to-toggle morph. One builder, morphSequence, makes the loops.
+const CIRCLE = "M100 25C141 25 175 59 175 100S141 175 100 175 25 141 25 100 59 25 100 25Z";
+const star = (points = 5, outer = 82, inner = 36) =>
+  `M${Array.from({ length: points * 2 }, (_, i) => {
+    const r = i % 2 ? inner : outer;
+    const a = (Math.PI * i) / points - Math.PI / 2;
+    return `${(100 + Math.cos(a) * r).toFixed(1)} ${(106 + Math.sin(a) * r).toFixed(1)}`;
+  }).join("L")}Z`;
+const HEART = "M100 172C42 128 20 98 30 66C40 36 80 30 100 60C120 30 160 36 170 66C180 98 158 128 100 172Z";
+const BOLT = "M116 18L52 112H96L82 182L150 84H106Z";
+/** A soft, uneven blob: eight points around the center, smoothed into a closed curve. Seeded, so it is the same each visit. */
+function blob(seed: number) {
+  let s = seed;
+  const rand = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+  const pts = Array.from({ length: 8 }, (_, i) => {
+    const a = (Math.PI * 2 * i) / 8;
+    const r = 52 + rand() * 34;
+    return [100 + Math.cos(a) * r, 100 + Math.sin(a) * r];
+  });
+  // Catmull-Rom through the points, as cubic Beziers.
+  const at = (i: number) => pts[(i + pts.length) % pts.length]!;
+  let d = `M${at(0)[0]!.toFixed(1)} ${at(0)[1]!.toFixed(1)}`;
+  for (let i = 0; i < pts.length; i++) {
+    const [p0, p1, p2, p3] = [at(i - 1), at(i), at(i + 1), at(i + 2)];
+    const c1 = [p1[0]! + (p2[0]! - p0[0]!) / 6, p1[1]! + (p2[1]! - p0[1]!) / 6];
+    const c2 = [p2[0]! - (p3[0]! - p1[0]!) / 6, p2[1]! - (p3[1]! - p1[1]!) / 6];
+    d += `C${c1.map((v) => v.toFixed(1)).join(" ")} ${c2.map((v) => v.toFixed(1)).join(" ")} ${p2[0]!.toFixed(1)} ${p2[1]!.toFixed(1)}`;
+  }
+  return `${d}Z`;
+}
+const MORPH_LOOPS: Record<string, { start: string; shapes: string[] }> = {
+  shapes: { start: CIRCLE, shapes: [star(), HEART, BOLT] },
+  blob: { start: blob(3), shapes: [blob(11), blob(29), blob(47)] },
+};
+const morphLoop = def(
+  ["Shapes", "Blob"],
+  ["shapes", "blob"],
+  ["duration", "hold", "ease"],
+  { duration: 0.9, stagger: 0, hold: 0.5, ease: "power2.inOut" },
+  (text, p) => {
+    const loop = MORPH_LOOPS[p.variation] ?? MORPH_LOOPS.shapes!;
+    const { layer, remove } = art(text, `<svg class="morph-art" viewBox="0 0 200 200"><path d="${loop.start}"/></svg>`);
+    const seq = morphSequence(layer.querySelector("path")!, loop.shapes, { duration: p.duration, hold: p.hold, ease: p.ease });
+    return assemble(
+      text,
+      p,
+      [],
+      {
+        // The sequence ends back on its first shape; the loop's own hold follows its last morph.
+        enter: (tl) => (tl.add(seq.timeline.paused(false), 0), seq.timeline.duration() - p.hold),
+      },
+      () => {
+        seq.revert();
+        remove();
+      },
+    );
+  },
+  { blob: { duration: 1.2, hold: 0.2, ease: "sine.inOut" } },
+);
+
+// Morph: the shape loops, then the press-to-toggle icons.
+const morphMerged = merge([{ def: morphLoop, all: true }, { label: "Icons", key: "icons", def: iconMorph }]);
 
 /* ---------- Component motion ---------- */
 
@@ -820,7 +886,7 @@ export const POINTER_STAGES: Record<string, StageDef> = {
   "attract": attractMerged,
   "open-and-close": openAndCloseMerged,
   "flip": flipMerged,
-  "icon-morph": iconMorph,
+  morph: morphMerged,
   "tab-indicator": tabs,
   particles,
   physics: {

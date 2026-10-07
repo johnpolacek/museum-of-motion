@@ -255,6 +255,17 @@ const DATA: Exhibit[] = [
     gl: true
   },
   {
+    name: "Morph",
+    group: "play",
+    builders: "morphSequence, morphToggle",
+    src: "svg-effects",
+    desc: "A shape flows into the next: marks, a blob, icons.",
+    vars: [
+      "Blob",
+      "Icons"
+    ]
+  },
+  {
     name: "Timeline",
     group: "play",
     builders: "gsap.timeline, drawIn",
@@ -412,13 +423,6 @@ const DATA: Exhibit[] = [
     ]
   },
   {
-    name: "Icon morph",
-    group: "pointer",
-    builders: "morphToggle",
-    src: "svg-effects",
-    desc: "An icon morphs between two shapes, such as menu and close."
-  },
-  {
     name: "Open and close",
     group: "pointer",
     builders: "menuOverlay, dialogMotion, disclosure, enterExit",
@@ -482,19 +486,15 @@ const DATA: Exhibit[] = [
     desc: "A pressed call to action sends the hero flying."
   },
   {
-    name: "Hover lens",
+    name: "Distort",
     group: "pointer",
-    builders: "hoverDistortion",
-    src: "uniform-effects",
-    desc: "A lens bends the image under the pointer.",
-    gl: true
-  },
-  {
-    name: "Liquid",
-    group: "pointer",
-    builders: "liquidImage",
+    builders: "liquidImage, hoverDistortion, ripple",
     src: "liquid-image",
-    desc: "The pointer drags a trail through the image like water.",
+    desc: "The image bends under the pointer: a liquid trail, a lens, a ripple.",
+    vars: [
+      "Lens",
+      "Ripple"
+    ],
     gl: true
   },
   {

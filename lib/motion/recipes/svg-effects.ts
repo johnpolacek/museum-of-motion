@@ -150,6 +150,35 @@ export function morphToggle(
   return { set, revert };
 }
 
+export type MorphSequenceOptions = {
+  /** Seconds each morph takes. */
+  duration?: number;
+  /** Seconds the shape rests before the next morph. */
+  hold?: number;
+  ease?: string;
+  /** End back on the path's own shape. */
+  loop?: boolean;
+};
+
+export function morphSequence(
+  path: SVGPathElement,
+  shapes: Array<SVGPathElement | string>,
+  { duration = 0.9, hold = 0.6, ease = "power2.inOut", loop = true }: MorphSequenceOptions = {},
+): SvgEffect {
+  // Reduced motion keeps the authored shape: an empty timeline, so the controller's calls still work.
+  let timeline = gsap.timeline({ paused: true });
+  if (prefersReducedMotion()) return { timeline, revert: () => timeline.kill() };
+  const revert = own((dispose, after) => {
+    after(snapshot([path], ["d"], []));
+    timeline = gsap.timeline({ paused: true });
+    const stops = loop ? [...shapes, path.getAttribute("d") ?? ""] : shapes;
+    stops.forEach((shape, i) => timeline.to(path, { morphSVG: { shape }, duration, ease }, i === 0 ? 0 : `+=${hold}`));
+    if (loop) timeline.to({}, { duration: hold });
+    dispose(() => timeline.kill());
+  });
+  return { timeline, revert };
+}
+
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);

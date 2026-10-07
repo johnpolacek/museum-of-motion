@@ -1,12 +1,12 @@
-// WebGL stages: Shader, Dust, Flight, Scroll wave, Hover lens, Liquid. Each draws on the animaxxing-webgl
+// WebGL stages: Shader, Dust, Flight, Scroll wave, Distort (liquid, lens, ripple). Each draws on the animaxxing-webgl
 // skill's one shared canvas (OGL), and GSAP tweens shader uniforms. Images draw as planes; Dust and Flight
 // draw framed views. The DOM stays the page: without WebGL, under reduced motion, or after a lost context,
 // each <img> or poster <img> shows as is.
 import { gsap } from "../gsap";
-import { art, assemble, def, live, play, type LoopParams, type StageDef } from "../stage-core";
+import { art, assemble, def, live, merge, play, type LoopParams, type StageDef } from "../stage-core";
 import { EXHIBITS } from "../../exhibits";
 import { imagePlane, type ImagePlane } from "../recipes/webgl/image-planes";
-import { hoverDistortion, scrollWave } from "../recipes/webgl/uniform-effects";
+import { hoverDistortion, ripple, scrollWave } from "../recipes/webgl/uniform-effects";
 import { flight, pointerLean, scrollFlight } from "../recipes/webgl/scene-flight";
 import { particleMorph, pointerPush, scatterShape, sphereShape, textShape, type PointShape } from "../recipes/webgl/particle-morph";
 import { liquidImage } from "../recipes/webgl/liquid-image";
@@ -245,7 +245,7 @@ const hoverLens = play(["Hover lens"], ["lens"], "Move the mouse or a held finge
 
 // The poster is water: the pointer, or a held finger, drags a trail through it that bends the picture and
 // fades back to rest. On arrival one stroke pours across it. The <img> is the content and the fallback.
-const LIQUID_NO = () => EXHIBITS.find((e) => e.slug === "liquid")?.no ?? 0;
+const LIQUID_NO = () => EXHIBITS.find((e) => e.slug === "distort")?.no ?? 0;
 const liquid = play(["Liquid"], ["liquid"], "Drag the mouse or a held finger across the poster.", (text) =>
   live(
     text,
@@ -268,11 +268,35 @@ const liquid = play(["Liquid"], ["liquid"], "Drag the mouse or a held finger acr
   ),
 );
 
+/* ---------- Ripple ---------- */
+
+// A press sends one ring out across the poster from its center. A button, so a tap, a click, and Enter all work.
+const rippleStage = play(["Ripple"], ["ripple"], "Click, tap, or press Enter on the poster.", (text) =>
+  live(
+    text,
+    `<button type="button" class="gl-frame gl-card gl-ripple" aria-label="Poster ${two(LIQUID_NO())}: send a ripple"><img alt="" src="${posterUrl(LIQUID_NO(), 0)}"></button>`,
+    (layer) => {
+      const button = layer.querySelector<HTMLButtonElement>(".gl-ripple")!;
+      const [plane] = planes([button.querySelector("img")!]);
+      const ring = ripple(plane, { duration: 1.4, hidden: false });
+      const send = () => ring.burst();
+      button.addEventListener("click", send);
+      return [() => plane.revert(), ring.revert, () => button.removeEventListener("click", send)];
+    },
+  ),
+);
+
+// Distort: one exhibit, one tab per way the image bends.
+const distort = merge([
+  { label: "Liquid", key: "liquid", def: liquid },
+  { label: "Lens", key: "lens", def: hoverLens },
+  { label: "Ripple", key: "ripple", def: rippleStage },
+]);
+
 export const WEBGL_STAGES: Record<string, StageDef> = {
   shader,
   dust,
   flight: flightStage,
-  liquid,
+  distort,
   "scroll-wave": scrollWaveStage,
-  "hover-lens": hoverLens,
 };

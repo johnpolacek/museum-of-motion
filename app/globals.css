@@ -190,6 +190,7 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .trail-cue { opacity: 0.6; }
 .ex .stage-art .icon-btn { display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.6); background: none; color: #fff; cursor: pointer; }
 .ex .stage-art .icon-btn svg { width: 36px; height: 36px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ex .stage-art .morph-art { width: min(calc(56svh - 110px), 380px); height: auto; aspect-ratio: 1; fill: #fff; }
 .ex .stage-art .menu-panel { position: absolute; inset: 0; z-index: 5; visibility: hidden; background: var(--ink); color: #fff; display: grid; align-content: center; justify-items: start; gap: 18px; padding: 24px var(--gut); }
 .ex .stage-art .menu-panel nav { display: grid; gap: 4px; }
 .ex .stage-art .menu-panel a { font: 700 clamp(28px, 4vw, 56px)/1.05 var(--sans); font-stretch: 82%; }

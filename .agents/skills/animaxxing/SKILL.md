@@ -50,7 +50,7 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 | Lists reordered by dragging a handle or with the keyboard | [Sortable](references/recipes/sortable.md) |
 | Full-screen sections changing on a wheel flick, swipe, or key | [Section pager](references/recipes/section-pager.md) |
 | Opt-in sound on interactions and timelines, ambient beds | [Sound cues](references/recipes/sound-cues.md) |
-| Line drawing, icon morphs, a mark following a path, a section edge that morphs with scroll, text riding a path or turning around a badge | [SVG effects](references/recipes/svg-effects.md) |
+| Line drawing, icon morphs, a shape flowing through a sequence of shapes, a mark following a path, a section edge that morphs with scroll, text riding a path or turning around a badge | [SVG effects](references/recipes/svg-effects.md) |
 | Count-up figures, odometer digits rolling to new values, looping marquees, logo walls that cycle | [Counters and marquees](references/recipes/counters-and-marquees.md) |
 | Eased page scrolling with Lenis or ScrollSmoother | [Smooth scroll](references/recipes/smooth-scroll.md) |
 | Curtain page transitions, tilted, titled, clip-path wipe, or drifting covers, curved SVG swipe covers, first-visit preloaders | [Page covers](references/recipes/page-covers.md) |

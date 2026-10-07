@@ -1,6 +1,6 @@
 # Recipe: SVG effects
 
-Five SVG effects on the project's own SVG, keeping its strokes and fills: strokes that draw in and out, an icon morph, a mark that follows a path, a shape that morphs with scroll, and text that rides a path.
+Six SVG effects on the project's own SVG, keeping its strokes and fills: strokes that draw in and out, an icon morph, a shape that flows through a sequence of shapes, a mark that follows a path, a shape that morphs with scroll, and text that rides a path.
 
 Lifecycle: see the [controller contract](#controller-contract); the controller calls each `revert` on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -179,6 +179,51 @@ export function morphToggle(
 ```
 
 To avoid twisting, draw both shapes with the same segment count and starting corner.
+
+## morphSequence
+
+A path flows through several shapes in order, resting on each, such as a blob that becomes a star, then a logo, then a heart. With `loop` it ends back on its own shape, so the controller can repeat it seamlessly. The timeline starts paused: the controller plays, repeats, or scrubs it.
+
+```html
+<svg viewBox="0 0 200 200" aria-hidden="true"><path id="shape" d="M100 30C140 30 170 60 170 100S140 170 100 170 30 140 30 100 60 30 100 30Z" /></svg>
+<svg hidden>
+  <path id="star" d="…" />
+  <path id="heart" d="…" />
+</svg>
+```
+
+```ts
+export type MorphSequenceOptions = {
+  /** Seconds each morph takes. */
+  duration?: number;
+  /** Seconds the shape rests before the next morph. */
+  hold?: number;
+  ease?: string;
+  /** End back on the path's own shape. */
+  loop?: boolean;
+};
+
+export function morphSequence(
+  path: SVGPathElement,
+  shapes: Array<SVGPathElement | string>,
+  { duration = 0.9, hold = 0.6, ease = "power2.inOut", loop = true }: MorphSequenceOptions = {},
+): SvgEffect {
+  // Reduced motion keeps the authored shape: an empty timeline, so the controller's calls still work.
+  let timeline = gsap.timeline({ paused: true });
+  if (prefersReducedMotion()) return { timeline, revert: () => timeline.kill() };
+  const revert = own((dispose, after) => {
+    after(snapshot([path], ["d"], []));
+    timeline = gsap.timeline({ paused: true });
+    const stops = loop ? [...shapes, path.getAttribute("d") ?? ""] : shapes;
+    stops.forEach((shape, i) => timeline.to(path, { morphSVG: { shape }, duration, ease }, i === 0 ? 0 : `+=${hold}`));
+    if (loop) timeline.to({}, { duration: hold });
+    dispose(() => timeline.kill());
+  });
+  return { timeline, revert };
+}
+```
+
+A sequence that repeats for more than five seconds is ambient: give it the framework's pause control. Keep the segment rules from `morphToggle`; shapes with very different point counts twist mid-morph.
 
 ## morphScrub
 
@@ -370,6 +415,7 @@ Set the text's size and `letter-spacing` so it fits: text past the path's end is
 | `drawIn` | Intro; strokes hidden by the pre-paint mechanism until built | `{ timeline, revert }` | Whole at once, completion fires |
 | `drawOut` | Outro | `{ timeline, revert }` | Removed at once, completion fires |
 | `morphToggle` | Settled; `set()` on each state change | `{ set, revert }` | Instant swap |
+| `morphSequence` | Intro or settled; the controller plays, repeats, or scrubs `timeline` | `{ timeline, revert }` | Empty timeline; authored shape |
 | `followPath` | Settled | `{ pause, play, revert }` | No-op |
 | `pathScrub` | Settled, once the trigger is measurable | teardown | Text placed at `to` |
 | `pathLoop` | Settled | `{ pause, play, revert }` | No-op |
