@@ -80,7 +80,7 @@ export function windowed(
   );
 }
 
-/* ---------- Scroll reveal ---------- */
+/* ---------- Reveal ---------- */
 
 // Cards from the skill's revealOnScroll, each tab a different start state; the statement tabs are its
 // scrubStatement, where words or letters fill in at the speed you read. All reverse on the way back up.
@@ -325,7 +325,7 @@ const zoom = play(["Scale", "Clip"], ["scale", "clip"], SCROLL_HINT, (text, p) =
 );
 
 export const SCROLL_STAGES: Record<string, StageDef> = {
-  "scroll-reveal": reveal,
+  reveal,
   parallax: parallaxStage,
   pinned,
   "stacking": stacking,

@@ -3,6 +3,7 @@
 // lib/motion/recipes. Nothing loops: the stage waits for the visitor, so it shows a hint instead of a scrub.
 import { gsap, SplitText } from "../gsap";
 import { art, assemble, def, live, merge, NEXT_TAB, play, type StageDef } from "../stage-core";
+import { characters } from "./text";
 import { directionalFill, imageZoom, textRoll, underlineSweep } from "../recipes/hover-effects";
 import { hoverPreview } from "../recipes/media-effects";
 import { cursorFollower, dragTrack, imageTrail, magnetic, momentumHover, proximity, spotlight, swipeDismiss, tilt } from "../recipes/pointer-effects";
@@ -574,7 +575,7 @@ const shared = play(["Shared element"], ["shared"], "Open a poster. Close it to 
   ),
 );
 
-/* ---------- Particles, confetti, blast-off ---------- */
+/* ---------- Particles, confetti ---------- */
 
 const PARTICLES: Record<string, ParticleEffectDefinition> = { marquee: runners, reactor, resolve, slipstream, ignite };
 
@@ -696,43 +697,44 @@ const confetti = play(
         }),
 );
 
-const blast = play(["Blast-off"], ["blast"], "Press a button. Reset brings the hero back.", (text) =>
-  live(
+/* ---------- Explode ---------- */
+
+// Blast-off on a loop: the hero flies apart, then the same flight runs backward and it implodes into place.
+// The page starts blown apart, so the loop opens on the implosion.
+const blastLoop = def(["Page"], ["page"], ["hold"], { duration: 1, stagger: 0, hold: 1.4, ease: "none" }, (text, p) => {
+  const { layer, remove } = art(
     text,
-    `<div class="mini-hero"><h3 class="mh-title">Every way a page can move.</h3><p class="mh-sub">${COUNT_WORDS} effects, each shown on its own.</p><div class="mh-btns"><button type="button" class="pill go">Start</button><button type="button" class="pill go">Explore</button></div><button type="button" class="pill mh-reset" hidden>Reset</button></div>`,
-    (layer) => {
-      const root = one(layer, ".mini-hero");
-      const heading = one(root, ".mh-title");
-      const sub = SplitText.create(one(root, ".mh-sub"), { type: "words" });
-      const words = sub.words as HTMLElement[];
-      const gos = all(root, ".go");
-      const reset = one(root, ".mh-reset");
-      let run: ReturnType<typeof blastOff> | null = null;
-      const fire = (e: Event) => {
-        if (run) return;
-        const pressed = e.currentTarget as HTMLElement;
-        run = blastOff({ root, heading, words, pressed, others: gos.filter((g) => g !== pressed) });
-        run.timeline.eventCallback("onComplete", () => {
-          reset.hidden = false;
-          reset.focus();
-        });
-      };
-      const back = () => {
-        run?.revert();
-        run = null;
-        reset.hidden = true;
-        gos[0].focus();
-      };
-      gos.forEach((g) => g.addEventListener("click", fire));
-      reset.addEventListener("click", back);
-      return [
-        () => gos.forEach((g) => g.removeEventListener("click", fire)),
-        () => run?.revert(),
-        () => sub.revert(),
-      ];
+    `<div class="mini-hero"><h3 class="mh-title">Every way a page can move.</h3><p class="mh-sub">${COUNT_WORDS} effects, each shown on its own.</p><div class="mh-btns"><span class="pill go">Start</span><span class="pill go">Explore</span></div></div>`,
+  );
+  const root = one(layer, ".mini-hero");
+  const heading = one(root, ".mh-title");
+  const sub = SplitText.create(one(root, ".mh-sub"), { type: "words" });
+  const gos = all(root, ".go");
+  const run = blastOff({ root, heading, words: sub.words as HTMLElement[], pressed: gos[0]!, others: gos.slice(1) });
+  const flight = run.timeline.pause();
+  const span = flight.duration();
+  flight.progress(1);
+  return assemble(
+    text,
+    p,
+    [],
+    {
+      enter: (tl) => (tl.add(flight.tweenFromTo(span, 0, { duration: span * 0.9, ease: "power2.out", immediateRender: false }), 0), span * 0.9),
+      exit: (tl, at) => tl.add(flight.tweenFromTo(0, span, { duration: span, ease: "none", immediateRender: false }), at),
     },
-  ),
-);
+    () => {
+      run.revert();
+      sub.revert();
+      remove();
+    },
+  );
+});
+
+// Explode: letters, then the whole page.
+const explode = merge([
+  { label: "Letters", key: "letters", def: characters, variation: "implode" },
+  { label: "Page", key: "page", def: blastLoop },
+]);
 
 /* ---------- Sortable ---------- */
 
@@ -893,7 +895,7 @@ export const POINTER_STAGES: Record<string, StageDef> = {
     ...confetti,
     hints: { pile: "Tap or click anywhere to drop more. Shake the heap, or clear it.", confetti: "Press the button.", emoji: "Press the button.", rain: "Press the button." },
   },
-  "blast-off": blast,
+  explode,
   // Throw: content you drag and throw, bounded, endless, or wrapping both ways.
   throw: merge([
     { def: track, label: "Track", key: "track", variation: "snap" },

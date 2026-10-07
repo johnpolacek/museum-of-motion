@@ -34,7 +34,7 @@ const POSTER = `
   <g fill="none" stroke="#fff" stroke-width="3" opacity="0.5">
     <circle cx="1180" cy="430" r="320"/><circle cx="1180" cy="430" r="230"/><circle cx="1180" cy="430" r="140"/>
   </g>
-  <text x="80" y="760" fill="#2130ff" font-family="var(--font-archivo), sans-serif" font-weight="800" font-size="640" font-stretch="75%" letter-spacing="-20">${String(EXHIBITS.find((e) => e.slug === "reveal")?.no ?? 0).padStart(2, "0")}</text>
+  <text x="80" y="760" fill="#2130ff" font-family="var(--font-archivo), sans-serif" font-weight="800" font-size="640" font-stretch="75%" letter-spacing="-20">${String(EXHIBITS.find((e) => e.slug === "unveil")?.no ?? 0).padStart(2, "0")}</text>
   <text x="90" y="140" fill="#fff" font-family="var(--font-archivo), sans-serif" font-weight="700" font-size="54" letter-spacing="6">REVEAL</text>
 </svg>`;
 
@@ -684,10 +684,9 @@ const timeline = play(["Clock", "Scroll"], ["clock", "scroll"], TL_HINTS.clock, 
 const timelineStage: StageDef = { ...timeline, hints: TL_HINTS };
 
 export const TIME_STAGES: Record<string, StageDef> = {
-  "text-on-path": textOnPath,
   timeline: timelineStage,
-  reveal: imageReveal,
-  path: merge([{ def: lineDraw, label: "Draw", key: "draw" }, { def: pathFollow, all: true }]),
+  unveil: imageReveal,
+  path: merge([{ def: lineDraw, label: "Draw", key: "draw" }, { def: pathFollow, all: true }, { def: textOnPath, all: true }]),
   count: merge([{ def: countUp, label: "Count-up", key: "count" }, { def: odometer, label: "Odometer", key: "odometer" }]),
   marquee,
   cycle: logoCycle,

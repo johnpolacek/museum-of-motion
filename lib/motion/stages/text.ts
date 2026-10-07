@@ -793,7 +793,8 @@ export const glitch = def(
 
 export const TEXT_STAGES: Record<string, StageDef> = {
   "line-mask": lineMask,
-  characters,
+  // Implode is Explode's Letters tab now.
+  characters: merge(["rise", "cascade", "flip", "spring", "scatter", "fall"].map((v, i) => ({ def: characters, variation: v, key: v, label: characters.labels[i + 1]! }))),
   "slide": wordSlide,
   scramble,
   glitch,

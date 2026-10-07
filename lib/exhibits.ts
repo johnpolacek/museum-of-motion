@@ -61,16 +61,25 @@ const DATA: Exhibit[] = [
   {
     name: "Characters",
     group: "type",
-    builders: "charsImplodeIn, charsExplodeOut, charsRiseIn, charsCascadeIn, charsFlipIn, charsSpringIn, charsScatterIn, charsFallOut",
+    builders: "charsRiseIn, charsCascadeIn, charsFlipIn, charsSpringIn, charsScatterIn, charsFallOut",
     src: "split-entrances",
-    desc: "Letters slam together from all around and blow apart, or rise, tip, spring, and scatter.",
+    desc: "Letters rise, cascade, tip, spring, scatter, and fall.",
     vars: [
-      "Rise",
       "Cascade",
       "Flip",
       "Spring",
       "Scatter",
       "Fall"
+    ]
+  },
+  {
+    name: "Explode",
+    group: "type",
+    builders: "charsImplodeIn, charsExplodeOut, blastOff",
+    src: "split-entrances",
+    desc: "Letters slam together from all around and blow apart, or a whole page does.",
+    vars: [
+      "Page"
     ]
   },
   {
@@ -141,16 +150,6 @@ const DATA: Exhibit[] = [
     desc: "A whole page arrives and leaves at once: the headline by letter, the rest as blocks."
   },
   {
-    name: "Text on path",
-    group: "type",
-    builders: "pathLoop",
-    src: "svg-effects",
-    desc: "A line of text rides a curve into place, or turns around a badge.",
-    vars: [
-      "Badge"
-    ]
-  },
-  {
     name: "Count",
     group: "type",
     builders: "countUp, odometer",
@@ -183,7 +182,7 @@ const DATA: Exhibit[] = [
     ]
   },
   {
-    name: "Reveal",
+    name: "Unveil",
     group: "play",
     builders: "imageReveal",
     src: "media-effects",
@@ -192,12 +191,14 @@ const DATA: Exhibit[] = [
   {
     name: "Path",
     group: "play",
-    builders: "drawIn, drawOut, followPath",
+    builders: "drawIn, drawOut, followPath, pathLoop",
     src: "svg-effects",
-    desc: "Strokes draw along their length, or a small mark loops along a path.",
+    desc: "Strokes draw along their length, a small mark loops along a path, or a line of text rides one.",
     vars: [
       "Dot",
-      "Arrow"
+      "Arrow",
+      "Ride",
+      "Badge"
     ]
   },
 
@@ -273,7 +274,7 @@ const DATA: Exhibit[] = [
     desc: "One master timeline nests five parts, placed with labels and overlaps. Play it, scrub it, reverse it, or jump to a label."
   },
   {
-    name: "Scroll reveal",
+    name: "Reveal",
     group: "scroll",
     builders: "revealOnScroll, scrubStatement",
     src: "scroll-effects",
@@ -477,13 +478,6 @@ const DATA: Exhibit[] = [
       "Emoji",
       "Rain"
     ]
-  },
-  {
-    name: "Blast-off",
-    group: "pointer",
-    builders: "blastOff",
-    src: "blast-off",
-    desc: "A pressed call to action sends the hero flying."
   },
   {
     name: "Distort",
