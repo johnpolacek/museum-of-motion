@@ -155,7 +155,10 @@ Character effects are for display type. Keep reading text immediately readable; 
 | `wordsSlideIn` / `Out` | words | `x ±40` alternating sides, `power2.out`, stagger 0.05 | Words zip together. |
 | `charsSlideIn` / `Out` | chars | `yPercent ±110` alternating above and below, `power2.out`, stagger 0.03 | Letters zip together. |
 | `linesMaskIn` / `Out` | lines, masked | `yPercent: 110 → 0`, 0.28s, `power3.out`, stagger 0.05 | Whole lines wiped up behind masks. |
-| `linesEllipseIn` / `Out` | lines, masked | mask `clip-path: ellipse(20% 0%)` swells to cover the line from its bottom edge while the line rises `yPercent 40 → 0`, 0.8s, `power3.out`, stagger 0.05 | A softer, rounder line reveal for display copy. |
+| `linesEllipseIn` / `Out` | lines, masked | mask `clip-path: ellipse()` grows from a point at the line's bottom middle into a tall arch while the line lifts `yPercent 15 → 0`, 1s, `power2.inOut`, stagger 0.1 | An arch opening under each line: softer and rounder than a mask. |
+| `linesSlideIn` / `Out` | lines, masked | `xPercent ±105` alternating, `power3.out`, stagger 0.05 | Lines slide in sideways from behind their masks. |
+| `linesWipeIn` / `Out` | lines, masked | mask `clip-path: inset()` wipes from the line's start, text drifts `xPercent -6 → 0`, `power2.inOut` | A straight wipe across each line. |
+| `linesIrisIn` / `Out` | lines, masked | mask `clip-path: circle(0% → 75%)` from the line's middle, `power2.inOut`, stagger 0.1 | Each line opens like a camera's iris. |
 | `linesHighlightIn` / `Out` | lines, words | a `--line-highlight` bar sweeps `scaleX 0 → 1` over each line's words, the words appear, the bar retracts toward the line end; 0.12s between lines | A marker pass across a statement or pull quote. |
 | `scrambleIn` / `Out` | none | each character cycles within its kind (capitals, lowercase, digits) at 20/s, then resolves left to right over 0.9s; punctuation stays blank until its turn | Text resolving out of noise while keeping its shape. Display only; plain text. |
 | `typeIn` / `typeOut` | an `aria-hidden` overlay; the text stays in place at `opacity 0` | one character at a time at ~22/s, uneven, slower after spaces and punctuation; the caret blinks twice at 1.06s and goes; out deletes at twice the speed | Text typed by a person. Plain text and `<br>` only. Code: [typewriter.md](recipes/typewriter.md). |

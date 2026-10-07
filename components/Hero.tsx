@@ -215,7 +215,7 @@ export function Hero() {
           <span className="mk">
             <span className="t">move.</span>
           </span>
-          <sup>{numberOf("line-mask")}</sup>
+          <sup>{numberOf("mask")}</sup>
         </span>
       </h1>
       <div className="under">
@@ -227,7 +227,7 @@ export function Hero() {
         <div className="side">
           <ol className="lab" aria-label="In this headline" data-list data-intro>
             {[
-              ["line-mask", "Line mask"],
+              ["mask", "Mask"],
               ["characters", "Characters"],
               ["slide", "Slide"],
               ["wave", "Wave"],

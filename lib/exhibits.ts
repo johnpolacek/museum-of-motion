@@ -48,13 +48,16 @@ export const GROUPS: { key: GroupKey; name: string; note: string }[] = [
 
 const DATA: Exhibit[] = [
   {
-    name: "Line mask",
+    name: "Mask",
     group: "type",
-    builders: "linesMaskIn, linesMaskOut",
+    builders: "linesMaskIn, linesSlideIn, linesWipeIn, linesIrisIn, linesEllipseIn, linesHighlightIn",
     src: "split-entrances",
-    desc: "Whole lines wipe up from behind masks.",
+    desc: "Whole lines appear through masks: they rise, slide in, wipe across, open like an iris or an arch, or a marker passes over them.",
     vars: [
-      "Ellipse",
+      "Slide",
+      "Wipe",
+      "Iris",
+      "Arch",
       "Highlight"
     ]
   },
@@ -662,10 +665,10 @@ export const groupName = (key: GroupKey) => GROUPS.find((g) => g.key === key)!.n
 
 // Full spec sheets. Facts from split-entrances.md and motion-vocabulary.md.
 export const SPECS: Record<string, [string, string][]> = {
-  "line-mask": [
+  mask: [
     ["Needs", "GSAP, SplitText"],
     ["Phase", "Intro and outro"],
-    ["Motion", "yPercent 110 to 0, 0.28 s, power3.out, 0.05 s between lines"],
+    ["Motion", "Rise: yPercent 110 to 0. Slide, wipe, iris, and arch move each line's mask. 0.05 to 0.14 s between lines"],
     ["Touch and keyboard", "Plays with the page. No input needed."],
     ["Reduced motion", "Never splits. The text is simply there."],
     ["Cleanup", "Reverts the split on completion. Accessible text kept."],

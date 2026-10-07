@@ -419,7 +419,7 @@ const odometer = def(["Odometer"], ["roll"], ["duration", "stagger", "hold", "ea
 
 /* ---------- Marquee ---------- */
 
-const MARQUEE_WORDS = ["Line mask", "Characters", "Word slide", "Scramble", "Speak-in", "Weight wave", "Letter wave", "Marquee"];
+const MARQUEE_WORDS = ["Mask", "Characters", "Slide", "Scramble", "Speak", "Wave", "Explode", "Marquee"];
 
 const marquee = def(
   ["Left", "Right"],
@@ -508,7 +508,7 @@ const logoCycle = def(["Cycle"], ["cycle"], ["duration", "hold", "ease"], { dura
 const MINI = (cover: string) => `
 <div class="mini">
   <div class="pg pg-a"><span class="lab">Museum of Motion</span><b>Collection</b><i></i><i></i><i></i></div>
-  <div class="pg pg-b"><span class="lab">Time · 01 of ${EXHIBITS.length}</span><b>01 Line mask</b><i></i><i></i></div>
+  <div class="pg pg-b"><span class="lab">Type · 01 of ${EXHIBITS.length}</span><b>01 Mask</b><i></i><i></i></div>
   ${cover}
 </div>`;
 
@@ -561,7 +561,7 @@ const curtain = def(
   (text, p) => {
     // Curve is the same page swap under one bowed shape: the skill's curveCover.
     if (p.variation === "curve") return curveCover.build(text, p);
-    const { layer, remove } = art(text, MINI(`<div class="panels">${"<i></i>".repeat(5)}</div><div class="cover-title">Line mask</div>`));
+    const { layer, remove } = art(text, MINI(`<div class="panels">${"<i></i>".repeat(5)}</div><div class="cover-title">Mask</div>`));
     const panels = Array.from(layer.querySelectorAll<HTMLElement>(".panels i"));
     // Parked below the page by GSAP, never by a CSS transform: GSAP would read that as an extra offset,
     // and every panel would land a full height short of covering.

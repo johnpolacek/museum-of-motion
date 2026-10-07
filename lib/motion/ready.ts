@@ -6,7 +6,7 @@ export const LIVE_STAGES = new Set([
   "luxury",
   "snappy",
   "glitchy",
-  "line-mask",
+  "mask",
   "timeline",
   "characters",
   "slide",

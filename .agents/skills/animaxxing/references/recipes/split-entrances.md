@@ -444,23 +444,56 @@ export const linesMaskOut: SplitRunner = (element, options = {}) =>
     { autoAlpha: 0 },
   );
 
-/** Clip for each line mask: a narrow sliver on the edge the line leaves from, or wide enough to show the whole line. */
-const ELLIPSE = {
-  closedBottom: "ellipse(20% 0% at 50% 100%)",
-  openBottom: "ellipse(100% 120% at 50% 100%)",
-  openTop: "ellipse(100% 120% at 50% 0%)",
-  closedTop: "ellipse(20% 0% at 50% 0%)",
-} as const;
+/**
+ * Where each line's text sits inside its mask, in pixels. A line mask spans the block's full width while the
+ * words may fill only part of it, so a shape centered on the mask would open beside the text, not over it.
+ */
+function textSpan(mask: HTMLElement) {
+  // Only the text's own boxes: a range over the line's element would measure its full-width block instead.
+  const box = mask.getBoundingClientRect();
+  let left = Infinity;
+  let right = -Infinity;
+  const walker = document.createTreeWalker(mask, NodeFilter.SHOW_TEXT);
+  const range = document.createRange();
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (!node.textContent?.trim()) continue;
+    range.selectNodeContents(node);
+    const rect = range.getBoundingClientRect();
+    left = Math.min(left, rect.left);
+    right = Math.max(right, rect.right);
+  }
+  if (left > right) [left, right] = [box.left, box.right];
+  return { center: (left + right) / 2 - box.left, width: Math.max(1, right - left), height: Math.max(1, box.height) };
+}
 
-/** Each line swells open from a sliver at its bottom edge while it rises into place. */
+/**
+ * Clip for each line mask: a point at the middle of the text's bottom or top edge, or an arch tall and wide
+ * enough to show the whole line. A line is far wider than tall, so the arch is tall: its curve stays in view
+ * while it opens rather than flattening at once into a plain wipe.
+ */
+const arch = (mask: HTMLElement, open: boolean, edge: "bottom" | "top") => {
+  const { center, width, height } = textSpan(mask);
+  const y = edge === "bottom" ? "100%" : "0%";
+  // Rounded, not toFixed: GSAP will not interpolate a clip-path whose number reads "533.0".
+  const r = (n: number) => Math.round(n * 10) / 10;
+  return open ? `ellipse(${r(width * 0.8)}px ${r(height * 1.9)}px at ${r(center)}px ${y})` : `ellipse(0px 0px at ${r(center)}px ${y})`;
+};
+
+/** A circle at the middle of the text, closed or wide enough to show the whole line. */
+const iris = (mask: HTMLElement, open: boolean) => {
+  const { center, width, height } = textSpan(mask);
+  return `circle(${open ? Math.round(Math.hypot(width / 2, height / 2) * 10.5) / 10 : 0}px at ${Math.round(center * 10) / 10}px 50%)`;
+};
+
+/** Each line opens through an arch rising from the middle of its bottom edge, the line lifting only a little. */
 export const linesEllipseIn: SplitRunner = (element, options = {}) =>
   withSplit(element, options, { type: "lines", mask: "lines" }, (split, tl) => {
     tl.fromTo(
       split.masks,
-      { clipPath: ELLIPSE.closedBottom },
-      { clipPath: ELLIPSE.openBottom, duration: 0.8, ease: "power3.out", stagger: STAGGER.loose },
+      { clipPath: (i: number) => arch(split.masks[i] as HTMLElement, false, "bottom") },
+      { clipPath: (i: number) => arch(split.masks[i] as HTMLElement, true, "bottom"), duration: 1, ease: "power2.inOut", stagger: STAGGER.loose * 2 },
       0,
-    ).from(split.lines, { yPercent: 40, duration: 0.8, ease: "power3.out", stagger: STAGGER.loose }, 0);
+    ).from(split.lines, { yPercent: 15, duration: 1, ease: "power2.out", stagger: STAGGER.loose * 2 }, 0);
   });
 
 /** And closes into a sliver at the top edge. */
@@ -472,12 +505,74 @@ export const linesEllipseOut: SplitRunner = (element, options = {}) =>
     (split, tl) => {
       tl.fromTo(
         split.masks,
-        { clipPath: ELLIPSE.openTop },
-        { clipPath: ELLIPSE.closedTop, duration: DURATION.page, ease: "power2.in", stagger: STAGGER.tight },
+        { clipPath: (i: number) => arch(split.masks[i] as HTMLElement, true, "top") },
+        { clipPath: (i: number) => arch(split.masks[i] as HTMLElement, false, "top"), duration: DURATION.page, ease: "power2.in", stagger: STAGGER.tight },
         0,
       )
-        .to(split.lines, { yPercent: -40, duration: DURATION.page, ease: "power2.in", stagger: STAGGER.tight }, 0)
+        .to(split.lines, { yPercent: -15, duration: DURATION.page, ease: "power2.in", stagger: STAGGER.tight }, 0)
         .set(element, { autoAlpha: 0 });
+    },
+    { autoAlpha: 0 },
+  );
+
+/** Lines slide in sideways from behind their masks, alternating from the left and the right. */
+export const linesSlideIn: SplitRunner = (element, options = {}) =>
+  withSplit(element, options, { type: "lines", mask: "lines" }, (split, tl) => {
+    tl.from(split.lines, { xPercent: (index: number) => (index % 2 === 0 ? -105 : 105), duration: DURATION.page, ease: "power3.out", stagger: STAGGER.loose });
+  });
+
+export const linesSlideOut: SplitRunner = (element, options = {}) =>
+  withSplit(
+    element,
+    options,
+    { type: "lines", mask: "lines" },
+    (split, tl) => {
+      tl.to(split.lines, { xPercent: (index: number) => (index % 2 === 0 ? 105 : -105), duration: DURATION.component, ease: "power2.in", stagger: STAGGER.tight }).set(element, { autoAlpha: 0 });
+    },
+    { autoAlpha: 0 },
+  );
+
+/** A straight edge wipes across each line from its start, the text drifting a few percent behind it. */
+export const linesWipeIn: SplitRunner = (element, options = {}) =>
+  withSplit(element, options, { type: "lines", mask: "lines" }, (split, tl) => {
+    tl.fromTo(split.masks, { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: DURATION.page, ease: "power2.inOut", stagger: STAGGER.loose }, 0)
+      .from(split.lines, { xPercent: -6, duration: DURATION.page, ease: "power2.out", stagger: STAGGER.loose }, 0);
+  });
+
+/** And out through the far edge. */
+export const linesWipeOut: SplitRunner = (element, options = {}) =>
+  withSplit(
+    element,
+    options,
+    { type: "lines", mask: "lines" },
+    (split, tl) => {
+      tl.fromTo(split.masks, { clipPath: "inset(0% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 100%)", duration: DURATION.component, ease: "power2.in", stagger: STAGGER.tight }, 0).set(element, { autoAlpha: 0 });
+    },
+    { autoAlpha: 0 },
+  );
+
+/** Each line opens through a circle from its middle, like a camera's iris. */
+export const linesIrisIn: SplitRunner = (element, options = {}) =>
+  withSplit(element, options, { type: "lines", mask: "lines" }, (split, tl) => {
+    tl.fromTo(
+      split.masks,
+      { clipPath: (i: number) => iris(split.masks[i] as HTMLElement, false) },
+      { clipPath: (i: number) => iris(split.masks[i] as HTMLElement, true), duration: DURATION.page * 1.2, ease: "power2.inOut", stagger: STAGGER.loose * 2 },
+    );
+  });
+
+/** And closes back to a point. */
+export const linesIrisOut: SplitRunner = (element, options = {}) =>
+  withSplit(
+    element,
+    options,
+    { type: "lines", mask: "lines" },
+    (split, tl) => {
+      tl.fromTo(
+        split.masks,
+        { clipPath: (i: number) => iris(split.masks[i] as HTMLElement, true) },
+        { clipPath: (i: number) => iris(split.masks[i] as HTMLElement, false), duration: DURATION.component, ease: "power2.in", stagger: STAGGER.tight },
+      ).set(element, { autoAlpha: 0 });
     },
     { autoAlpha: 0 },
   );

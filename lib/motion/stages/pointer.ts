@@ -22,7 +22,7 @@ import { ignite, marquee as runners, reactor, resolve, slipstream } from "../rec
 
 /* ---------- Shared art ---------- */
 
-const NAMES = ["Line mask", "Characters", "Word slide", "Scramble", "Speak-in", "Weight wave", "Letter wave", "Marquee", "Curtain"];
+const NAMES = ["Mask", "Characters", "Slide", "Scramble", "Speak", "Wave", "Explode", "Marquee", "Curtain"];
 /** Field and figure colors for posters, all from the site's three. */
 const TONES: [string, string][] = [
   ["#0b0b0b", "#2130ff"],
@@ -531,7 +531,7 @@ const tabs = play(["Tab indicator"], ["tabs"], "Pick a tab, by click or arrow ke
 /* ---------- and 55 Layout Flip ---------- */
 
 const GROUPED: [string, string][] = [
-  ["Line mask", "type"], ["Scramble", "type"], ["Marquee", "play"], ["Parallax", "scroll"], ["Pinned", "scroll"], ["Attract", "pointer"],
+  ["Mask", "type"], ["Scramble", "type"], ["Marquee", "play"], ["Parallax", "scroll"], ["Pinned", "scroll"], ["Attract", "pointer"],
   ["Cursor", "pointer"], ["Throw", "drag"], ["Card stack", "drag"], ["Timeline", "play"],
 ];
 
@@ -774,7 +774,7 @@ const sortList = play(["Sortable"], ["sort"], "Drag a handle to reorder. Or Tab 
 
 /* ---------- Swipe to dismiss ---------- */
 
-const NOTES = ["Line mask is back on view", "Two new exhibits this week", "Your tour starts at noon", "The gift shop is open late"];
+const NOTES = ["Mask is back on view", "Two new exhibits this week", "Your tour starts at noon", "The gift shop is open late"];
 
 const swipe = play(["Swipe to dismiss"], ["swipe"], "Drag a note sideways, or flick it. Tab to one and press Delete.", (text) =>
   live(

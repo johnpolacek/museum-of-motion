@@ -4,14 +4,39 @@ import { gsap, SplitText } from "../gsap";
 import { type Act, art, assemble, def, end, EXIT, type LoopParams, merge, pinWidths, rnd, split, type StageDef } from "../stage-core";
 import { EXHIBITS } from "../../exhibits";
 
-/* ---------- Line mask ---------- */
+/* ---------- Mask ---------- */
 
-const ELLIPSE = {
-  closedBottom: "ellipse(20% 0% at 50% 100%)",
-  openBottom: "ellipse(100% 120% at 50% 100%)",
-  openTop: "ellipse(100% 120% at 50% 0%)",
-  closedTop: "ellipse(20% 0% at 50% 0%)",
-} as const;
+// From split-entrances' textSpan, arch, and iris. A line mask spans the block's full width while the words may
+// fill only part of it, so the shapes center on each line's text, measured with a Range.
+function textSpan(mask: HTMLElement) {
+  // Only the text's own boxes: a range over the line's element would measure its full-width block instead.
+  const box = mask.getBoundingClientRect();
+  let left = Infinity;
+  let right = -Infinity;
+  const walker = document.createTreeWalker(mask, NodeFilter.SHOW_TEXT);
+  const range = document.createRange();
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (!node.textContent?.trim()) continue;
+    range.selectNodeContents(node);
+    const rect = range.getBoundingClientRect();
+    left = Math.min(left, rect.left);
+    right = Math.max(right, rect.right);
+  }
+  if (left > right) [left, right] = [box.left, box.right];
+  return { center: (left + right) / 2 - box.left, width: Math.max(1, right - left), height: Math.max(1, box.height) };
+}
+/** A tall arch from the middle of the text's bottom or top edge, so its curve stays in view while it opens. */
+const arch = (mask: HTMLElement, open: boolean, edge: "bottom" | "top") => {
+  const { center, width, height } = textSpan(mask);
+  const y = edge === "bottom" ? "100%" : "0%";
+  // Rounded, not toFixed: GSAP will not interpolate a clip-path whose number reads "533.0".
+  const r = (n: number) => Math.round(n * 10) / 10;
+  return open ? `ellipse(${r(width * 0.8)}px ${r(height * 1.9)}px at ${r(center)}px ${y})` : `ellipse(0px 0px at ${r(center)}px ${y})`;
+};
+const iris = (mask: HTMLElement, open: boolean) => {
+  const { center, width, height } = textSpan(mask);
+  return `circle(${open ? Math.round(Math.hypot(width / 2, height / 2) * 10.5) / 10 : 0}px at ${Math.round(center * 10) / 10}px 50%)`;
+};
 
 /** Lays a bar over each line's words, for the highlight. SplitText's revert removes the bars with the split. */
 function addBars(s: SplitText) {
@@ -39,8 +64,8 @@ function addBars(s: SplitText) {
 }
 
 export const lineMask = def(
-  ["Line mask", "Ellipse", "Highlight"],
-  ["mask", "ellipse", "highlight"],
+  ["Rise", "Slide", "Wipe", "Iris", "Arch", "Highlight"],
+  ["rise", "slide", "wipe", "iris", "arch", "highlight"],
   ["duration", "stagger", "hold", "ease"],
   { duration: 0.8, stagger: 0.06, hold: 2, ease: "signature" },
   (text, p) => {
@@ -50,23 +75,54 @@ export const lineMask = def(
     const lines = s.lines as HTMLElement[];
     const out = Math.max(0.2, p.duration * 0.4);
     const outEach = p.stagger * 0.5;
-    if (p.variation === "mask") {
+    const masks = (s.masks ?? []) as HTMLElement[];
+    const alt = (i: number) => (i % 2 === 0 ? -1 : 1);
+    if (p.variation === "rise") {
       return assemble(text, p, splits, {
         enter: (tl) => (tl.fromTo(lines, { yPercent: 110 }, { yPercent: 0, duration: p.duration, ease: p.ease, stagger: p.stagger }, 0), end(lines.length, p)),
         exit: (tl, at) => tl.to(lines, { yPercent: -110, duration: out, ease: EXIT, stagger: outEach }, at),
       });
     }
-    if (p.variation === "ellipse") {
-      const masks = s.masks as HTMLElement[];
+    // From linesSlideIn: sideways from behind the masks, alternating sides, and out the other way.
+    if (p.variation === "slide") {
+      return assemble(text, p, splits, {
+        enter: (tl) => (tl.fromTo(lines, { xPercent: (i: number) => alt(i) * 105 }, { xPercent: 0, duration: p.duration, ease: p.ease, stagger: p.stagger }, 0), end(lines.length, p)),
+        exit: (tl, at) => tl.to(lines, { xPercent: (i: number) => -alt(i) * 105, duration: out, ease: EXIT, stagger: outEach }, at),
+      });
+    }
+    // From linesWipeIn: a straight edge across each line from its start, and out through the far edge.
+    if (p.variation === "wipe") {
       return assemble(text, p, splits, {
         enter: (tl) => {
-          tl.fromTo(masks, { clipPath: ELLIPSE.closedBottom }, { clipPath: ELLIPSE.openBottom, duration: p.duration, ease: p.ease, stagger: p.stagger }, 0)
-            .fromTo(lines, { yPercent: 40 }, { yPercent: 0, duration: p.duration, ease: p.ease, stagger: p.stagger }, 0);
+          tl.fromTo(masks, { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: p.duration, ease: "power2.inOut", stagger: p.stagger, overwrite: false }, 0)
+            .fromTo(lines, { xPercent: -6 }, { xPercent: 0, duration: p.duration, ease: "power2.out", stagger: p.stagger }, 0);
+          return end(lines.length, p);
+        },
+        exit: (tl, at) => tl.fromTo(masks, { clipPath: "inset(0% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 100%)", duration: out, ease: EXIT, stagger: outEach, immediateRender: false, overwrite: false }, at),
+      });
+    }
+    // From linesIrisIn and linesEllipseIn: a circle from each line's middle, or an arch from the middle of its
+    // bottom edge, centered on the line's text. One tween per mask, with each shape measured once.
+    if (p.variation === "iris" || p.variation === "arch") {
+      const isArch = p.variation === "arch";
+      const shapes = masks.map((m) =>
+        isArch
+          ? { closedIn: arch(m, false, "bottom"), openIn: arch(m, true, "bottom"), openOut: arch(m, true, "top"), closedOut: arch(m, false, "top") }
+          : { closedIn: iris(m, false), openIn: iris(m, true), openOut: iris(m, true), closedOut: iris(m, false) },
+      );
+      return assemble(text, p, splits, {
+        enter: (tl) => {
+          masks.forEach((m, i) => {
+            tl.fromTo(m, { clipPath: shapes[i]!.closedIn }, { clipPath: shapes[i]!.openIn, duration: p.duration, ease: "power2.inOut", overwrite: false }, i * p.stagger);
+            if (isArch) tl.fromTo(lines[i]!, { yPercent: 15 }, { yPercent: 0, duration: p.duration, ease: "power2.out" }, i * p.stagger);
+          });
           return end(lines.length, p);
         },
         exit: (tl, at) =>
-          tl.fromTo(masks, { clipPath: ELLIPSE.openTop }, { clipPath: ELLIPSE.closedTop, duration: out, ease: EXIT, stagger: outEach, immediateRender: false }, at)
-            .to(lines, { yPercent: -40, duration: out, ease: EXIT, stagger: outEach }, at),
+          masks.forEach((m, i) => {
+            tl.fromTo(m, { clipPath: shapes[i]!.openOut }, { clipPath: shapes[i]!.closedOut, duration: out, ease: EXIT, immediateRender: false, overwrite: false }, at + i * outEach);
+            if (isArch) tl.to(lines[i]!, { yPercent: -15, duration: out, ease: EXIT }, at + i * outEach);
+          }),
       });
     }
     // A bar sweeps across each line, the words appear beneath it, the bar retracts. Out runs the same way.
@@ -92,6 +148,8 @@ export const lineMask = def(
         }),
     });
   },
+  // The shapes need time to read as shapes: the iris and the arch open slower, a line at a time.
+  { iris: { duration: 1.1, stagger: 0.14 }, arch: { duration: 1.1, stagger: 0.14 }, wipe: { duration: 0.9, stagger: 0.1 } },
 );
 
 /* ---------- Characters ---------- */
@@ -837,7 +895,7 @@ export const glitch = def(
 );
 
 export const TEXT_STAGES: Record<string, StageDef> = {
-  "line-mask": lineMask,
+  mask: lineMask,
   // Implode is Explode's Letters tab now.
   characters: merge(["rise", "cascade", "flip", "spring", "scatter", "fall"].map((v, i) => ({ def: characters, variation: v, key: v, label: characters.labels[i + 1]! }))),
   "slide": wordSlide,

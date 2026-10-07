@@ -110,7 +110,7 @@ export function heroIntro(root: HTMLElement): HeroIntro {
     land(p.leaf("can"), { autoAlpha: 0, duration: 0.2, ease: "none" }, 0.72);
     sup("can", 1.45);
 
-    // 01 Line mask on "move.": the line rises from behind its mask and holds partway, as on the poster.
+    // 01 Mask on "move.": the line rises from behind its mask and holds partway, as on the poster.
     land(p.leaf("move"), { yPercent: 110, duration: 0.8, ease: ENTER }, 0.95);
     sup("move", 1.7);
 
