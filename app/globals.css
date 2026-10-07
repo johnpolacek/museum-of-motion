@@ -264,6 +264,16 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .detail[hidden] { display: none; }
 .ex .stage-art .detail-art { width: min(80%, 640px); aspect-ratio: 4 / 3; }
 .ex .stage-art .detail-close { position: absolute; top: 16px; right: var(--gut); }
+.ex .stage-art .shape-stage { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: clamp(20px, 5vw, 72px); width: min(92%, 980px); }
+.ex .stage-art .shape-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 200px)); gap: 14px; }
+.ex .stage-art .shape-card { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; }
+.ex .stage-art .shape-frame, .ex .stage-art .shape-archframe { position: relative; display: block; overflow: hidden; }
+.ex .stage-art .shape-frame { aspect-ratio: 4 / 3; }
+.ex .stage-art .shape-frame img, .ex .stage-art .shape-archframe img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ex .stage-art .shape-arch { padding: 0; border: 0; background: none; cursor: pointer; }
+.ex .stage-art .shape-arch[aria-disabled="true"] { cursor: default; }
+.ex .stage-art .shape-archframe { height: min(calc(50svh - 110px), 380px); aspect-ratio: 3 / 4; background: rgb(255 255 255 / 0.14); }
+@media (max-width: 700px) { .ex .stage-art .shape-stage { grid-template-columns: 1fr; justify-items: center; } .ex .stage-art .shape-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; } .ex .stage-art .shape-arch { order: -1; } .ex .stage-art .shape-archframe { height: min(34svh, 260px); } }
 .ex .stage-art .particle-btn { position: relative; isolation: isolate; }
 .ex .stage-art .particle-btn canvas { pointer-events: none; position: absolute; z-index: 10; color: #fff; }
 .ex .stage-art .particle-btn button { position: relative; z-index: 20; }
@@ -389,6 +399,13 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win .w-deckcard svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .ex .win .w-deckcard b { position: relative; padding: 14px 18px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-size: 13px; }
 .ex .win .w-zoom { position: relative; height: 100cqh; overflow: clip; display: grid; place-items: center; }
+/* Door: a tall track holds the stage while the scroll walks through its doorway. The stage keeps the plate's 16 by 10, so the door's fractions hold. */
+.ex .win .w-door { position: relative; height: 320cqh; }
+.ex .win .w-doorpin { position: sticky; top: 0; height: 100cqh; display: grid; place-items: center; }
+.ex .win .w-doorstage { position: relative; width: min(92%, 150cqh); aspect-ratio: 16 / 10; overflow: hidden; }
+.ex .win .w-doorstage svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ex .win .w-doornext { position: absolute; inset: 0; }
+.ex .win .w-doorglow { position: absolute; border-radius: 999px 999px 0 0; background: radial-gradient(ellipse 60% 70% at 50% 100%, #fff, rgb(255 255 255 / 0.5) 60%, rgb(255 255 255 / 0)); box-shadow: 0 0 60px 20px rgb(255 255 255 / 0.45); pointer-events: none; }
 .ex .win .w-zoom > * { position: absolute; inset: 0; }
 .ex .win .w-zoomback, .ex .win .w-zoomclip { width: 100%; height: 100%; }
 .ex .win .w-zoomback svg, .ex .win .w-zoomclip svg { display: block; width: 100%; height: 100%; }

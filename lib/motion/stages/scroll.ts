@@ -19,6 +19,7 @@ import {
   stackCards,
   zoomThrough,
 } from "../recipes/scroll-effects";
+import { doorwayPassage, type Door } from "../recipes/doorways";
 import { sectionPager } from "../recipes/section-pager";
 import { lenisScroll } from "../recipes/smooth/lenis-scroll";
 import type { LenisOptions } from "lenis";
@@ -313,8 +314,27 @@ const PLATE = `<svg class="w-zoomplate" viewBox="0 0 1000 400" preserveAspectRat
 // A three by three wall of posters; the middle one is the tile the camera pushes into or pulls back from.
 const WALL = `<div class="w-zoomwall">${Array.from({ length: 9 }, (_, i) => `<div class="w-zoomtile"${i === 4 ? " data-zoom-tile" : ""}>${poster(i + 1, i)}</div>`).join("")}</div>`;
 
-const zoom = play(["Through", "Window", "Push", "Pull"], ["through", "window", "push", "pull"], SCROLL_HINT, (text, p) =>
+/**
+ * Two rooms for the Door tab, drawn on one 16 by 10 plate so the doorway's box is the same fraction of
+ * the stage at every size. The first is the site's blue with a doorway in its back wall; the second, the
+ * room beyond, is white with a poster hung where the doorway's light falls.
+ */
+const ROOM_DOOR: Door = { left: 700 / 1600, top: 330 / 1000, right: 900 / 1600, bottom: 800 / 1000 };
+const room = (wall: string, floor: string, line: string, inside: string, hung: string) =>
+  `<svg viewBox="0 0 1600 1000" preserveAspectRatio="none" aria-hidden="true"><rect width="1600" height="1000" fill="${wall}"/><path d="M0 1000L360 800H1240L1600 1000Z" fill="${floor}"/><path d="M360 800V0M1240 800V0M360 800H1240" stroke="${line}" stroke-width="3" fill="none"/>${inside}${hung}</svg>`;
+const DOORWAY = `<path d="M700 800V430A100 100 0 0 1 900 430V800Z" fill="#f4f4f4"/><path d="M700 800V430A100 100 0 0 1 900 430V800" fill="none" stroke="#0b0b0b" stroke-width="6"/>`;
+const ROOM_ONE = room("#2130ff", "#1a27d9", "#0b0b0b", DOORWAY, `<rect x="440" y="330" width="170" height="230" fill="#0b0b0b"/><rect x="990" y="330" width="170" height="230" fill="#ffffff"/>`);
+const ROOM_TWO = room("#f4f4f4", "#e4e4e4", "#0b0b0b", "", `<g transform="translate(560 200) scale(1.2)">${poster(20, 0)}</g>`.replace("<svg ", '<svg width="400" height="300" '));
+
+const doorStage = (text: HTMLElement) =>
   windowed(
+    text,
+    `${CUE}<section class="w-door"><div class="w-doorpin"><div class="w-doorstage" role="img" aria-label="A blue room with a doorway in its back wall, opening into a white room with a poster">${ROOM_ONE}<div class="w-doornext">${ROOM_TWO}</div><i class="w-doorglow" aria-hidden="true"></i></div></div></section>${END}`,
+    (win) => [doorwayPassage(one(win, ".w-doorstage"), one(win, ".w-doornext"), { door: ROOM_DOOR, glow: one<HTMLElement>(win, ".w-doorglow"), trigger: one(win, ".w-door"), scroller: win, scrub: 1 }).revert],
+  );
+
+const zoom = play(["Through", "Window", "Push", "Pull", "Door"], ["through", "window", "push", "pull", "door"], SCROLL_HINT, (text, p) =>
+  p.variation === "door" ? doorStage(text) : windowed(
     text,
     p.variation === "window"
       ? `${CUE}<section class="w-zoom"><div class="w-zoomclip">${poster(7, 0)}</div></section>${END}`

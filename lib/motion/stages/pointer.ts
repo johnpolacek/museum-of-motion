@@ -14,6 +14,7 @@ import { pressFeedback } from "../recipes/press-feedback";
 import { shake } from "../recipes/accents";
 import { dialogMotion, disclosure, enterExit, menuOverlay, stateButton, tabIndicator } from "../recipes/component-motion";
 import { captureLayout, captureShared, playShared } from "../recipes/layout-flip";
+import { archPolygon, shapeFlight, type DoorwayEffect } from "../recipes/doorways";
 import { burstFrom, pile, rain } from "../recipes/physics-effects";
 import { blastOff } from "../recipes/blast-off";
 import { dragGrid, dragLoop, flickCards } from "../recipes/endless-drag";
@@ -599,6 +600,62 @@ const shared = play(["Shared element"], ["shared"], "Open a poster. Close it to 
   ),
 );
 
+// From doorways' shapeFlight: a card's poster flies into the arch and takes its shape on the way, the
+// rectangle's corners spreading along the arch's curve. The arch sends it back the same way, arch to card.
+const SHAPE_POSTERS = [54, 55, 56, 57];
+const shape = play(["Shape"], ["shape"], "Hang a poster in the arch. Press the arch to send it back.", (text) =>
+  live(
+    text,
+    `<div class="shape-stage"><ul class="shape-cards">${SHAPE_POSTERS.map((n, i) => `<li><button type="button" class="shape-card" data-n="${n}" aria-label="Hang poster ${n} in the arch"><span class="shape-frame"><img alt="" src="${posterUrl(n, i)}"></span></button></li>`).join("")}</ul>
+     <button type="button" class="shape-arch" aria-label="The arch is empty" aria-disabled="true"><span class="shape-archframe"><img alt="" hidden></span></button></div>`,
+    (layer) => {
+      const arch = one(layer, ".shape-archframe");
+      const archButton = one(layer, ".shape-arch");
+      const archImage = one<HTMLImageElement>(arch, "img");
+      // A polygon arch, so a rectangle with the same points can tween into it.
+      arch.style.clipPath = archPolygon(arch.offsetWidth / arch.offsetHeight);
+      let flight: DoorwayEffect | undefined;
+      let hung: HTMLElement | null = null;
+      const label = () => {
+        archButton.setAttribute("aria-label", hung ? `Poster ${hung.closest<HTMLElement>(".shape-card")!.dataset.n} hangs in the arch. Press to send it back.` : "The arch is empty");
+        archButton.setAttribute("aria-disabled", String(!hung));
+      };
+      const hang = (e: Event) => {
+        const card = one(e.currentTarget as HTMLElement, ".shape-frame");
+        if (card === hung) return;
+        flight?.revert();
+        archImage.src = one<HTMLImageElement>(card, "img").src;
+        archImage.hidden = false;
+        hung = card;
+        label();
+        flight = shapeFlight(card, arch, { duration: 0.8, ease: "power3.inOut" });
+      };
+      const back = () => {
+        if (!hung) return;
+        flight?.revert();
+        const home = hung;
+        hung = null;
+        label();
+        flight = shapeFlight(arch, home, { duration: 0.7, ease: "power3.inOut" });
+        // Landed, the arch stands empty.
+        flight.timeline.call(() => (archImage.hidden = true));
+        if (!flight.timeline.duration()) archImage.hidden = true;
+      };
+      const cards = all(layer, ".shape-card");
+      cards.forEach((c) => c.addEventListener("click", hang));
+      archButton.addEventListener("click", back);
+      return [
+        () => {
+          cards.forEach((c) => c.removeEventListener("click", hang));
+          archButton.removeEventListener("click", back);
+          flight?.revert();
+          arch.style.removeProperty("clip-path");
+        },
+      ];
+    },
+  ),
+);
+
 /* ---------- Particles, confetti ---------- */
 
 const PARTICLES: Record<string, ParticleEffectDefinition> = { marquee: runners, reactor, resolve, slipstream, ignite };
@@ -906,6 +963,7 @@ const openAndCloseMerged = merge([
 const flipMerged = merge([
   { label: "Layout", key: "layout", def: layoutFlip },
   { label: "Shared", key: "shared", def: shared },
+  { label: "Shape", key: "shape", def: shape },
 ]);
 
 export const POINTER_STAGES: Record<string, StageDef> = {

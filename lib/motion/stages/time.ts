@@ -8,6 +8,7 @@ import { drawIn, pathLoop } from "../recipes/svg-effects";
 import { pinnedScene } from "../recipes/scroll-effects";
 import { dragPull, inkText, paintReveal, pullCorner, writeOn, type Pull } from "../recipes/print-effects";
 import { lenisScroll } from "../recipes/smooth/lenis-scroll";
+import { archAt, archPath, DOOR_SHARE, type Door } from "../recipes/doorways";
 import { EXHIBITS } from "../../exhibits";
 
 const OPEN = "inset(0% 0% 0% 0%)";
@@ -230,6 +231,49 @@ const pourUnveil = def(["Pour"], ["pour"], ["duration", "hold"], { duration: 0.9
         return p.duration;
       },
       exit: (tl, at) => tl.to(state, { level: 0, duration: p.duration * 0.55, ease: "power2.in" }, at),
+    },
+    () => {
+      frame.style.removeProperty("clip-path");
+      remove();
+    },
+  );
+});
+
+/* ---------- Arch ---------- */
+
+// From doorways' archReveal: a point at the foot of an arch draws the arch open, it holds a beat as a
+// door, then the poster grows out of it to fill the frame. Leaving closes it back into the arch and down
+// to the point. The stage draws the arch through its own tweens, so pause and scrub reach it.
+const ARCH_DOOR: Door = { left: 0.36, top: 0.2, right: 0.64, bottom: 0.94 };
+const archUnveil = def(["Arch"], ["arch"], ["duration", "hold"], { duration: 1.6, stagger: 0, hold: 1.4, ease: "power3.inOut" }, (text, p) => {
+  const { layer, remove } = art(text, `<figure class="frame">${POSTER}</figure>`);
+  const frame = layer.querySelector<HTMLElement>(".frame")!;
+  const inner = layer.querySelector<SVGElement>("[data-reveal-inner]")!;
+  let q = 0;
+  const state = {
+    get q() {
+      return q;
+    },
+    set q(value: number) {
+      q = value;
+      frame.style.clipPath = archPath(archAt(frame, ARCH_DOOR, value));
+    },
+  };
+  state.q = 0;
+  return assemble(
+    text,
+    p,
+    [],
+    {
+      enter: (tl) => {
+        const d = p.duration;
+        tl.fromTo(state, { q: 0 }, { q: DOOR_SHARE, duration: d * 0.4, ease: "power3.out" }, 0)
+          .to(state, { q: 1, duration: d * 0.65, ease: p.ease }, d * 0.42)
+          .fromTo(inner, { scale: 1.08, transformOrigin: "50% 100%" }, { scale: 1, duration: d * 1.05, ease: "power2.out" }, 0);
+        return d * 1.07;
+      },
+      exit: (tl, at) =>
+        tl.to(state, { q: DOOR_SHARE, duration: p.duration * 0.22, ease: EXIT }, at).to(state, { q: 0, duration: p.duration * 0.12, ease: EXIT }, at + p.duration * 0.22),
     },
     () => {
       frame.style.removeProperty("clip-path");
@@ -856,7 +900,7 @@ const timelineStage: StageDef = { ...timeline, hints: TL_HINTS };
 export const TIME_STAGES: Record<string, StageDef> = {
   timeline: timelineStage,
   paint,
-  unveil: merge([{ def: imageReveal, all: true }, { def: pourUnveil, label: "Pour", key: "pour" }]),
+  unveil: merge([{ def: imageReveal, all: true }, { def: pourUnveil, label: "Pour", key: "pour" }, { def: archUnveil, label: "Arch", key: "arch" }]),
   path: merge([{ def: lineDraw, label: "Draw", key: "draw" }, { def: pathFollow, all: true }, { def: textOnPath, all: true }, { def: write, label: "Write", key: "write" }]),
   pull: pullStage,
   count: merge([{ def: countUp, label: "Count-up", key: "count" }, { def: odometer, label: "Odometer", key: "odometer" }]),

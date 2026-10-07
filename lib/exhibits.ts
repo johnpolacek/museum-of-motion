@@ -191,14 +191,15 @@ const DATA: Exhibit[] = [
   {
     name: "Unveil",
     group: "play",
-    builders: "imageReveal, pourReveal",
+    builders: "imageReveal, pourReveal, archReveal",
     src: "media-effects",
-    desc: "A wipe opens a frame while what is inside settles from a slight zoom, or the picture pours in through a wobbling blob.",
+    desc: "A wipe opens a frame while what is inside settles from a slight zoom, the picture pours in through a wobbling blob, or it opens out of an arch.",
     vars: [
       "Down",
       "Left",
       "Right",
-      "Pour"
+      "Pour",
+      "Arch"
     ]
   },
   {
@@ -347,13 +348,14 @@ const DATA: Exhibit[] = [
   {
     name: "Zoom",
     group: "scroll",
-    builders: "zoomThrough",
+    builders: "zoomThrough, doorwayPassage",
     src: "scroll-effects",
-    desc: "A word grows until you pass through it, a window opens to full bleed, or the camera pushes into one tile of a wall and pulls back out.",
+    desc: "A word grows until you pass through it, a window opens to full bleed, the camera pushes into one tile of a wall and pulls back out, or you walk through a doorway into the next room.",
     vars: [
       "Window",
       "Push",
-      "Pull"
+      "Pull",
+      "Door"
     ]
   },
   {
@@ -495,11 +497,12 @@ const DATA: Exhibit[] = [
   {
     name: "Flip",
     group: "pointer",
-    builders: "captureLayout, captureShared, playShared",
+    builders: "captureLayout, captureShared, playShared, shapeFlight",
     src: "layout-flip",
-    desc: "Flip records where things were and animates them to where they are: tiles sliding as a layout filters, or a thumbnail morphing into the hero it opens.",
+    desc: "Flip records where things were and animates them to where they are: tiles sliding as a layout filters, a thumbnail morphing into the hero it opens, or a card's picture flying into an arch and taking its shape.",
     vars: [
-      "Shared"
+      "Shared",
+      "Shape"
     ]
   },
   {
