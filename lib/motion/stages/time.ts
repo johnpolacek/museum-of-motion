@@ -6,7 +6,7 @@ import { gsap, prefersReducedMotion, ScrollTrigger, SplitText } from "../gsap";
 import { art, assemble, def, EXIT, live, merge, pinWidths, play, type StageDef } from "../stage-core";
 import { drawIn, pathLoop } from "../recipes/svg-effects";
 import { pinnedScene } from "../recipes/scroll-effects";
-import { inkText, paintReveal } from "../recipes/print-effects";
+import { dragPull, inkText, paintReveal, pullCorner, writeOn, type Pull } from "../recipes/print-effects";
 import { lenisScroll } from "../recipes/smooth/lenis-scroll";
 import { EXHIBITS } from "../../exhibits";
 
@@ -110,6 +110,83 @@ const paint = play(["Image", "Type", "Roller"], ["image", "type", "roller"], "Pu
       const again = layer.querySelector<HTMLButtonElement>(".print-again")!;
       again.addEventListener("click", print);
       return [() => again.removeEventListener("click", print), () => reverts.forEach((revert) => revert())];
+    },
+  ),
+);
+
+/* ---------- Write ---------- */
+
+// The line is written on by a brush, one rounded stroke per line, through a mask over the live text.
+const write = play(["Write"], ["write"], "Write it again with the button.", (text) =>
+  live(
+    text,
+    `<div class="write-stage"><p class="write-line">Every way a page can move.</p><button type="button" class="pill write-again">Write again</button></div>`,
+    (layer) => {
+      const line = layer.querySelector<HTMLElement>(".write-line")!;
+      let run = writeOn(line, { duration: 1.1 });
+      const again = layer.querySelector<HTMLButtonElement>(".write-again")!;
+      const rerun = () => {
+        run.revert();
+        run = writeOn(line, { duration: 1.1 });
+      };
+      again.addEventListener("click", rerun);
+      return [() => again.removeEventListener("click", rerun), () => run.revert()];
+    },
+  ),
+);
+
+/* ---------- Pull ---------- */
+
+// A stack of prints. Grab the top sheet anywhere and drag: its corner lifts and folds back. Let go past a
+// third of the way and it peels off, showing the next; short of that it lies flat again. Enter pulls it too.
+const PULL_SHEETS = 4;
+const pullStage = play(["Pull"], ["pull"], "Drag a print to pull it off the stack, or press Enter on it.", (text) =>
+  live(
+    text,
+    `<div class="pull-stage"><div class="pull-stack">${Array.from({ length: PULL_SHEETS }, (_, i) => {
+      const n = PULL_SHEETS - i;
+      // Each sheet sits in its own turned slot, so the fold's flap, a sibling of the sheet, turns with it.
+      return `<div class="pull-slot"><figure class="pull-sheet" tabindex="-1" aria-label="Print ${n} of ${PULL_SHEETS}: drag or press Enter to pull it off">${PLATE_KEY(String(n).padStart(2, "0"))}<div class="plate-color">${PLATE_COLOR}</div></figure></div>`;
+    }).join("")}</div><button type="button" class="pill pull-reset">Restack</button></div>`,
+    (layer) => {
+      const sheets = Array.from(layer.querySelectorAll<HTMLElement>(".pull-sheet"));
+      const reset = layer.querySelector<HTMLButtonElement>(".pull-reset")!;
+      let pulls: Pull[] = [];
+      let drags: Array<() => void> = [];
+      /** The last sheet in the stack is on top. Only it takes the pointer and focus. */
+      const arm = (index: number) => {
+        sheets.forEach((sheet, i) => {
+          sheet.tabIndex = i === index ? 0 : -1;
+          sheet.style.pointerEvents = i === index ? "auto" : "none";
+        });
+        if (index < 0) return;
+        const sheet = sheets[index]!;
+        const pull = pullCorner(sheet, { back: "#f4efe6" });
+        pulls.push(pull);
+        drags.push(
+          dragPull(sheet, pull, {
+            onPulled: () => {
+              sheet.style.visibility = "hidden";
+              arm(index - 1);
+              (index > 0 ? sheets[index - 1]! : reset).focus();
+            },
+          }),
+        );
+      };
+      const clear = () => {
+        drags.forEach((off) => off());
+        pulls.forEach((pull) => pull.revert());
+        drags = [];
+        pulls = [];
+        sheets.forEach((sheet) => sheet.style.removeProperty("visibility"));
+      };
+      const restack = () => {
+        clear();
+        arm(sheets.length - 1);
+      };
+      arm(sheets.length - 1);
+      reset.addEventListener("click", restack);
+      return [() => reset.removeEventListener("click", restack), clear];
     },
   ),
 );
@@ -733,7 +810,8 @@ export const TIME_STAGES: Record<string, StageDef> = {
   timeline: timelineStage,
   paint,
   unveil: imageReveal,
-  path: merge([{ def: lineDraw, label: "Draw", key: "draw" }, { def: pathFollow, all: true }, { def: textOnPath, all: true }]),
+  path: merge([{ def: lineDraw, label: "Draw", key: "draw" }, { def: pathFollow, all: true }, { def: textOnPath, all: true }, { def: write, label: "Write", key: "write" }]),
+  pull: pullStage,
   count: merge([{ def: countUp, label: "Count-up", key: "count" }, { def: odometer, label: "Odometer", key: "odometer" }]),
   marquee,
   cycle: logoCycle,

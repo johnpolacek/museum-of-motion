@@ -51,7 +51,7 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 | Full-screen sections changing on a wheel flick, swipe, or key | [Section pager](references/recipes/section-pager.md) |
 | Opt-in sound on interactions and timelines, ambient beds | [Sound cues](references/recipes/sound-cues.md) |
 | Line drawing, icon morphs, a shape flowing through a sequence of shapes, a mark following a path, a section edge that morphs with scroll, text riding a path or turning around a badge | [SVG effects](references/recipes/svg-effects.md) |
-| Printmaking: an image or block painted on with a dry brush, text that inks in through grain, a second impression slipping into register | [Print effects](references/recipes/print-effects.md) |
+| Printmaking: an image or block painted on with a dry brush, text that inks in through grain or is written on by a brush, a second impression slipping into register, a corner pulled back and peeled off | [Print effects](references/recipes/print-effects.md) |
 | Count-up figures, odometer digits rolling to new values, looping marquees, logo walls that cycle | [Counters and marquees](references/recipes/counters-and-marquees.md) |
 | Eased page scrolling with Lenis or ScrollSmoother | [Smooth scroll](references/recipes/smooth-scroll.md) |
 | Curtain page transitions, tilted, titled, clip-path wipe, or drifting covers, curved SVG swipe covers, first-visit preloaders | [Page covers](references/recipes/page-covers.md) |

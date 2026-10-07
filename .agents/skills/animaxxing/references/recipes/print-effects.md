@@ -1,6 +1,6 @@
 # Recipe: print effects
 
-Three effects that borrow from printmaking, for a handmade feel: an image or block painted on with a dry, broken brush edge, live text that inks in through grain, and a second impression that slips into register behind a heading. They keep the project's own content, colors, and fonts; the grain and the timing are the only additions.
+Five effects that borrow from printmaking, for a handmade feel: an image or block painted on with a dry, broken brush edge, live text that inks in through grain, a second impression that slips into register behind a heading, live text written on by a brush stroke, and a sheet whose corner is pulled back and peeled off. They keep the project's own content, colors, and fonts; the grain and the timing are the only additions.
 
 Lifecycle: see the [controller contract](#controller-contract); the controller calls each `revert` on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -278,6 +278,215 @@ export function registrationSlip(heading: HTMLElement, { ink, x = 8, y = 3, dura
 }
 ```
 
+## writeOn
+
+Live text is written on by a brush: one rounded stroke per line sweeps left to right through an SVG mask, a little wavy, as a hand would. The text is untouched and the mask is removed at rest. The strokes are measured from the text's line height, so a heading that wraps gets one stroke per line.
+
+```ts
+export type WriteOptions = { duration?: number; ease?: string };
+
+export function writeOn(target: HTMLElement, { duration = 0.55, ease = "power1.inOut" }: WriteOptions = {}): PrintEffect {
+  const timeline = gsap.timeline();
+  if (prefersReducedMotion()) return { timeline, revert: () => timeline.kill() };
+  const style = getComputedStyle(target);
+  const lineHeight = parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.2;
+  const lines = Math.max(1, Math.round(target.getBoundingClientRect().height / lineHeight));
+  const svg = "http://www.w3.org/2000/svg";
+  const defs = document.createElementNS(svg, "svg");
+  defs.setAttribute("aria-hidden", "true");
+  Object.assign(defs.style, { position: "absolute", width: "0", height: "0", pointerEvents: "none" });
+  const id = `write-on-${++maskId}`;
+  const band = 1 / lines;
+  // A slight rise and fall across each line, and strokes a little wider than the line, so descenders write too.
+  const strokes = Array.from({ length: lines }, (_, i) => {
+    const y = band * (i + 0.5);
+    return `<path d="M-0.02 ${(y + band * 0.04).toFixed(4)}Q0.4 ${(y - band * 0.06).toFixed(4)} 1.02 ${(y + band * 0.02).toFixed(4)}" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" fill="none" stroke="white" stroke-linecap="round" stroke-width="${(band * 1.12).toFixed(4)}"/>`;
+  }).join("");
+  defs.innerHTML = `<defs><mask id="${id}" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">${strokes}</mask></defs>`;
+  document.body.append(defs);
+  const saved = [target.style.getPropertyValue("mask"), target.style.getPropertyValue("-webkit-mask")] as const;
+  target.style.setProperty("mask", `url(#${id})`);
+  target.style.setProperty("-webkit-mask", `url(#${id})`);
+  const paths = Array.from(defs.querySelectorAll("path"));
+  paths.forEach((path, i) => timeline.to(path, { attr: { "stroke-dashoffset": 0 }, duration: duration / lines + 0.1, ease }, i * (duration / lines)));
+  timeline.call(() => restore(), [], ">");
+  let restored = false;
+  const restore = () => {
+    if (restored) return;
+    restored = true;
+    defs.remove();
+    if (saved[0]) target.style.setProperty("mask", saved[0]);
+    else target.style.removeProperty("mask");
+    if (saved[1]) target.style.setProperty("-webkit-mask", saved[1]);
+    else target.style.removeProperty("-webkit-mask");
+  };
+  return {
+    timeline,
+    revert() {
+      timeline.kill();
+      restore();
+    },
+  };
+}
+```
+
+`pathLength="1"` lets a dash offset of 1 hide a whole stroke at any size, so no plugin is needed. Like `inkText`, a target is hidden from the moment the mask is set until its stroke passes; build it in the framework's initial state.
+
+## pullCorner
+
+A sheet's corner lifts and folds back along a diagonal, showing the paper's back, and can be pulled all the way off. The sheet is clipped to the part still lying flat; an `aria-hidden` flap, the reflection of the lifted part across the fold, is drawn in the back's color. `set(progress)` places the fold: 0 is flat, 1 has peeled the whole sheet. `dragPull` lets a pointer or finger pull it, and finishes or springs back on release.
+
+```ts
+export type Corner = "bottom-right" | "bottom-left" | "top-right" | "top-left";
+export type PullOptions = {
+  corner?: Corner;
+  /** The paper's back. Defaults to a warm off-white. */
+  back?: string;
+};
+export type Pull = {
+  /** 0 lies flat; 1 has peeled the whole sheet away. */
+  set(progress: number): void;
+  progress(): number;
+  /** Tweens to a progress. Reduced motion jumps. */
+  to(progress: number, vars?: gsap.TweenVars): gsap.core.Tween;
+  /** Stops a running tween where it is, such as when a hand takes the corner. */
+  stop(): void;
+  revert: Teardown;
+};
+
+type Point = [number, number];
+
+/** The part of a polygon where x + y <= c, by one Sutherland-Hodgman pass. */
+function clipBelow(points: Point[], c: number): Point[] {
+  const out: Point[] = [];
+  points.forEach((a, i) => {
+    const b = points[(i + 1) % points.length]!;
+    const inA = a[0] + a[1] <= c;
+    const inB = b[0] + b[1] <= c;
+    if (inA) out.push(a);
+    if (inA !== inB) {
+      const t = (c - a[0] - a[1]) / (b[0] + b[1] - a[0] - a[1]);
+      out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]);
+    }
+  });
+  return out;
+}
+
+export function pullCorner(sheet: HTMLElement, { corner = "bottom-right", back = "#f4efe6" }: PullOptions = {}): Pull {
+  const flap = document.createElement("i");
+  flap.setAttribute("aria-hidden", "true");
+  const shade = `linear-gradient(${corner.includes("bottom") ? (corner.includes("right") ? "315deg" : "45deg") : corner.includes("right") ? "225deg" : "135deg"}, ${back} 40%, color-mix(in srgb, ${back} 78%, black))`;
+  // Three times the sheet's size, centered on it, so a flap folded past the sheet's edges still paints.
+  Object.assign(flap.style, { position: "absolute", left: "-100%", top: "-100%", width: "300%", height: "300%", pointerEvents: "none", background: shade, clipPath: "polygon(0 0)", zIndex: "2" });
+  const position = sheet.style.position;
+  const clip = sheet.style.clipPath;
+  if (getComputedStyle(sheet).position === "static") sheet.style.position = "relative";
+  // The flap sits in the sheet's parent, so the sheet's own clip does not cut it.
+  const host = document.createElement("div");
+  Object.assign(host.style, { position: "absolute", pointerEvents: "none" });
+  host.setAttribute("aria-hidden", "true");
+  host.append(flap);
+  sheet.after(host);
+  let current = 0;
+  let tween: gsap.core.Tween | undefined;
+  const flipX = corner.endsWith("left");
+  const flipY = corner.startsWith("top");
+
+  const set = (progress: number) => {
+    current = Math.max(0, Math.min(1, progress));
+    const w = sheet.offsetWidth;
+    const h = sheet.offsetHeight;
+    Object.assign(host.style, { left: `${sheet.offsetLeft}px`, top: `${sheet.offsetTop}px`, width: `${w}px`, height: `${h}px` });
+    // Work as if the corner were bottom right; mirror the axes for the others.
+    const map = ([x, y]: Point): Point => [flipX ? w - x : x, flipY ? h - y : y];
+    const c = w + h - current * (w + h);
+    const rect: Point[] = [[0, 0], [w, 0], [w, h], [0, h]];
+    const kept = clipBelow(rect, c).map(map);
+    const lifted = clipBelow(rect.map(([x, y]) => [-x, -y] as Point), -c).map(([x, y]) => [-x, -y] as Point);
+    // The flap is the lifted part reflected across the fold line x + y = c.
+    const folded = lifted.map(([x, y]) => [c - y, c - x] as Point).map(map);
+    const polygon = (points: Point[], ox = 0, oy = 0) =>
+      points.length ? `polygon(${points.map(([x, y]) => `${(x + ox).toFixed(2)}px ${(y + oy).toFixed(2)}px`).join(",")})` : "polygon(0 0)";
+    // Fully peeled, nothing lies flat: an empty clip rather than a polygon of zero area.
+    sheet.style.clipPath = current === 0 ? clip : current === 1 ? "polygon(0 0)" : polygon(kept);
+    flap.style.clipPath = current === 0 ? "polygon(0 0)" : polygon(folded, w, h);
+  };
+  set(0);
+  return {
+    set,
+    progress: () => current,
+    to(progress, vars = {}) {
+      tween?.kill();
+      const state = { value: current };
+      tween = gsap.to(state, { value: progress, duration: prefersReducedMotion() ? 0 : 0.45, ease: "power2.inOut", ...vars, onUpdate: () => set(state.value) });
+      return tween;
+    },
+    stop: () => tween?.kill(),
+    revert() {
+      tween?.kill();
+      host.remove();
+      sheet.style.clipPath = clip;
+      sheet.style.position = position;
+    },
+  };
+}
+
+export type DragPullOptions = {
+  /** Share of the peel past which a release finishes it. */
+  threshold?: number;
+  /** Runs once the sheet has been pulled all the way off. */
+  onPulled?: () => void;
+};
+
+/**
+ * A pointer or finger pulls the corner: the fold follows the distance dragged toward the opposite
+ * corner. Released past `threshold`, the sheet peels off; short of it, it springs flat. Keyboard: Enter
+ * or Space on the sheet pulls it off, so give the sheet `tabindex="0"` and a label saying so.
+ */
+export function dragPull(sheet: HTMLElement, pull: Pull, { threshold = 0.35, onPulled }: DragPullOptions = {}): Teardown {
+  const aborter = new AbortController();
+  const on = { signal: aborter.signal };
+  const touchAction = sheet.style.touchAction;
+  sheet.style.touchAction = "none";
+  let start: { x: number; y: number; id: number } | undefined;
+  const finish = () =>
+    pull.to(1, { duration: 0.6, ease: "power2.in" }).eventCallback("onComplete", () => onPulled?.());
+  sheet.addEventListener("pointerdown", (event) => {
+    // The hand takes over from any spring back or peel still running.
+    pull.stop();
+    start = { x: event.clientX, y: event.clientY, id: event.pointerId };
+    sheet.setPointerCapture(event.pointerId);
+  }, on);
+  sheet.addEventListener("pointermove", (event) => {
+    if (!start || event.pointerId !== start.id) return;
+    const span = sheet.offsetWidth + sheet.offsetHeight;
+    // Distance dragged along the diagonal, toward the sheet's middle from whichever corner is pulled.
+    const dx = start.x - event.clientX;
+    const dy = start.y - event.clientY;
+    pull.set(Math.max(0, (Math.abs(dx) + Math.abs(dy)) / span));
+  }, on);
+  const release = (event: PointerEvent) => {
+    if (!start || event.pointerId !== start.id) return;
+    start = undefined;
+    if (pull.progress() >= threshold) finish();
+    else pull.to(0, { duration: 0.5, ease: "power3.out" });
+  };
+  sheet.addEventListener("pointerup", release, on);
+  sheet.addEventListener("pointercancel", release, on);
+  sheet.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    finish();
+  }, on);
+  return () => {
+    aborter.abort();
+    sheet.style.touchAction = touchAction;
+  };
+}
+```
+
+The flap's shading is a gradient of the back color toward a little black, so the fold reads as a curl in light; pass a `back` from the palette. The sheet's content never changes; only its clip does. Reduced motion: drags still follow the hand, and a release or key press jumps to the end.
+
 ## Controller contract
 
 | Builder | Phase | Returns | Reduced motion |
@@ -285,6 +494,8 @@ export function registrationSlip(heading: HTMLElement, { ink, x = 8, y = 3, dura
 | `paintReveal` | Intro, once the target has its size | `{ timeline, revert }` | Empty timeline; content shows |
 | `inkText` | Intro; targets hidden by the pre-paint marker until built | `{ timeline, revert }` | Empty timeline; text shows |
 | `registrationSlip` | Intro, after the heading's font has loaded | `{ timeline, revert }` | Empty timeline; no copy |
+| `writeOn` | Intro; target hidden by the pre-paint marker until built | `{ timeline, revert }` | Empty timeline; text shows |
+| `pullCorner`, `dragPull` | Settled, once the sheet has its size | `{ set, progress, to, revert }`, teardown | Drags follow the hand; releases jump |
 
-- Each builder runs once and leaves nothing behind at rest: the cover, the masks, and the copy are removed when their timeline ends.
+- Each intro builder runs once and leaves nothing behind at rest: the cover, the masks, and the copy are removed when their timeline ends. `pullCorner` holds its flap until reverted.
 - `paintReveal` draws on the CPU, a few hundred thousand pixels per changed step. Keep it to one or two at a time, and to intros, not scroll scrubbing on long pages.

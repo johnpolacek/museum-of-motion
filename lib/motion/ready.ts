@@ -44,6 +44,7 @@ export const LIVE_STAGES = new Set([
   "flip",
   "morph",
   "paint",
+  "pull",
   "tab-indicator",
   "particles",
   "physics",

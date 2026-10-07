@@ -195,14 +195,15 @@ const DATA: Exhibit[] = [
   {
     name: "Path",
     group: "play",
-    builders: "drawIn, drawOut, followPath, pathLoop",
+    builders: "drawIn, drawOut, followPath, pathLoop, writeOn",
     src: "svg-effects",
-    desc: "Strokes draw along their length, a small mark loops along a path, or a line of text rides one.",
+    desc: "Strokes draw along their length, a small mark loops along a path, a line of text rides one, or a brush writes a line on.",
     vars: [
       "Dot",
       "Arrow",
       "Ride",
-      "Badge"
+      "Badge",
+      "Write"
     ]
   },
 
@@ -544,6 +545,13 @@ const DATA: Exhibit[] = [
     builders: "swipeDismiss",
     src: "pointer-effects",
     desc: "Throw an item sideways and the list closes up behind it."
+  },
+  {
+    name: "Pull",
+    group: "drag",
+    builders: "pullCorner, dragPull",
+    src: "print-effects",
+    desc: "A print's corner lifts and folds back under the hand, and the sheet peels off the stack."
   },
   {
     name: "Calm",

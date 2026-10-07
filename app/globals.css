@@ -193,6 +193,20 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .morph-art { width: min(calc(56svh - 110px), 380px); height: auto; aspect-ratio: 1; fill: #fff; }
 /* Slip: the second impression sits exactly over the line, in black, behind it. */
 .ex .stage > .slip-copy { position: absolute; color: #0b0b0b; pointer-events: none; }
+/* Write: the line in display type, written on by a brush. */
+.ex .stage-art .write-stage { display: grid; gap: 22px; justify-items: center; }
+.ex .stage-art .write-line { margin: 0; max-width: 12ch; font-size: clamp(40px, 7vw, 96px); line-height: 0.95; font-weight: 800; font-stretch: 75%; text-transform: uppercase; text-align: center; }
+
+/* Pull: a stack of prints, each a white sheet, slightly turned. */
+.ex .stage-art .pull-stage { display: grid; gap: 18px; justify-items: center; }
+.ex .stage-art .pull-stack { position: relative; width: min(520px, 76vw); aspect-ratio: 4 / 3; max-height: calc(50svh - 110px); }
+.ex .stage-art .pull-slot { position: absolute; inset: 0; pointer-events: none; }
+.ex .stage-art .pull-slot:nth-child(1) { rotate: -3deg; }
+.ex .stage-art .pull-slot:nth-child(2) { rotate: 2deg; }
+.ex .stage-art .pull-slot:nth-child(3) { rotate: -1deg; }
+.ex .stage-art .pull-sheet { position: absolute; inset: 0; margin: 0; background: #fff; box-shadow: 0 10px 30px -18px rgb(0 0 0 / 0.6); cursor: grab; outline-offset: 6px; }
+.ex .stage-art .pull-sheet .plate, .ex .stage-art .pull-sheet .plate-color { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+
 /* Paint: a white sheet on the blue field, printed in black and blue. */
 .ex .stage-art .print-stage { display: grid; gap: 18px; justify-items: center; }
 .ex .stage-art .print-sheet { position: relative; margin: 0; width: min(560px, 80vw); aspect-ratio: 4 / 3; max-height: calc(52svh - 110px); background: #fff; color: #0b0b0b; overflow: hidden; }
