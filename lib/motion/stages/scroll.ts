@@ -152,7 +152,7 @@ const pinned = play(["Pinned"], ["pinned"], SCROLL_HINT, (text) =>
   ),
 );
 
-/* ---------- Horizontal run ---------- */
+/* ---------- Run ---------- */
 
 const run = play(["Run", "Drift"], ["run", "drift"], SCROLL_HINT, (text, p) =>
   windowed(
@@ -226,7 +226,7 @@ const header = play(
     ),
 );
 
-/* ---------- Section pager ---------- */
+/* ---------- Pager ---------- */
 
 const CHAPTERS = ["Arrive", "Hold", "Turn", "Leave"];
 
@@ -290,9 +290,9 @@ const pager = play(["Cover", "Stack", "Loop"], ["cover", "stack", "loop"], "Whee
   ),
 );
 
-/* ---------- Stacking cards ---------- */
+/* ---------- Stacking ---------- */
 
-const stacking = play(["Stacking cards"], ["stack"], SCROLL_HINT, (text) =>
+const stacking = play(["Stacking"], ["stack"], SCROLL_HINT, (text) =>
   windowed(
     text,
     `${CUE}<section class="w-deck">${[0, 1, 2, 3].map((k) => `<article class="w-deckcard" data-stack-card>${poster(k + 1, k)}<b>Card ${k + 1}</b></article>`).join("")}</section>${END}`,
@@ -300,7 +300,7 @@ const stacking = play(["Stacking cards"], ["stack"], SCROLL_HINT, (text) =>
   ),
 );
 
-/* ---------- Zoom-through ---------- */
+/* ---------- Zoom ---------- */
 
 /**
  * A blue plate with the word cut out of it, so the poster behind shows through the letters. The mask's
@@ -328,10 +328,10 @@ export const SCROLL_STAGES: Record<string, StageDef> = {
   "scroll-reveal": reveal,
   parallax: parallaxStage,
   pinned,
-  "stacking-cards": stacking,
-  "zoom-through": zoom,
-  "horizontal-run": run,
+  "stacking": stacking,
+  "zoom": zoom,
+  "run": run,
   waypoints,
   header,
-  "section-pager": pager,
+  "pager": pager,
 };

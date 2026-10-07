@@ -1,5 +1,5 @@
-// WebGL stages: Shader, Dust, Flight, Scroll wave, Distort (liquid, lens, ripple). Each draws on the animaxxing-webgl
-// skill's one shared canvas (OGL), and GSAP tweens shader uniforms. Images draw as planes; Dust and Flight
+// WebGL stages: Shader, Pixels, Flight, Curl, Distort (liquid, lens, ripple). Each draws on the animaxxing-webgl
+// skill's one shared canvas (OGL), and GSAP tweens shader uniforms. Images draw as planes; Pixels and Flight
 // draw framed views. The DOM stays the page: without WebGL, under reduced motion, or after a lost context,
 // each <img> or poster <img> shows as is.
 import { gsap } from "../gsap";
@@ -123,31 +123,31 @@ const shader = def(
   { dissolve: { duration: 1.1 }, pixelate: { duration: 1 }, ripple: { duration: 1.4 }, glitch: { duration: 0.6 } },
 );
 
-/* ---------- Dust ---------- */
+/* ---------- Pixels ---------- */
 
-// Dust gathers into a shape, rests, and blows back into dust: a word in the page's own face, the exhibit's
+// Points gather into a shape, rest, and blow back apart: a word in the page's own face, the exhibit's
 // number, a sphere. One uniform, uShape, carries it; each point leaves on its own delay. The pointer parts
 // the points. A poster per tab shows the gathered shape whenever WebGL cannot draw.
-const DUST_SHAPES: Record<string, (text: HTMLElement, n: number) => PointShape> = {
+const PIXEL_SHAPES: Record<string, (text: HTMLElement, n: number) => PointShape> = {
   word: (text) => textShape("MOTION", { font: `800 200px ${getComputedStyle(text).fontFamily}` }),
   number: (text, n) => textShape(two(n), { font: `800 320px ${getComputedStyle(text).fontFamily}` }),
   sphere: () => sphereShape(5000, 0.95),
 };
-const dust = def(
+const pixels = def(
   ["Word", "Number", "Sphere"],
   ["word", "number", "sphere"],
   ["duration", "hold"],
   { duration: 2, stagger: 0, hold: 1.6, ease: "power2.inOut" },
   (text, p) => {
-    const n = EXHIBITS.find((e) => e.slug === "dust")?.no ?? 0;
+    const n = EXHIBITS.find((e) => e.slug === "pixels")?.no ?? 0;
     const { layer, remove } = art(
       text,
-      `<figure class="gl-view gl-dust"><img data-poster alt="" src="/exhibits/dust-${p.variation}.jpg"></figure>`,
+      `<figure class="gl-view gl-pixels"><img data-poster alt="" src="/exhibits/pixels-${p.variation}.jpg"></figure>`,
     );
-    const host = layer.querySelector<HTMLElement>(".gl-dust")!;
-    // The gathered shape is the poster; hide it until the dust is ready, so the loop starts scattered.
+    const host = layer.querySelector<HTMLElement>(".gl-pixels")!;
+    // The gathered shape is the poster; hide it until the points are ready, so the loop starts scattered.
     layer.style.visibility = "hidden";
-    const shape = (DUST_SHAPES[p.variation] ?? DUST_SHAPES.word)(text, n);
+    const shape = (PIXEL_SHAPES[p.variation] ?? PIXEL_SHAPES.word)(text, n);
     const m = particleMorph(host, { shapes: [scatterShape(4000, 1.1), shape], size: 2, fill: 0.86 });
     const push = pointerPush(m, { touch: true });
     const u = m.uniforms;
@@ -207,13 +207,13 @@ const flightStage = play(["Flight"], ["flight"], "Scroll the page to fly through
   ),
 );
 
-/* ---------- Scroll wave ---------- */
+/* ---------- Curl ---------- */
 
 /**
  * The canvas is fixed to the viewport, so a plane inside a scrolling box would draw past the box's edges.
  * This stage scrolls the page itself: a tall column of posters that bend with the page's scroll speed.
  */
-const scrollWaveStage = play(["Scroll wave"], ["wave"], "Scroll the page past the posters, fast and slow.", (text) =>
+const scrollWaveStage = play(["Curl"], ["curl"], "Scroll the page past the posters, fast and slow.", (text) =>
   live(
     text,
     `<div class="gl-column">${[37, 38, 39, 40].map((n, i) => `<figure class="gl-frame"><img alt="Poster ${n}" src="${posterUrl(n, i)}"></figure>`).join("")}</div>`,
@@ -295,8 +295,8 @@ const distort = merge([
 
 export const WEBGL_STAGES: Record<string, StageDef> = {
   shader,
-  dust,
+  pixels,
   flight: flightStage,
   distort,
-  "scroll-wave": scrollWaveStage,
+  "curl": scrollWaveStage,
 };

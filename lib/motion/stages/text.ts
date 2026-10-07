@@ -209,7 +209,7 @@ export const characters = def(
   },
 );
 
-/* ---------- Word slide ---------- */
+/* ---------- Slide ---------- */
 
 export const wordSlide = def(["Word slide"], ["slide"], ["duration", "stagger", "hold", "ease"], { duration: 0.5, stagger: 0.05, hold: 2, ease: "signature" }, (text, p) => {
   const splits: SplitText[] = [];
@@ -408,12 +408,12 @@ export const letterWave = def(
   },
 );
 
-/* ---------- Route letters ---------- */
+/* ---------- Route ---------- */
 
-// Route letters runs a whole page at once: one call takes every marked item. The stage is a small page:
+// Route runs a whole page at once: one call takes every marked item. The stage is a small page:
 // a section label and a button slide, the text and picture rise as blocks, and the headline goes by letter.
 const PAGE_ART = `<article class="mini-page">
-  <span class="lab" data-route="slide">Exhibit · ${String(EXHIBITS.find((e) => e.slug === "route-letters")?.no ?? 0).padStart(2, "0")}</span>
+  <span class="lab" data-route="slide">Exhibit · ${String(EXHIBITS.find((e) => e.slug === "route")?.no ?? 0).padStart(2, "0")}</span>
   <h3 class="mp-title" data-route="letters">Route letters</h3>
   <div class="mp-body">
     <p data-route="rise">One call runs the whole page in, and back out on the way to the next one.</p>
@@ -794,11 +794,11 @@ export const glitch = def(
 export const TEXT_STAGES: Record<string, StageDef> = {
   "line-mask": lineMask,
   characters,
-  "word-slide": wordSlide,
+  "slide": wordSlide,
   scramble,
   glitch,
-  "type-and-speak": merge([{ def: typewriter, all: true }, { def: speakIn, label: "Speak", key: "speak" }]),
+  "speak": merge([{ def: typewriter, all: true }, { def: speakIn, label: "Speak", key: "speak" }]),
   wave: merge([{ def: weightWave, label: "Weight", key: "weight" }, { def: letterWave, all: true }]),
-  "route-letters": routeLetters,
+  "route": routeLetters,
   "enter-and-exit": paired,
 };

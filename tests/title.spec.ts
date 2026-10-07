@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 // each word, or hyphenated part, is held at its resting width while it widens or condenses.
 test.use({ viewport: { width: 390, height: 844 } });
 
-for (const slug of ["open-and-close", "type-and-speak", "enter-and-exit", "swipe-to-dismiss", "zoom-through"]) {
+for (const slug of ["open-and-close", "enter-and-exit", "swipe-to-dismiss", "stacking", "distort"]) {
   test(`${slug}: the title keeps its lines while it widens in`, async ({ page }) => {
     await page.addInitScript(() => {
       const w = window as unknown as { __heights: number[] };

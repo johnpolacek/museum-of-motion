@@ -74,7 +74,7 @@ const DATA: Exhibit[] = [
     ]
   },
   {
-    name: "Word slide",
+    name: "Slide",
     group: "type",
     builders: "wordsSlideIn, wordsSlideOut",
     src: "split-entrances",
@@ -102,7 +102,7 @@ const DATA: Exhibit[] = [
     ]
   },
   {
-    name: "Type and speak",
+    name: "Speak",
     group: "type",
     builders: "typeIn, typeOut, retype, speakIn",
     src: "typewriter",
@@ -134,7 +134,7 @@ const DATA: Exhibit[] = [
 
 
   {
-    name: "Route letters",
+    name: "Route",
     group: "type",
     builders: "buildPageIntro, buildPageOutro",
     src: "route-letters",
@@ -243,11 +243,11 @@ const DATA: Exhibit[] = [
     gl: true
   },
   {
-    name: "Dust",
+    name: "Pixels",
     group: "play",
     builders: "particleMorph",
     src: "particle-morph",
-    desc: "Dust gathers into a shape, then blows away.",
+    desc: "Thousands of points gather into a shape, then scatter.",
     vars: [
       "Number",
       "Sphere"
@@ -301,14 +301,14 @@ const DATA: Exhibit[] = [
     desc: "A section holds still while a timeline plays through it."
   },
   {
-    name: "Stacking cards",
+    name: "Stacking",
     group: "scroll",
     builders: "stackCards",
     src: "scroll-effects",
     desc: "Cards pin one over another into a deck, then leave together."
   },
   {
-    name: "Zoom-through",
+    name: "Zoom",
     group: "scroll",
     builders: "zoomThrough",
     src: "scroll-effects",
@@ -318,7 +318,7 @@ const DATA: Exhibit[] = [
     ]
   },
   {
-    name: "Horizontal run",
+    name: "Run",
     group: "scroll",
     builders: "horizontalRun, runDrift",
     src: "scroll-effects",
@@ -348,7 +348,7 @@ const DATA: Exhibit[] = [
     ]
   },
   {
-    name: "Section pager",
+    name: "Pager",
     group: "scroll",
     builders: "sectionPager",
     src: "section-pager",
@@ -359,7 +359,7 @@ const DATA: Exhibit[] = [
     ]
   },
   {
-    name: "Scroll wave",
+    name: "Curl",
     group: "scroll",
     builders: "scrollWave",
     src: "uniform-effects",

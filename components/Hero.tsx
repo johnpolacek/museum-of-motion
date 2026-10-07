@@ -209,7 +209,7 @@ export function Hero() {
         </span>{" "}
         <span className="w" data-word="can" aria-hidden="true">
           <span className="t">can</span>
-          <sup>{numberOf("word-slide")}</sup>
+          <sup>{numberOf("slide")}</sup>
         </span>{" "}
         <span className="w" data-word="move" aria-hidden="true">
           <span className="mk">
@@ -229,7 +229,7 @@ export function Hero() {
             {[
               ["line-mask", "Line mask"],
               ["characters", "Characters"],
-              ["word-slide", "Word slide"],
+              ["slide", "Slide"],
               ["wave", "Wave"],
               ["link-hover", "Link hover"],
             ].map(([slug, name]) => (
