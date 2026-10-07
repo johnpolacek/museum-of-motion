@@ -424,7 +424,7 @@ const DATA: Exhibit[] = [
     gl: true
   },
   {
-    name: "Link hover",
+    name: "Hover",
     group: "pointer",
     builders: "textRoll, underlineSweep, directionalFill, imageZoom, beadUnderline, pourFill, jelly",
     src: "hover-effects",

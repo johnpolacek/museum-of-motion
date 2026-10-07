@@ -193,7 +193,7 @@ export function Hero() {
         <span className="w us" data-word="way" aria-hidden="true">
           <span className="t">way</span>
           <i data-ul></i>
-          <sup>{numberOf("link-hover")}</sup>
+          <sup>{numberOf("hover")}</sup>
         </span>{" "}
         <span className="w" data-word="a" aria-hidden="true">
           <span className="t">a</span>
@@ -231,7 +231,7 @@ export function Hero() {
               ["characters", "Characters"],
               ["slide", "Slide"],
               ["wave", "Wave"],
-              ["link-hover", "Link hover"],
+              ["hover", "Hover"],
             ].map(([slug, name]) => (
               <li key={slug}>
                 {numberOf(slug)} {name}

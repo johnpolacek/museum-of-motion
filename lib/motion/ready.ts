@@ -40,7 +40,7 @@ export const LIVE_STAGES = new Set([
   "waypoints",
   "header",
   "pager",
-  "link-hover",
+  "hover",
   "feedback",
   "cursor",
   "attract",

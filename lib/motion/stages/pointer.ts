@@ -915,7 +915,7 @@ const deck = play(["Card stack"], ["deck"], "Drag or flick the front card, or us
   ),
 );
 
-// Link hover: one exhibit, one tab per stage it gathers.
+// Hover: one exhibit, one tab per stage it gathers.
 const linkHoverMerged = merge([
   { label: "Roll", key: "roll", def: labelRoll },
   { label: "Underline", key: "underline", def: underline },
@@ -967,7 +967,7 @@ const flipMerged = merge([
 ]);
 
 export const POINTER_STAGES: Record<string, StageDef> = {
-  "link-hover": linkHoverMerged,
+  hover: linkHoverMerged,
   "feedback": feedbackMerged,
   "cursor": cursorMerged,
   "attract": attractMerged,
