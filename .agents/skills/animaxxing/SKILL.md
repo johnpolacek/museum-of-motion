@@ -56,8 +56,8 @@ Load the matching `gsap-<framework>` skill first (`gsap-vanilla` for plain sites
 | Eased page scrolling with Lenis or ScrollSmoother | [Smooth scroll](references/recipes/smooth-scroll.md) |
 | Curtain page transitions, tilted, titled, clip-path wipe, or drifting covers, curved SVG swipe covers, first-visit preloaders | [Page covers](references/recipes/page-covers.md) |
 | Filter, reorder, and expand layouts; shared-element morphs across pages | [Layout Flip](references/recipes/layout-flip.md) |
-| Image wipe reveals, hover image previews, scroll-scrubbed video, canvas frame sequences | [Media effects](references/recipes/media-effects.md) |
-| Label rolls, underline sweeps, direction-aware fills, weight or width hovers in running text, image zoom on hover and focus | [Hover effects](references/recipes/hover-effects.md) |
+| Image wipe reveals, a liquid pour reveal, hover image previews, scroll-scrubbed video, canvas frame sequences | [Media effects](references/recipes/media-effects.md) |
+| Label rolls, underline sweeps, direction-aware fills, weight or width hovers in running text, image zoom on hover and focus, liquid hovers (a bead underline, a poured round fill, a jelly button) | [Hover effects](references/recipes/hover-effects.md) |
 | A control that squashes and ripples when pressed, by any input | [Press feedback](references/recipes/press-feedback.md) |
 | A shake for an error or refused action | [Accents](references/motion-vocabulary.md#accents) |
 | Menu overlays, interruptible enter/exit with reverse easing, dialog enter and exit, accordion height, sliding tab indicators, buttons that show loading, success, and failure | [Component motion](references/recipes/component-motion.md) |

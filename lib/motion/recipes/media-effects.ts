@@ -182,6 +182,64 @@ export function imageReveal(
   return { timeline, revert };
 }
 
+export type PourRevealOptions = {
+  /** Where the pour starts, as fractions of the frame's width and height. */
+  origin?: [number, number];
+  duration?: number;
+  /** Drain back to the origin instead of pouring in. */
+  out?: boolean;
+  /** The inner element's starting scale while pouring in. */
+  from?: number;
+};
+
+/** The blob's outline at a radius, as a clip-path polygon in the frame's pixels. */
+function blob(cx: number, cy: number, radius: number, turn: number): string {
+  const points = Array.from({ length: 48 }, (_, i) => {
+    const t = (i / 48) * Math.PI * 2;
+    const wobble = 1 + 0.11 * Math.sin(t * 5 + 0.7 + turn) + 0.06 * Math.sin(t * 9 + 2.1 - turn * 1.6) + 0.035 * Math.sin(t * 14 + turn * 2.3);
+    const r = radius * wobble;
+    return `${(cx + r * Math.cos(t)).toFixed(1)}px ${(cy + r * Math.sin(t)).toFixed(1)}px`;
+  });
+  return `polygon(${points.join(",")})`;
+}
+
+export function pourReveal(frame: HTMLElement, { origin = [0.85, 0.7], duration = 0.75, out = false, from = 1.08 }: PourRevealOptions = {}): ImageReveal {
+  const inner = frame.querySelector<HTMLElement>("[data-reveal-inner], img, video");
+  let timeline!: gsap.core.Timeline;
+  const revert = own((dispose, after) => {
+    const restore = snapshotStyles(inner ? [frame, inner] : [frame]);
+    after(restore);
+    timeline = gsap.timeline();
+    dispose(() => timeline.kill());
+    if (prefersReducedMotion()) {
+      timeline.set(frame, { autoAlpha: out ? 0 : 1 });
+      return;
+    }
+    const box = frame.getBoundingClientRect();
+    const cx = origin[0] * box.width;
+    const cy = origin[1] * box.height;
+    // Far enough past the farthest corner that the wobble's inward dips clear it too.
+    const reach = Math.hypot(Math.max(cx, box.width - cx), Math.max(cy, box.height - cy)) * 1.25;
+    let level = out ? 1 : 0;
+    // A setter, so a scrubbed or seeked timeline redraws the edge too.
+    const state = {
+      get level() {
+        return level;
+      },
+      set level(value: number) {
+        level = value;
+        frame.style.clipPath = blob(cx, cy, reach * value, value * 2.4);
+      },
+    };
+    state.level = level;
+    timeline.to(state, { level: out ? 0 : 1, duration, ease: out ? "power2.in" : "power2.out" }, 0);
+    if (inner && !out) timeline.fromTo(inner, { scale: from }, { scale: 1, duration, ease: "power2.out" }, 0);
+    // Poured in, nothing clips the frame at rest. Drained, it stays clipped shut until reverted.
+    if (!out) timeline.call(() => restore(), [], duration);
+  });
+  return { timeline, revert };
+}
+
 export type HoverPreviewOptions = {
   /** Offset of the preview's top-left corner from the pointer, px. */
   offset?: { x: number; y: number };
@@ -477,3 +535,4 @@ export function frameSequence(
     });
   });
 }
+

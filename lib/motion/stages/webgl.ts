@@ -10,6 +10,7 @@ import { hoverDistortion, ripple, scrollWave } from "../recipes/webgl/uniform-ef
 import { flight, pointerLean, scrollFlight } from "../recipes/webgl/scene-flight";
 import { particleMorph, pointerPush, scatterShape, sphereShape, textShape, type PointShape } from "../recipes/webgl/particle-morph";
 import { liquidImage } from "../recipes/webgl/liquid-image";
+import { drawText, melt, pourStream } from "../recipes/webgl/metaballs";
 
 const TONES: [string, string][] = [
   ["#0b0b0b", "#2130ff"],
@@ -184,6 +185,60 @@ const pixels = def(
   { number: { duration: 1.8 }, sphere: { duration: 2.4 } },
 );
 
+/* ---------- Melt ---------- */
+
+// Liquid metal: one bead swells, drops run out to their places, and they merge into the word. The button
+// lets it drip apart and pours it back. The live heading is the poster: without WebGL it simply shows.
+const meltStage = play(["Word", "Number"], ["word", "number"], "Press the button to let it drip, and again to pour it back.", (text, p) =>
+  live(
+    text,
+    `<div class="melt-stage"><div class="gl-view gl-melt"><h3 class="melt-word">${p.variation === "number" ? two(EXHIBITS.find((e) => e.slug === "melt")?.no ?? 0) : "MOTION"}</h3></div><button type="button" class="pill melt-toggle" aria-pressed="false">Let it drip</button></div>`,
+    (layer) => {
+      const host = layer.querySelector<HTMLElement>(".gl-melt")!;
+      const word = host.querySelector<HTMLElement>(".melt-word")!;
+      const font = `800 ${p.variation === "number" ? 320 : 220}px ${getComputedStyle(word).fontFamily}`;
+      const metal = melt(host, { draw: drawText(word.textContent ?? "", font), poster: word, drops: p.variation === "number" ? 10 : 16 });
+      const button = layer.querySelector<HTMLButtonElement>(".melt-toggle")!;
+      let cancelled = false;
+      metal.view.ready.then((drawn) => {
+        if (drawn && !cancelled) metal.form();
+      });
+      const toggle = () => {
+        const dripping = button.getAttribute("aria-pressed") !== "true";
+        button.setAttribute("aria-pressed", String(dripping));
+        button.textContent = dripping ? "Pour it back" : "Let it drip";
+        if (dripping) metal.drip();
+        else metal.form();
+      };
+      button.addEventListener("click", toggle);
+      return [
+        () => {
+          cancelled = true;
+          button.removeEventListener("click", toggle);
+        },
+        () => metal.revert(),
+      ];
+    },
+  ),
+);
+
+/* ---------- Pour ---------- */
+
+// A stream of liquid metal runs down beside an index as the page scrolls, its head following the reader,
+// and a drop settles beside each row it reaches. The stage scrolls the page itself, as Flight does.
+const POUR_ROWS = ["Line mask", "Characters", "Explode", "Slide", "Scramble", "Glitch", "Speak", "Wave", "Route", "Count", "Enter and exit", "Cycle"];
+const pourStage = play(["Pour"], ["pour"], "Scroll the page down the index, and back up.", (text) =>
+  live(
+    text,
+    `<div class="pour-index"><div class="pour-gutter" aria-hidden="true"></div><ol class="pour-rows">${POUR_ROWS.map((name, i) => `<li><span>${two(i + 1)}</span>${name}</li>`).join("")}</ol></div>`,
+    (layer) => {
+      const stream = pourStream(layer.querySelector<HTMLElement>(".pour-gutter")!, { rows: Array.from(layer.querySelectorAll<HTMLElement>(".pour-rows li")), width: 7 });
+      return [() => stream.revert()];
+    },
+    "flow",
+  ),
+);
+
 /* ---------- Flight ---------- */
 
 /**
@@ -297,6 +352,8 @@ export const WEBGL_STAGES: Record<string, StageDef> = {
   shader,
   pixels,
   flight: flightStage,
+  melt: meltStage,
+  pour: pourStage,
   distort,
   "curl": scrollWaveStage,
 };

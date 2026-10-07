@@ -191,6 +191,53 @@ const pullStage = play(["Pull"], ["pull"], "Drag a print to pull it off the stac
   ),
 );
 
+/* ---------- Pour ---------- */
+
+// From media-effects' pourReveal: the poster pours in through a wobbling blob from its lower right, the
+// way a picture fills a frame beside a gallery, rests, and drains back to the same point. The stage draws
+// the blob through its own tweens, so pause and scrub reach it.
+const blobAt = (cx: number, cy: number, radius: number, turn: number) =>
+  `polygon(${Array.from({ length: 48 }, (_, i) => {
+    const a = (i / 48) * Math.PI * 2;
+    const r = radius * (1 + 0.11 * Math.sin(a * 5 + 0.7 + turn) + 0.06 * Math.sin(a * 9 + 2.1 - turn * 1.6) + 0.035 * Math.sin(a * 14 + turn * 2.3));
+    return `${(cx + r * Math.cos(a)).toFixed(1)}px ${(cy + r * Math.sin(a)).toFixed(1)}px`;
+  }).join(",")})`;
+const pourUnveil = def(["Pour"], ["pour"], ["duration", "hold"], { duration: 0.9, stagger: 0, hold: 1.6, ease: "power2.out" }, (text, p) => {
+  const { layer, remove } = art(text, `<figure class="frame">${POSTER}</figure>`);
+  const frame = layer.querySelector<HTMLElement>(".frame")!;
+  const inner = layer.querySelector<SVGElement>("[data-reveal-inner]")!;
+  const box = frame.getBoundingClientRect();
+  const [cx, cy] = [box.width * 0.85, box.height * 0.7];
+  const reach = Math.hypot(cx, cy) * 1.25;
+  let level = 0;
+  const state = {
+    get level() {
+      return level;
+    },
+    set level(value: number) {
+      level = value;
+      frame.style.clipPath = blobAt(cx, cy, reach * value, value * 2.4);
+    },
+  };
+  state.level = 0;
+  return assemble(
+    text,
+    p,
+    [],
+    {
+      enter: (tl) => {
+        tl.fromTo(state, { level: 0 }, { level: 1, duration: p.duration, ease: "power2.out" }, 0).fromTo(inner, { scale: 1.08, transformOrigin: "50% 50%" }, { scale: 1, duration: p.duration, ease: "power2.out" }, 0);
+        return p.duration;
+      },
+      exit: (tl, at) => tl.to(state, { level: 0, duration: p.duration * 0.55, ease: "power2.in" }, at),
+    },
+    () => {
+      frame.style.removeProperty("clip-path");
+      remove();
+    },
+  );
+});
+
 /* ---------- Line draw ---------- */
 
 const DRAWING = `
@@ -809,7 +856,7 @@ const timelineStage: StageDef = { ...timeline, hints: TL_HINTS };
 export const TIME_STAGES: Record<string, StageDef> = {
   timeline: timelineStage,
   paint,
-  unveil: imageReveal,
+  unveil: merge([{ def: imageReveal, all: true }, { def: pourUnveil, label: "Pour", key: "pour" }]),
   path: merge([{ def: lineDraw, label: "Draw", key: "draw" }, { def: pathFollow, all: true }, { def: textOnPath, all: true }, { def: write, label: "Write", key: "write" }]),
   pull: pullStage,
   count: merge([{ def: countUp, label: "Count-up", key: "count" }, { def: odometer, label: "Odometer", key: "odometer" }]),

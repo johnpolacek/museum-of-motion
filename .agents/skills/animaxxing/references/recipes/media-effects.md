@@ -1,6 +1,6 @@
 # Recipe: media effects
 
-Image wipe reveals, a mouse-following hover preview, scroll-scrubbed video, and canvas frame sequences, on the app's own markup and styling.
+Image wipe reveals, a liquid pour reveal, a mouse-following hover preview, scroll-scrubbed video, and canvas frame sequences, on the app's own markup and styling.
 
 Lifecycle: the framework controller creates these once the target is measurable, composes `imageReveal`'s timeline, and calls teardown on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
 
@@ -215,6 +215,72 @@ A frame can carry a brand shape, such as a logo outline or a torn edge, with a C
 ```
 
 A shaped frame's `alt` text still describes the image, never the shape.
+
+## pourReveal
+
+The frame's content pours in as liquid through a wobbling blob that spreads from a point, such as the corner a gallery sits beside, while the inside settles from a slight zoom. With `out`, it drains back to that point. Only `clip-path` and the inner element's `scale` move. The blob's edge is drawn from a few sine waves, and its wobble turns slowly as it grows, so the edge reads as liquid rather than a circle.
+
+```ts
+export type PourRevealOptions = {
+  /** Where the pour starts, as fractions of the frame's width and height. */
+  origin?: [number, number];
+  duration?: number;
+  /** Drain back to the origin instead of pouring in. */
+  out?: boolean;
+  /** The inner element's starting scale while pouring in. */
+  from?: number;
+};
+
+/** The blob's outline at a radius, as a clip-path polygon in the frame's pixels. */
+function blob(cx: number, cy: number, radius: number, turn: number): string {
+  const points = Array.from({ length: 48 }, (_, i) => {
+    const t = (i / 48) * Math.PI * 2;
+    const wobble = 1 + 0.11 * Math.sin(t * 5 + 0.7 + turn) + 0.06 * Math.sin(t * 9 + 2.1 - turn * 1.6) + 0.035 * Math.sin(t * 14 + turn * 2.3);
+    const r = radius * wobble;
+    return `${(cx + r * Math.cos(t)).toFixed(1)}px ${(cy + r * Math.sin(t)).toFixed(1)}px`;
+  });
+  return `polygon(${points.join(",")})`;
+}
+
+export function pourReveal(frame: HTMLElement, { origin = [0.85, 0.7], duration = 0.75, out = false, from = 1.08 }: PourRevealOptions = {}): ImageReveal {
+  const inner = frame.querySelector<HTMLElement>("[data-reveal-inner], img, video");
+  let timeline!: gsap.core.Timeline;
+  const revert = own((dispose, after) => {
+    const restore = snapshotStyles(inner ? [frame, inner] : [frame]);
+    after(restore);
+    timeline = gsap.timeline();
+    dispose(() => timeline.kill());
+    if (prefersReducedMotion()) {
+      timeline.set(frame, { autoAlpha: out ? 0 : 1 });
+      return;
+    }
+    const box = frame.getBoundingClientRect();
+    const cx = origin[0] * box.width;
+    const cy = origin[1] * box.height;
+    // Far enough past the farthest corner that the wobble's inward dips clear it too.
+    const reach = Math.hypot(Math.max(cx, box.width - cx), Math.max(cy, box.height - cy)) * 1.25;
+    let level = out ? 1 : 0;
+    // A setter, so a scrubbed or seeked timeline redraws the edge too.
+    const state = {
+      get level() {
+        return level;
+      },
+      set level(value: number) {
+        level = value;
+        frame.style.clipPath = blob(cx, cy, reach * value, value * 2.4);
+      },
+    };
+    state.level = level;
+    timeline.to(state, { level: out ? 0 : 1, duration, ease: out ? "power2.in" : "power2.out" }, 0);
+    if (inner && !out) timeline.fromTo(inner, { scale: from }, { scale: 1, duration, ease: "power2.out" }, 0);
+    // Poured in, nothing clips the frame at rest. Drained, it stays clipped shut until reverted.
+    if (!out) timeline.call(() => restore(), [], duration);
+  });
+  return { timeline, revert };
+}
+```
+
+Pour over a picture already showing to swap one image for the next: stack the new frame above the old, pour it in, then remove the old. Keep `out` for a picture leaving on its own; it pours back to the same point it came from.
 
 ## hoverPreview
 
@@ -584,6 +650,7 @@ const sequence = frameSequence(canvas, Array.from({ length: 120 }, (_, i) => `/t
 | Builder | Create | Returns | Reduced motion |
 |---|---|---|---|
 | `imageReveal` | Intro frames at initial state, composed into the intro; `onScroll` frames at settled | `{ timeline, revert }` | Nothing clipped or scaled; timeline completes (on entry for `onScroll`) and fires `onComplete` |
+| `pourReveal` | Intro or on a swap, once the frame has its size | `{ timeline, revert }` | No blob: the frame shows, or hides with `out`, at once |
 | `hoverPreview` | Settled | teardown | No-op, as on coarse pointers |
 | `scrubVideo` | Settled, once the section is measurable | teardown | No-op; poster stays |
 | `frameSequence` | Settled, once the canvas has its CSS size | teardown | Draws only the `still` frame; no trigger |

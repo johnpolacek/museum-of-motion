@@ -1,6 +1,6 @@
 ---
 name: animaxxing-webgl
-description: "Add GSAP-driven WebGL to a site without restyling it, on one shared OGL renderer and canvas per document. Image planes track each img for a hover lens, scroll-velocity wave, wipe, glitch, dissolve, pixelation, and ripple. Framed views draw in an element's box: a camera flight through a 3D spiral of images, thousands of GPU particles morphing between text, logo, and sphere shapes, and a liquid image the pointer drags trails through. GSAP tweens shader uniforms. The real img, or a poster img for a view, stays the accessible content and the fallback when WebGL is missing, the context is lost, an image lacks CORS, or motion is reduced. Use for WebGL image effects, shader hover, 3D scroll flights, particle morphs, liquid hover, uniform tweens, or keeping a canvas alive across routes. Pair with the matching GSAP framework skill for lifecycle timing. Not for glTF models, physics, DOM-only effects (use animaxxing), branding, or GSAP API questions."
+description: "Add GSAP-driven WebGL to a site without restyling it, on one shared OGL renderer and canvas per document. Image planes track each img for a hover lens, scroll-velocity wave, wipe, glitch, dissolve, pixelation, and ripple. Framed views draw in an element's box: a camera flight through a 3D spiral of images, GPU particles morphing between shapes, a liquid image, and liquid-metal drops that melt into a word or pour down a page. GSAP tweens shader uniforms. The real img, or a poster img for a view, stays the accessible content and the fallback when WebGL is missing, the context is lost, an image lacks CORS, or motion is reduced. Use for WebGL image effects, shader hover, 3D scroll flights, particle morphs, liquid hover, uniform tweens, or keeping a canvas alive across routes. Pair with the matching GSAP framework skill for lifecycle timing. Not for glTF models, physics, DOM-only effects (use animaxxing), branding, or GSAP API questions."
 license: MIT
 metadata:
   short-description: GSAP-tweened WebGL image effects, 3D flights, particle morphs, and liquid images with a DOM fallback
@@ -21,7 +21,7 @@ If the project already ships three.js, port the recipes rather than add OGL: `Sh
 ## Setup and adaptation
 
 - Install `gsap` 3.13 or later and `ogl` 1.x. Read the installed versions and types before trusting these recipes. The effects register `ScrollTrigger` at module scope; drop that if the project registers plugins centrally. Import the modules only from client code.
-- Copy only the modules a task needs, with these file names: `webgl-stage.ts` always; `image-planes.ts` for planes and for any recipe that loads image textures; `uniform-effects.ts` for the image effects; `framed-views.ts` for any view; then `scene-flight.ts`, `particle-morph.ts`, or `liquid-image.ts`. Each imports only modules listed before it.
+- Copy only the modules a task needs, with these file names: `webgl-stage.ts` always; `image-planes.ts` for planes and for any recipe that loads image textures; `uniform-effects.ts` for the image effects; `framed-views.ts` for any view; then `scene-flight.ts`, `particle-morph.ts`, `liquid-image.ts`, or `metaballs.ts`. Each imports only modules listed before it.
 - Images need CORS. Same-origin, `data:`, and `blob:` images work; CDN images need `Access-Control-Allow-Origin` and `crossorigin="anonymous"` in the markup ([image planes](references/recipes/image-planes.md#images-need-cors)). Unreadable images keep their DOM rendering.
 - Add only requested effects. Effect constants, shader numbers, and the wipe direction are editable defaults; tune them to the surface. The plane draws the image as the page lays it out and adds no color, font, or layout of its own.
 - Mark which images get planes, such as `img[data-webgl]`. Keep images that depend on ancestor clipping, `border-radius`, filters, or `object-position` out of WebGL, or add those to a replacement shader.
@@ -37,6 +37,7 @@ If the project already ships three.js, port the recipes rather than add OGL: `Sh
 | A camera flight through a 3D spiral of images, scrubbed by scroll or a timeline | [Scene flight](references/recipes/scene-flight.md) |
 | GPU particles morphing between text, logo, sphere, and scatter shapes | [Particle morph](references/recipes/particle-morph.md) |
 | A liquid image the pointer drags trails through, and a poured intro stroke | [Liquid image](references/recipes/liquid-image.md) |
+| Liquid-metal drops that gather into a word or shape and drip away, or a stream that pours down a column with the scroll | [Metaballs](references/recipes/metaballs.md) |
 | Keep one canvas across client-side navigation | Matching installed framework skill's `references/transition-archetypes.md`, **Persistent WebGL canvas** |
 | Planes an intro depends on; deadlines and recovery | Matching installed framework skill's `references/initialization.md` |
 | Phone tiers and pixel budgets | Matching installed framework skill's `references/devices.md` |

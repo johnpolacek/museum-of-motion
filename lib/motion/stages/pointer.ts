@@ -4,7 +4,7 @@
 import { gsap, SplitText } from "../gsap";
 import { art, assemble, def, live, merge, NEXT_TAB, play, type StageDef } from "../stage-core";
 import { characters } from "./text";
-import { directionalFill, imageZoom, textRoll, underlineSweep } from "../recipes/hover-effects";
+import { beadUnderline, directionalFill, imageZoom, jelly, pourFill, textRoll, underlineSweep } from "../recipes/hover-effects";
 import { hoverPreview } from "../recipes/media-effects";
 import { cursorFollower, dragTrack, imageTrail, magnetic, momentumHover, proximity, spotlight, swipeDismiss, tilt } from "../recipes/pointer-effects";
 import { sortable } from "../recipes/sortable";
@@ -70,6 +70,30 @@ const zoom = play(["Zoom"], ["zoom"], "Hover, tab to, or hold a finger on a card
       .join("")}</div>`,
     (layer) => all(layer, ".card").map((c) => imageZoom(c, { touch: true })),
   ),
+);
+
+/* ---------- Liquid hovers ---------- */
+
+// From hover-effects' liquid hovers: a bead of ink lands where the pointer enters and stretches into the
+// underline; a round button fills like liquid poured from the side the pointer came from; a pill squashes
+// and springs like jelly, a highlight following the pointer.
+const bead = play(["Bead"], ["bead"], "Hover a link from either side, or tab to it.", (text) =>
+  live(
+    text,
+    `<nav class="sweeps" aria-label="Sample">${["Collection", "Exhibits", "Recipes", "About"].map((l) => `<button type="button" class="sweep">${l}</button>`).join("")}</nav>`,
+    (layer) => all(layer, ".sweep").map((a) => beadUnderline(a, { bead: 10, thickness: 3, touch: true })),
+  ),
+);
+const ARROWS = ["←", "↑", "→", "↓"];
+const pour = play(["Pour"], ["pour"], "Move the mouse into a button from any side, or tab to one.", (text) =>
+  live(
+    text,
+    `<div class="pours">${ARROWS.map((a, i) => `<button type="button" class="pour-round" aria-label="${["Back", "Up", "Next", "Down"][i]}"><span class="pour-fill" aria-hidden="true"></span><span aria-hidden="true">${a}</span></button>`).join("")}</div>`,
+    (layer) => all(layer, ".pour-round").map((b) => pourFill(b, one(b, ".pour-fill"), { touch: true })),
+  ),
+);
+const jellyStage = play(["Jelly"], ["jelly"], "Hover the button and move around on it.", (text) =>
+  live(text, `<div class="btns"><button type="button" class="pill jelly">Explore the collection</button></div>`, (layer) => all(layer, ".jelly").map((b) => jelly(b, { touch: true }))),
 );
 
 /* ---------- Directional fill ---------- */
@@ -840,6 +864,9 @@ const linkHoverMerged = merge([
   { label: "Underline", key: "underline", def: underline },
   { label: "Fill", key: "fill", def: fillTiles },
   { label: "Zoom", key: "zoom", def: zoom },
+  { label: "Bead", key: "bead", def: bead },
+  { label: "Pour", key: "pour", def: pour },
+  { label: "Jelly", key: "jelly", def: jellyStage },
 ]);
 
 // Feedback: one exhibit, one tab per stage it gathers.

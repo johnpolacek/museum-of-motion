@@ -188,9 +188,15 @@ const DATA: Exhibit[] = [
   {
     name: "Unveil",
     group: "play",
-    builders: "imageReveal",
+    builders: "imageReveal, pourReveal",
     src: "media-effects",
-    desc: "A wipe opens a frame while what is inside settles from a slight zoom: an image, a video, any block."
+    desc: "A wipe opens a frame while what is inside settles from a slight zoom, or the picture pours in through a wobbling blob.",
+    vars: [
+      "Down",
+      "Left",
+      "Right",
+      "Pour"
+    ]
   },
   {
     name: "Path",
@@ -257,6 +263,17 @@ const DATA: Exhibit[] = [
     vars: [
       "Number",
       "Sphere"
+    ],
+    gl: true
+  },
+  {
+    name: "Melt",
+    group: "play",
+    builders: "melt, drawText",
+    src: "metaballs",
+    desc: "Liquid metal: one bead swells, runs out in drops, and merges into a word.",
+    vars: [
+      "Number"
     ],
     gl: true
   },
@@ -394,15 +411,26 @@ const DATA: Exhibit[] = [
     gl: true
   },
   {
+    name: "Pour",
+    group: "scroll",
+    builders: "pourStream",
+    src: "metaballs",
+    desc: "A stream of liquid metal pours down beside an index as you read, dropping a bead at each row.",
+    gl: true
+  },
+  {
     name: "Link hover",
     group: "pointer",
-    builders: "textRoll, underlineSweep, directionalFill, imageZoom",
+    builders: "textRoll, underlineSweep, directionalFill, imageZoom, beadUnderline, pourFill, jelly",
     src: "hover-effects",
-    desc: "Links and cards answer the pointer: a label rolls, a line sweeps, a fill follows the side you came from, or the picture leans in.",
+    desc: "Links and cards answer the pointer: a label rolls, a line sweeps, a fill follows the side you came from, the picture leans in, or it all behaves like liquid.",
     vars: [
       "Underline",
       "Fill",
-      "Zoom"
+      "Zoom",
+      "Bead",
+      "Pour",
+      "Jelly"
     ]
   },
   {

@@ -50,8 +50,8 @@ export type FramedViewOptions = {
   draw(gl: OGLRenderingContext): Drawing;
   /** Runs before the first build, such as loading textures. Resolve false to keep the poster. */
   prepare?(signal: AbortSignal): Promise<boolean>;
-  /** The resting frame. Defaults to the element's `img[data-poster]`, else its first `<img>`. */
-  poster?: HTMLImageElement | null;
+  /** The resting frame. Defaults to the element's `img[data-poster]`, else its first `<img>`. Any element works, such as live text the drawing replaces. */
+  poster?: HTMLElement | null;
   /** A depth buffer for drawings whose surfaces overlap in 3D. */
   depth?: boolean;
   /** Used only if this view creates the stage. */
@@ -60,7 +60,7 @@ export type FramedViewOptions = {
 
 export type FramedView = {
   readonly host: HTMLElement;
-  readonly poster: HTMLImageElement | null;
+  readonly poster: HTMLElement | null;
   /** False when the page keeps the poster: no WebGL, reduced motion, failed preparation, or after revert. */
   readonly webgl: boolean;
   /** True after a prepared frame; false for the fallback. */
@@ -138,7 +138,7 @@ export function framedView(
   host: HTMLElement,
   { draw, prepare, poster: posterOption, depth = false, stage: stageOptions }: FramedViewOptions,
 ): FramedView {
-  const poster = posterOption === undefined ? (host.querySelector<HTMLImageElement>("img[data-poster]") ?? host.querySelector("img")) : posterOption;
+  const poster: HTMLElement | null = posterOption === undefined ? (host.querySelector<HTMLImageElement>("img[data-poster]") ?? host.querySelector("img")) : posterOption;
   let settle: (live: boolean) => void = () => {};
   const ready = new Promise<boolean>((resolve) => (settle = resolve));
   const hold = holdStage(stageOptions);

@@ -49,6 +49,8 @@ Reference demo: none yet. Check visual quality, shader tuning, and frame pacing 
 - Flight: the nearest image draws right of center at rest; `uTravel` changes the rendering; `scrollFlight` follows the scroll range and leaves no ScrollTrigger after revert; `pointerLean` follows the mouse, settles on leave, and ignores touch. A flight whose images cannot be read keeps its poster and creates no texture.
 - Morph: gathering into a sphere concentrates ink in the element's color; `uScatter` thins it; `pointerPush` rises under the mouse and falls on leave.
 - Liquid: a mouse trail changes sampled pixels across the image, and the image returns to exactly its clean rendering once the trail fades; `pour()` does the same in one stroke.
+- Melt: nothing shows before `form()`; formed, the shape is inked in the element's tint; `drip()` clears it; the live text is the poster.
+- Stream: ink in the column grows as the page scrolls down and shrinks when it scrolls back.
 - Every submitted shader's constant `smoothstep` edges increase.
 
 ## Manual checks

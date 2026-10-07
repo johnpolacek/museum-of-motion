@@ -26,6 +26,8 @@ export const LIVE_STAGES = new Set([
   "curl",
   "pixels",
   "flight",
+  "melt",
+  "pour",
   "distort",
   "reveal",
   "parallax",
