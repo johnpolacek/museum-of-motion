@@ -243,7 +243,7 @@ const calm = vibe("calm", {
       <div class="cl-hero-art">${lake("clh", DAWN, true)}</div>
     </section>
     <section class="cl-sessions"><p class="v-kicker">Today’s sessions</p><div class="v-cards">${CALM_SESSIONS.map(([name, meta, line, hour], i) => `<article class="v-card"><span class="v-art"><i data-parallax="-16">${lake(`clc${i}`, hour)}</i><b class="cl-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 7l8 5-8 5Z" fill="currentColor"/></svg></b></span><b>${name}</b><span class="v-meta">${meta}</span><span class="cl-line">${line}</span></article>`).join("")}</div></section>
-    <section class="v-breathe"><div class="cl-orb" aria-hidden="true"><i></i><i></i><span class="v-orb"></span></div><p class="v-orb-say">Breathe in</p></section>
+    <section class="v-breathe"><div class="cl-orb" aria-hidden="true"><i></i><i></i><span class="v-orb"></span></div><p class="v-orb-say"><span class="cl-said">Breathe in for four, hold, and breathe out for four.</span><span aria-hidden="true">Breathe in</span><span aria-hidden="true">Hold</span><span aria-hidden="true">Breathe out</span></p></section>
     <p class="v-ambient"><button type="button" class="v-pause">Pause</button></p>
     <section class="cl-day"><div class="cl-day-pin">${CALM_DAY.map(([time, name, line, hour], i) => `<figure class="cl-hour">${lake(`cld${i}`, hour)}<figcaption><span>${time}</span><b>${name}</b><em>${line}</em></figcaption></figure>`).join("")}</div></section>
     <section class="cl-journal"><p class="v-kicker">From the journal</p>${[["On beginning badly", "Why a wandering mind is the practice, not the failure.", "4 min read"], ["The long exhale", "A breath twice as long going out as coming in, and what it does.", "6 min read"], ["Rest is not a reward", "You do not have to earn the ten minutes.", "5 min read"]].map(([t, d, m]) => `<article class="cl-entry"><b>${t}</b><span>${d}</span><small>${m}</small></article>`).join("")}</section>
@@ -275,18 +275,22 @@ const calm = vibe("calm", {
     (() => {
       const orb = one(p.win, ".v-orb");
       const rings = all(p.win, ".cl-orb i");
-      const say = one(p.win, ".v-orb-say");
+      const [breatheIn, hold, breatheOut] = all(p.win, ".v-orb-say [aria-hidden]");
+      gsap.set([hold, breatheOut], { autoAlpha: 0 });
+      // One cue fades out as the next fades in, slowly, like the breath itself.
+      const fade = (tl: gsap.core.Timeline, from: HTMLElement, to: HTMLElement, at: number) =>
+        tl.to(from, { autoAlpha: 0, duration: 0.9, ease: "sine.inOut" }, at).to(to, { autoAlpha: 1, duration: 0.9, ease: "sine.inOut" }, at + 0.15);
       // Four seconds in, a beat held, four seconds out: the pace of a calm breath. The rings follow a little late.
       const breath = gsap
         .timeline({ repeat: -1, defaults: { ease: "sine.inOut" } })
-        .call(() => (say.textContent = "Breathe in"))
-        .fromTo(orb, { scale: 0.55 }, { scale: 1, duration: 4 })
-        .fromTo(rings, { scale: 0.6, opacity: 0.2 }, { scale: 1, opacity: 1, duration: 4, stagger: 0.3 }, "<")
-        .call(() => (say.textContent = "Hold"))
-        .to({}, { duration: 1.2 })
-        .call(() => (say.textContent = "Breathe out"))
-        .to(orb, { scale: 0.55, duration: 4 })
-        .to(rings, { scale: 0.6, opacity: 0.2, duration: 4, stagger: 0.3 }, "<");
+        .fromTo(orb, { scale: 0.55 }, { scale: 1, duration: 4 }, 0)
+        .fromTo(rings, { scale: 0.6, opacity: 0.2 }, { scale: 1, opacity: 1, duration: 4, stagger: 0.3 }, 0)
+        .to(orb, { scale: 0.55, duration: 4 }, 5.2)
+        .to(rings, { scale: 0.6, opacity: 0.2, duration: 4, stagger: 0.3 }, 5.2);
+      fade(breath, breatheIn!, hold!, 3.4);
+      fade(breath, hold!, breatheOut!, 4.7);
+      // Into the next breath: out gives way to in as the loop turns over.
+      fade(breath, breatheOut!, breatheIn!, 8.6);
       // The day, as you scroll: dawn gives way to noon, dusk, then night. A slow crossfade, scrubbed.
       const hours = all(p.win, ".cl-hour");
       gsap.set(hours.slice(1), { autoAlpha: 0 });
@@ -405,16 +409,59 @@ const playful = vibe("playful", {
     });
     // Stickers drag and throw, bounded by their section; the one held grows and leans.
     const area = one(p.win, ".v-play");
+    // A throw carries on after release and bounces off the walls, losing a little each time, spinning as it
+    // goes. Draggable's own inertia would stop dead at the bounds, so the throw is a small simulation.
+    const flights = new Map<Element, () => void>();
+    const fling = (drag: Draggable, vx: number, vy: number) => {
+      const el = drag.target as HTMLElement;
+      flights.get(el)?.();
+      if (prefersReducedMotion()) return;
+      let [x, y] = [Number(gsap.getProperty(el, "x")), Number(gsap.getProperty(el, "y"))];
+      let spin = vx * 0.04;
+      const step = (_time: number, deltaMs: number) => {
+        const dt = Math.min(deltaMs, 40) / 1000;
+        x += vx * dt;
+        y += vy * dt;
+        // Off a wall: reflect, keep 82% of the speed, and kick the spin.
+        if (x < drag.minX) [x, vx, spin] = [drag.minX, -vx * 0.82, -spin + vy * 0.02];
+        if (x > drag.maxX) [x, vx, spin] = [drag.maxX, -vx * 0.82, -spin - vy * 0.02];
+        if (y < drag.minY) [y, vy, spin] = [drag.minY, -vy * 0.82, -spin - vx * 0.02];
+        if (y > drag.maxY) [y, vy, spin] = [drag.maxY, -vy * 0.82, -spin + vx * 0.02];
+        const drag2 = Math.pow(0.32, dt);
+        [vx, vy, spin] = [vx * drag2, vy * drag2, spin * drag2];
+        gsap.set(el, { x, y, rotation: `+=${spin * dt * 60}` });
+        if (Math.hypot(vx, vy) < 12) stop();
+      };
+      const stop = () => {
+        gsap.ticker.remove(step);
+        flights.delete(el);
+      };
+      flights.set(el, stop);
+      gsap.ticker.add(step);
+    };
+    /** The last few pointer samples, for a throw's speed. */
+    const trail = new WeakMap<Element, Array<{ x: number; y: number; t: number }>>();
     const stickers = Draggable.create(all(p.win, ".v-sticker"), {
       type: "x,y",
       bounds: area,
-      inertia: true,
       zIndexBoost: true,
       onPress(this: Draggable) {
+        flights.get(this.target)?.();
+        trail.set(this.target, []);
         gsap.to(this.target, { scale: 1.2, rotation: gsap.utils.random(-15, 15), duration: 0.2, ease: "back.out(3)" });
+      },
+      onDrag(this: Draggable) {
+        const samples = trail.get(this.target)!;
+        samples.push({ x: this.x, y: this.y, t: performance.now() });
+        if (samples.length > 5) samples.shift();
       },
       onRelease(this: Draggable) {
         gsap.to(this.target, { scale: 1, duration: 0.4, ease: "elastic.out(1, 0.4)" });
+        const samples = trail.get(this.target) ?? [];
+        const [first, last] = [samples[0], samples[samples.length - 1]];
+        if (!first || !last || last.t - first.t < 8 || performance.now() - last.t > 80) return;
+        const seconds = (last.t - first.t) / 1000;
+        fling(this, (last.x - first.x) / seconds, (last.y - first.y) / seconds);
       },
     });
     // A jar of stickers falls in once it scrolls into view; the button throws them back up.
@@ -437,6 +484,7 @@ const playful = vibe("playful", {
         go();
         p.head.removeEventListener("pointerover", hop);
         wobbles.forEach((off) => off());
+        flights.forEach((stop) => stop());
         stickers.forEach((d) => d.kill());
         landed.kill();
         one(p.win, ".v-shake").removeEventListener("click", shake);
@@ -710,7 +758,7 @@ const snappy = vibe("snappy", {
         timer = window.setTimeout(() => sb.success("Upgraded").eventCallback("onComplete", () => (busy = false)), 600);
       };
       state.addEventListener("click", upgrade);
-      const sorter = sortable(one(p.win, ".v-sort"), { lift: 1.02 });
+      const sorter = sortable(one(p.win, ".v-sort"), { lift: 1.02, grab: "item" });
       const counts = all(p.win, "[data-count]");
       const counted = onView(one(p.win, ".v-stats"), p.win, () =>
         counts.forEach((el) => {

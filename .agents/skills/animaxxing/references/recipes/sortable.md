@@ -43,6 +43,11 @@ export type SortableOptions = {
   onReorder?: (items: HTMLElement[], from: number, to: number) => void;
   /** Scale of the held item. */
   lift?: number;
+  /**
+   * What the pointer drags: the `handle` only, so the rest of the item still scrolls the page on touch, or the
+   * whole `item`, for short rows where a handle is a small target. Either way the handle keeps the keyboard.
+   */
+  grab?: "handle" | "item";
 };
 export type Sortable = { order: () => HTMLElement[]; revert: () => void };
 
@@ -51,7 +56,7 @@ const VISUALLY_HIDDEN = { position: "absolute", width: "1px", height: "1px", ove
 const SLIDE = { duration: 0.2, ease: "power2.out" } as const;
 const SETTLE = { duration: 0.3, ease: "back.out(1.4)" } as const;
 
-export function sortable(list: HTMLElement, { onReorder, lift = 1.03 }: SortableOptions = {}): Sortable {
+export function sortable(list: HTMLElement, { onReorder, lift = 1.03, grab = "handle" }: SortableOptions = {}): Sortable {
   const reduced = prefersReducedMotion();
   const items = () => Array.from(list.querySelectorAll<HTMLElement>(":scope > [data-sortable-item]"));
   const nameOf = (item: HTMLElement) => (item.querySelector("[data-sortable-name]")?.textContent ?? item.textContent ?? "").trim();
@@ -121,9 +126,11 @@ export function sortable(list: HTMLElement, { onReorder, lift = 1.03 }: Sortable
       let target = 0;
       let rects: DOMRect[] = [];
       let slot = 0;
+      // Grabbing the whole item: Draggable sets its touch-action to pan-x, so vertical drags on it move the row.
+      if (grab === "item") item.style.cursor = "grab";
       const [drag] = Draggable.create(item, {
         type: "y",
-        trigger: handle,
+        trigger: grab === "item" ? item : handle,
         bounds: list,
         zIndexBoost: true,
         onPress() {

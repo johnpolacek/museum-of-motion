@@ -641,7 +641,9 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win.vibe-calm .cl-orb i { width: 118%; height: 118%; border: 1.5px solid rgb(95 127 102 / 0.5); }
 .ex .win.vibe-calm .cl-orb i + i { width: 140%; height: 140%; border-color: rgb(95 127 102 / 0.28); }
 .ex .win.vibe-calm .v-orb { width: 100%; height: 100%; background: radial-gradient(circle at 40% 35%, #e3ece0, #8fa58f 72%); box-shadow: 0 0 80px rgb(111 143 116 / 0.35); }
-.ex .win.vibe-calm .v-orb-say { font-family: var(--v-display); font-style: italic; font-size: 26px; color: var(--v-muted); }
+.ex .win.vibe-calm .v-orb-say { display: grid; justify-items: center; font-family: var(--v-display); font-style: italic; font-size: 26px; color: var(--v-muted); }
+.ex .win.vibe-calm .v-orb-say > span { grid-area: 1 / 1; }
+.ex .win.vibe-calm .v-orb-say .cl-said { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .ex .win.vibe-calm .cl-day { height: 320cqh; margin: 24px 0; }
 .ex .win.vibe-calm .cl-day-pin { position: sticky; top: 72px; height: calc(100cqh - 96px); margin: 0 24px; border-radius: 26px; overflow: hidden; }
 .ex .win.vibe-calm .cl-hour { position: absolute; inset: 0; margin: 0; }
