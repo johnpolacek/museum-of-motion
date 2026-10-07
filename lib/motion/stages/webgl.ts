@@ -1,5 +1,5 @@
-// WebGL stages: Shader, Morph, Flight, Scroll wave, Hover lens, Liquid. Each draws on the animaxxing-webgl
-// skill's one shared canvas (OGL), and GSAP tweens shader uniforms. Images draw as planes; Morph and Flight
+// WebGL stages: Shader, Dust, Flight, Scroll wave, Hover lens, Liquid. Each draws on the animaxxing-webgl
+// skill's one shared canvas (OGL), and GSAP tweens shader uniforms. Images draw as planes; Dust and Flight
 // draw framed views. The DOM stays the page: without WebGL, under reduced motion, or after a lost context,
 // each <img> or poster <img> shows as is.
 import { gsap } from "../gsap";
@@ -123,31 +123,31 @@ const shader = def(
   { dissolve: { duration: 1.1 }, pixelate: { duration: 1 }, ripple: { duration: 1.4 }, glitch: { duration: 0.6 } },
 );
 
-/* ---------- Morph ---------- */
+/* ---------- Dust ---------- */
 
 // Dust gathers into a shape, rests, and blows back into dust: a word in the page's own face, the exhibit's
 // number, a sphere. One uniform, uShape, carries it; each point leaves on its own delay. The pointer parts
 // the points. A poster per tab shows the gathered shape whenever WebGL cannot draw.
-const MORPH_SHAPES: Record<string, (text: HTMLElement, n: number) => PointShape> = {
+const DUST_SHAPES: Record<string, (text: HTMLElement, n: number) => PointShape> = {
   word: (text) => textShape("MOTION", { font: `800 200px ${getComputedStyle(text).fontFamily}` }),
   number: (text, n) => textShape(two(n), { font: `800 320px ${getComputedStyle(text).fontFamily}` }),
   sphere: () => sphereShape(5000, 0.95),
 };
-const morph = def(
+const dust = def(
   ["Word", "Number", "Sphere"],
   ["word", "number", "sphere"],
   ["duration", "hold"],
   { duration: 2, stagger: 0, hold: 1.6, ease: "power2.inOut" },
   (text, p) => {
-    const n = EXHIBITS.find((e) => e.slug === "morph")?.no ?? 0;
+    const n = EXHIBITS.find((e) => e.slug === "dust")?.no ?? 0;
     const { layer, remove } = art(
       text,
-      `<figure class="gl-view gl-morph"><img data-poster alt="" src="/exhibits/morph-${p.variation}.jpg"></figure>`,
+      `<figure class="gl-view gl-dust"><img data-poster alt="" src="/exhibits/dust-${p.variation}.jpg"></figure>`,
     );
-    const host = layer.querySelector<HTMLElement>(".gl-morph")!;
+    const host = layer.querySelector<HTMLElement>(".gl-dust")!;
     // The gathered shape is the poster; hide it until the dust is ready, so the loop starts scattered.
     layer.style.visibility = "hidden";
-    const shape = (MORPH_SHAPES[p.variation] ?? MORPH_SHAPES.word)(text, n);
+    const shape = (DUST_SHAPES[p.variation] ?? DUST_SHAPES.word)(text, n);
     const m = particleMorph(host, { shapes: [scatterShape(4000, 1.1), shape], size: 2, fill: 0.86 });
     const push = pointerPush(m, { touch: true });
     const u = m.uniforms;
@@ -270,7 +270,7 @@ const liquid = play(["Liquid"], ["liquid"], "Drag the mouse or a held finger acr
 
 export const WEBGL_STAGES: Record<string, StageDef> = {
   shader,
-  morph,
+  dust,
   flight: flightStage,
   liquid,
   "scroll-wave": scrollWaveStage,

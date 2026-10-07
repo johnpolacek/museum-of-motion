@@ -243,7 +243,7 @@ const DATA: Exhibit[] = [
     gl: true
   },
   {
-    name: "Morph",
+    name: "Dust",
     group: "play",
     builders: "particleMorph",
     src: "particle-morph",
