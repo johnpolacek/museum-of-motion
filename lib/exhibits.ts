@@ -62,11 +62,11 @@ const DATA: Exhibit[] = [
     ]
   },
   {
-    name: "Characters",
+    name: "Stagger",
     group: "type",
     builders: "charsRiseIn, charsCascadeIn, charsFlipIn, charsSpringIn, charsScatterIn, charsFallOut",
     src: "split-entrances",
-    desc: "Letters rise, cascade, tip, spring, scatter, and fall.",
+    desc: "Letters arrive one after another: they rise, cascade, tip, spring, scatter, and fall.",
     vars: [
       "Cascade",
       "Flip",

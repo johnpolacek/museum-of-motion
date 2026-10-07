@@ -82,7 +82,7 @@ export function heroIntro(root: HTMLElement): HeroIntro {
     // Headline words land on the poster's frozen poses, which live in globals.css.
     // `from` tweens read those resting values, so CSS stays the one source of the pose.
 
-    // 02 Characters on "Every": letters drop in one after another and land mid-flight, fading as they rise.
+    // 02 Stagger on "Every": letters drop in one after another and land mid-flight, fading as they rise.
     const everyChars = p.chars("every");
     land(everyChars, { yPercent: -70, autoAlpha: 0, duration: 0.8, ease: ENTER, stagger: 0.04 }, 0);
     sup("every", 0.85);

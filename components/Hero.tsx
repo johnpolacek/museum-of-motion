@@ -188,7 +188,7 @@ export function Hero() {
             <span className="ch">r</span>
             <span className="ch">y</span>
           </span>
-          <sup>{numberOf("characters")}</sup>
+          <sup>{numberOf("stagger")}</sup>
         </span>{" "}
         <span className="w us" data-word="way" aria-hidden="true">
           <span className="t">way</span>
@@ -228,7 +228,7 @@ export function Hero() {
           <ol className="lab" aria-label="In this headline" data-list data-intro>
             {[
               ["mask", "Mask"],
-              ["characters", "Characters"],
+              ["stagger", "Stagger"],
               ["slide", "Slide"],
               ["wave", "Wave"],
               ["hover", "Hover"],

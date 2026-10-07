@@ -152,7 +152,7 @@ export const lineMask = def(
   { iris: { duration: 1.1, stagger: 0.14 }, arch: { duration: 1.1, stagger: 0.14 }, wipe: { duration: 0.9, stagger: 0.1 } },
 );
 
-/* ---------- Characters ---------- */
+/* ---------- Stagger ---------- */
 
 export const characters = def(
   ["Implode", "Rise", "Cascade", "Flip", "Spring", "Scatter", "Fall"],
@@ -897,7 +897,7 @@ export const glitch = def(
 export const TEXT_STAGES: Record<string, StageDef> = {
   mask: lineMask,
   // Implode is Explode's Letters tab now.
-  characters: merge(["rise", "cascade", "flip", "spring", "scatter", "fall"].map((v, i) => ({ def: characters, variation: v, key: v, label: characters.labels[i + 1]! }))),
+  stagger: merge(["rise", "cascade", "flip", "spring", "scatter", "fall"].map((v, i) => ({ def: characters, variation: v, key: v, label: characters.labels[i + 1]! }))),
   "slide": wordSlide,
   scramble,
   glitch: merge([{ def: glitch, all: true }, { def: slip, label: "Slip", key: "slip" }]),
