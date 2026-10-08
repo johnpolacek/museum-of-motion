@@ -199,8 +199,6 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 /* Slip: the second impression sits exactly over the line, in black, behind it. */
 .ex .stage > .slip-copy { position: absolute; color: #0b0b0b; pointer-events: none; }
 /* Write: the line in display type, written on by a brush. */
-.ex .stage-art .write-stage { display: grid; gap: 22px; justify-items: center; }
-.ex .stage-art .write-line { margin: 0; max-width: 12ch; font-size: clamp(40px, 7vw, 96px); line-height: 0.95; font-weight: 800; font-stretch: 75%; text-transform: uppercase; text-align: center; }
 
 /* Pull: a stack of prints, each a white sheet, slightly turned. */
 .ex .stage-art .pull-stage { display: grid; gap: 18px; justify-items: center; }

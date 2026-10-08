@@ -6,7 +6,7 @@ import { gsap, prefersReducedMotion, ScrollTrigger, SplitText } from "../gsap";
 import { art, assemble, def, EXIT, live, merge, pinWidths, play, type StageDef } from "../stage-core";
 import { drawIn, pathLoop } from "../recipes/svg-effects";
 import { pinnedScene } from "../recipes/scroll-effects";
-import { dragPull, inkText, paintReveal, pullCorner, writeOn, type Pull } from "../recipes/print-effects";
+import { dragPull, inkText, paintReveal, pullCorner, type Pull } from "../recipes/print-effects";
 import { lenisScroll } from "../recipes/smooth/lenis-scroll";
 import { archAt, archPath, DOOR_SHARE, type Door } from "../recipes/doorways";
 import { breathe, bump, drift, float, heartbeat, orbit, ping, watch, type Loop, type Pulse } from "../recipes/ambient";
@@ -112,27 +112,6 @@ const paint = play(["Image", "Type", "Roller"], ["image", "type", "roller"], "Pu
       const again = layer.querySelector<HTMLButtonElement>(".print-again")!;
       again.addEventListener("click", print);
       return [() => again.removeEventListener("click", print), () => reverts.forEach((revert) => revert())];
-    },
-  ),
-);
-
-/* ---------- Write ---------- */
-
-// The line is written on by a brush, one rounded stroke per line, through a mask over the live text.
-const write = play(["Write"], ["write"], "Write it again with the button.", (text) =>
-  live(
-    text,
-    `<div class="write-stage"><p class="write-line">Every way a page can move.</p><button type="button" class="pill write-again">Write again</button></div>`,
-    (layer) => {
-      const line = layer.querySelector<HTMLElement>(".write-line")!;
-      let run = writeOn(line, { duration: 1.1 });
-      const again = layer.querySelector<HTMLButtonElement>(".write-again")!;
-      const rerun = () => {
-        run.revert();
-        run = writeOn(line, { duration: 1.1 });
-      };
-      again.addEventListener("click", rerun);
-      return [() => again.removeEventListener("click", rerun), () => run.revert()];
     },
   ),
 );
@@ -985,7 +964,7 @@ export const TIME_STAGES: Record<string, StageDef> = {
   timeline: timelineStage,
   paint,
   unveil: merge([{ def: imageReveal, all: true }, { def: pourUnveil, label: "Pour", key: "pour" }, { def: archUnveil, label: "Arch", key: "arch" }]),
-  path: merge([{ def: lineDraw, label: "Draw", key: "draw" }, { def: pathFollow, all: true }, { def: textOnPath, all: true }, { def: write, label: "Write", key: "write" }]),
+  path: merge([{ def: pathFollow, all: true }, { def: textOnPath, all: true }, { def: lineDraw, label: "Draw", key: "draw" }]),
   pull: pullStage,
   count: merge([{ def: countUp, label: "Count-up", key: "count" }, { def: odometer, label: "Odometer", key: "odometer" }]),
   marquee,

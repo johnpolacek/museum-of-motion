@@ -584,7 +584,7 @@ export const routeLetters = def(
   },
 );
 
-/* ---------- Enter and exit ---------- */
+/* ---------- In and Out ---------- */
 
 type Pair = { from: gsap.TweenVars; to: gsap.TweenVars; out: gsap.TweenVars };
 const PAIRS: Record<string, Pair> = {
@@ -933,5 +933,5 @@ export const TEXT_STAGES: Record<string, StageDef> = {
   "speak": merge([{ def: typewriter, all: true }, { def: speakIn, label: "Speak", key: "speak" }]),
   wave: merge([{ def: weightWave, label: "Weight", key: "weight" }, { def: letterWave, all: true }]),
   "route": routeLetters,
-  "enter-and-exit": paired,
+  "in-and-out": paired,
 };

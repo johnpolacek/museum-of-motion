@@ -169,7 +169,7 @@ const DATA: Exhibit[] = [
 
 
   {
-    name: "Enter and exit",
+    name: "In and Out",
     group: "play",
     builders: "fadeIn, riseIn, dropIn, slideIn, scaleIn, popIn, wipeUp, wipeAcross, flipIn, focusIn, weightIn",
     src: "motion-vocabulary",
@@ -205,15 +205,14 @@ const DATA: Exhibit[] = [
   {
     name: "Path",
     group: "play",
-    builders: "drawIn, drawOut, followPath, pathLoop, writeOn",
+    builders: "followPath, pathLoop, drawIn, drawOut",
     src: "svg-effects",
-    desc: "Strokes draw along their length, a small mark loops along a path, a line of text rides one, or a brush writes a line on.",
+    desc: "A small mark loops along a path, a line of text rides one, or strokes draw along their length.",
     vars: [
-      "Dot",
       "Arrow",
       "Ride",
       "Badge",
-      "Write"
+      "Draw"
     ]
   },
 
