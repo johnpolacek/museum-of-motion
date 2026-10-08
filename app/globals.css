@@ -977,3 +977,44 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
   .ex .win.vibe-liquid .lq-frame { order: -1; width: min(72%, 300px); }
   .ex .win.vibe-liquid .lq-pool { aspect-ratio: 4 / 5; }
 }
+
+/* Immersive: a public observatory. Night blue, starlight, an amber accent, Space Grotesk. A field of fixed stars sits behind the page. */
+.ex .win.vibe-immersive { --v-bg: #05060d; --v-fg: #e8ecf7; --v-muted: #8d93a8; --v-amber: #f3c26b; --v-accent: #e8ecf7; --v-on-accent: #05060d; --v-font: var(--font-space), "Space Grotesk", system-ui, sans-serif; --v-art: #0b0d1a; font-size: 16px;
+  background-image: radial-gradient(1px 1px at 12% 18%, #e8ecf7aa 50%, transparent 51%), radial-gradient(1px 1px at 34% 62%, #e8ecf788 50%, transparent 51%), radial-gradient(1.5px 1.5px at 58% 28%, #e8ecf7cc 50%, transparent 51%), radial-gradient(1px 1px at 76% 74%, #e8ecf799 50%, transparent 51%), radial-gradient(1px 1px at 88% 12%, #e8ecf7aa 50%, transparent 51%), radial-gradient(1px 1px at 22% 88%, #e8ecf766 50%, transparent 51%);
+  background-size: 420px 420px; background-attachment: local; }
+.ex .win.vibe-immersive .v-nav { background: rgb(5 6 13 / 0.8); backdrop-filter: blur(6px); border-bottom: 1px solid rgb(232 236 247 / 0.08); }
+.ex .win.vibe-immersive .v-brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 500; letter-spacing: 0.02em; }
+.ex .win.vibe-immersive .im-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--v-amber); box-shadow: 0 0 14px 2px rgb(243 194 107 / 0.6); }
+.ex .win.vibe-immersive .v-links { font-size: 13px; color: var(--v-muted); --underline-color: var(--v-amber); }
+.ex .win.vibe-immersive .v-links a:hover, .ex .win.vibe-immersive .v-links a:focus-visible { color: var(--v-fg); }
+.ex .win.vibe-immersive .v-kicker { font-size: 12px; letter-spacing: 0.24em; color: var(--v-amber); }
+.ex .win.vibe-immersive .im-hero { grid-template-columns: 1fr 1fr; align-items: center; justify-items: stretch; gap: 32px; }
+.ex .win.vibe-immersive .im-copy { display: grid; gap: 20px; justify-items: start; }
+.ex .win.vibe-immersive .v-head { font-weight: 500; font-size: clamp(46px, 7.4cqw, 104px); line-height: 0.98; letter-spacing: -0.035em; max-width: none; }
+.ex .win.vibe-immersive .im-line { display: block; }
+.ex .win.vibe-immersive .im-line + .im-line { color: var(--v-muted); }
+.ex .win.vibe-immersive .v-sub { font-size: 18px; line-height: 1.5; max-width: 32ch; }
+.ex .win.vibe-immersive .v-btn { border-radius: 999px; padding: 14px 26px; font-weight: 500; }
+.ex .win.vibe-immersive .im-sky { position: relative; margin: 0; width: min(100%, 520px); aspect-ratio: 1; justify-self: center; color: var(--v-fg); }
+.ex .win.vibe-immersive .im-sky img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.ex .win.vibe-immersive .im-tonight { padding: 48px 24px 24px; }
+.ex .win.vibe-immersive .v-cards { padding: 18px 0 0; gap: 22px; }
+.ex .win.vibe-immersive .v-art { aspect-ratio: 4 / 3; border-radius: 14px; box-shadow: inset 0 0 0 1px rgb(232 236 247 / 0.1); }
+.ex .win.vibe-immersive .v-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ex .win.vibe-immersive .v-card b { font-weight: 500; font-size: 20px; margin-top: 6px; }
+.ex .win.vibe-immersive .im-flight { position: relative; height: 420cqh; }
+.ex .win.vibe-immersive .im-pin { position: sticky; top: 0; height: 100cqh; display: grid; grid-template-rows: 1fr auto; gap: 10px; padding: 64px 0 18px; }
+.ex .win.vibe-immersive .im-view { position: relative; margin: 0; width: 100%; height: 100%; overflow: hidden; }
+.ex .win.vibe-immersive .im-view img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ex .win.vibe-immersive .v-caption { color: var(--v-muted); font-size: 13px; letter-spacing: 0.08em; }
+.ex .win.vibe-immersive .v-quote p { font-weight: 500; font-size: clamp(32px, 5.6cqw, 72px); line-height: 1.04; letter-spacing: -0.03em; }
+.ex .win.vibe-immersive .v-foot { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid rgb(232 236 247 / 0.08); }
+.ex .win.vibe-immersive a:focus-visible, .ex .win.vibe-immersive button:focus-visible { outline: 2px solid var(--v-amber); outline-offset: 4px; }
+@container (max-width: 640px) {
+  .ex .win.vibe-immersive .im-hero { grid-template-columns: 1fr; }
+  .ex .win.vibe-immersive .im-sky { order: -1; width: min(80%, 320px); }
+  .ex .win.vibe-immersive .v-brand, .ex .win.vibe-immersive .v-links a { white-space: nowrap; }
+  .ex .win.vibe-immersive .v-brand { font-size: 14px; }
+  .ex .win.vibe-immersive .v-links { gap: 12px; font-size: 12px; }
+  .ex .win.vibe-immersive .v-foot { flex-direction: column; padding-bottom: 64px; }
+}

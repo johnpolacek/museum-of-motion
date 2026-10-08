@@ -10,6 +10,8 @@ import { pressFeedback } from "../recipes/press-feedback";
 import { beadUnderline, imageZoom, jelly, pourFill, textRoll, underlineSweep } from "../recipes/hover-effects";
 import { dragPull, inkText, paintReveal, pullCorner, registrationSlip, writeOn, type Pull } from "../recipes/print-effects";
 import { liquidImage } from "../recipes/webgl/liquid-image";
+import { flight, pointerLean, scrollFlight } from "../recipes/webgl/scene-flight";
+import { particleMorph, pointerPush, scatterShape } from "../recipes/webgl/particle-morph";
 import { pourReveal } from "../recipes/media-effects";
 import { cursorFollower, spotlight, tilt } from "../recipes/pointer-effects";
 import { burstFrom, pile } from "../recipes/physics-effects";
@@ -1397,6 +1399,211 @@ const liquid = vibe("liquid", {
   },
 });
 
+/* ---------- Immersive ---------- */
+
+// Orion, in the -1 to 1 box: its stars with their brightness, and the lines between them.
+const ORION_STARS: Array<[number, number, number]> = [
+  [-0.42, 0.78, 1], [0.38, 0.7, 0.75], // Betelgeuse, Bellatrix
+  [-0.12, 0.05, 0.6], [0.0, 0.0, 0.65], [0.12, -0.05, 0.6], // the belt
+  [-0.36, -0.72, 0.7], [0.46, -0.66, 1], // Saiph, Rigel
+  [-0.02, 0.98, 0.35], [0.03, -0.32, 0.4], // head, sword
+];
+const ORION_LINES: Array<[number, number]> = [[0, 2], [1, 4], [2, 3], [3, 4], [2, 5], [4, 6], [0, 7], [1, 7], [3, 8]];
+/** Orion as points: a bright knot for each star, a faint thread along each line, and stray dust around them. */
+function orionShape(count = 5000) {
+  const out: number[] = [];
+  const random = (() => {
+    let s = 41;
+    return () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  })();
+  const gauss = () => (random() + random() + random() - 1.5) * 0.8;
+  const push = (x: number, y: number) => out.push(x, y, (random() - 0.5) * 0.1);
+  const stars = Math.round(count * 0.5);
+  const weight = ORION_STARS.reduce((sum, [, , b]) => sum + b, 0);
+  ORION_STARS.forEach(([x, y, b]) => {
+    const n = Math.round((stars * b) / weight);
+    for (let i = 0; i < n; i++) push(x + gauss() * 0.035 * (0.6 + b), y + gauss() * 0.035 * (0.6 + b));
+  });
+  const thread = Math.round((count * 0.38) / ORION_LINES.length);
+  ORION_LINES.forEach(([a, b]) => {
+    const [x1, y1] = ORION_STARS[a]!;
+    const [x2, y2] = ORION_STARS[b]!;
+    for (let i = 0; i < thread; i++) {
+      const k = random();
+      push(x1 + (x2 - x1) * k + gauss() * 0.006, y1 + (y2 - y1) * k + gauss() * 0.006);
+    }
+  });
+  while (out.length / 3 < count) push((random() - 0.5) * 2.2, (random() - 0.5) * 2.2);
+  return new Float32Array(out);
+}
+/** The same chart, drawn: the poster without WebGL and under reduced motion. */
+const ORION_SVG = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1.1 -1.1 2.2 2.2"><g transform="scale(1,-1)"><g stroke="#e8ecf7" stroke-opacity=".45" stroke-width=".008">${ORION_LINES.map(([a, b]) => `<line x1="${ORION_STARS[a]![0]}" y1="${ORION_STARS[a]![1]}" x2="${ORION_STARS[b]![0]}" y2="${ORION_STARS[b]![1]}"/>`).join("")}</g>${ORION_STARS.map(([x, y, s]) => `<circle cx="${x}" cy="${y}" r="${0.018 + s * 0.022}" fill="#e8ecf7"/>`).join("")}</g></svg>`,
+)}`;
+
+/** A painted body of the sky, as a data URL a WebGL texture can read: planets, a moon, nebulae, a galaxy. */
+function skyPicture(kind: string, seed: number): string {
+  const c = document.createElement("canvas");
+  [c.width, c.height] = [640, 480];
+  const x = c.getContext("2d")!;
+  let s = seed * 9301 + 49297;
+  const r = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+  x.fillStyle = "#05060d";
+  x.fillRect(0, 0, 640, 480);
+  for (let i = 0; i < 260; i++) {
+    x.fillStyle = `rgba(232,236,247,${0.2 + r() * 0.7})`;
+    x.fillRect(r() * 640, r() * 480, r() < 0.9 ? 1 : 2, r() < 0.9 ? 1 : 2);
+  }
+  const glow = (cx: number, cy: number, rad: number, color: string) => {
+    const g = x.createRadialGradient(cx, cy, 0, cx, cy, rad);
+    g.addColorStop(0, color);
+    g.addColorStop(1, "rgba(5,6,13,0)");
+    x.fillStyle = g;
+    x.fillRect(0, 0, 640, 480);
+  };
+  const sphere = (cx: number, cy: number, rad: number, light: string, dark: string) => {
+    const g = x.createRadialGradient(cx - rad * 0.4, cy - rad * 0.4, rad * 0.1, cx, cy, rad);
+    g.addColorStop(0, light);
+    g.addColorStop(1, dark);
+    x.fillStyle = g;
+    x.beginPath();
+    x.arc(cx, cy, rad, 0, Math.PI * 2);
+    x.fill();
+  };
+  if (kind === "moon") {
+    sphere(320, 240, 150, "#f1efe6", "#5d5b57");
+    for (let i = 0; i < 18; i++) {
+      x.fillStyle = `rgba(60,58,55,${0.15 + r() * 0.25})`;
+      x.beginPath();
+      x.arc(220 + r() * 200, 140 + r() * 200, 6 + r() * 22, 0, Math.PI * 2);
+      x.fill();
+    }
+  } else if (kind === "saturn") {
+    x.save();
+    x.translate(320, 240);
+    x.rotate(-0.35);
+    x.strokeStyle = "rgba(243,194,107,0.55)";
+    x.lineWidth = 18;
+    x.beginPath();
+    x.ellipse(0, 0, 230, 60, 0, Math.PI, Math.PI * 2);
+    x.stroke();
+    sphere(0, 0, 110, "#f6dfa8", "#8a5a24");
+    x.beginPath();
+    x.ellipse(0, 0, 230, 60, 0, 0, Math.PI);
+    x.stroke();
+    x.restore();
+  } else if (kind === "nebula" || kind === "veil") {
+    const tints = kind === "nebula" ? ["rgba(255,120,170,0.55)", "rgba(120,140,255,0.5)", "rgba(243,194,107,0.4)"] : ["rgba(90,220,210,0.45)", "rgba(160,110,255,0.45)", "rgba(255,150,120,0.35)"];
+    for (let i = 0; i < 14; i++) glow(140 + r() * 360, 100 + r() * 280, 80 + r() * 160, tints[i % 3]!);
+    glow(320, 240, 60, "rgba(255,255,255,0.7)");
+  } else if (kind === "galaxy") {
+    for (let i = 0; i < 2600; i++) {
+      const arm = i % 2;
+      const t = r() * 5.5;
+      const rad = t * 38;
+      const a = t + arm * Math.PI + (r() - 0.5) * 0.5;
+      x.fillStyle = `rgba(${200 + r() * 55},${200 + r() * 40},255,${0.25 + r() * 0.5})`;
+      x.fillRect(320 + Math.cos(a) * rad * 1.3, 240 + Math.sin(a) * rad * 0.55, 1.6, 1.6);
+    }
+    glow(320, 240, 80, "rgba(255,240,210,0.9)");
+  } else {
+    // A planet with bands, clipped to its disc.
+    sphere(320, 240, 140, ["#9ec5ff", "#ffb48a", "#c8f0d8"][seed % 3]!, "#1b2240");
+    x.save();
+    x.beginPath();
+    x.arc(320, 240, 140, 0, Math.PI * 2);
+    x.clip();
+    x.globalAlpha = 0.22;
+    for (let i = 0; i < 6; i++) {
+      x.fillStyle = i % 2 ? "#ffffff" : "#05060d";
+      x.fillRect(180, 150 + i * 30, 280, 10);
+    }
+    x.restore();
+  }
+  return c.toDataURL("image/jpeg", 0.86);
+}
+const IM_TONIGHT: Array<[string, string, string]> = [
+  ["moon", "The Moon", "Rises 18:42 · 3 days past full"],
+  ["saturn", "Saturn", "South at 21:10 · rings open"],
+  ["nebula", "The Orion Nebula", "After midnight · bring the big scope"],
+];
+const IM_FLIGHT = ["galaxy", "nebula", "planet", "veil", "moon", "saturn", "planet", "galaxy", "veil", "planet"];
+
+// Deep and slow: dust drifts into a constellation that parts around the pointer, and a scroll flies a camera
+// through a spiral of the sky's pictures, leaning with the mouse. Space Grotesk on a night-blue field.
+const immersive = vibe("immersive", {
+  copy: { brand: "", links: ["", ""], kicker: "", head: "", sub: "", cta: "", cards: [], quote: "", foot: "" },
+  lenis: { lerp: 0.06 },
+  move: { duration: 1.8, ease: "power2.inOut" },
+  nav: [".v-cards", ".im-flight"],
+  page: `<header class="v-nav"><b class="v-brand"><i class="im-dot" aria-hidden="true"></i>Halcyon Observatory</b><span class="v-links"><a href="#v">Tonight</a><a href="#v">The flight</a></span></header>
+    <section class="v-hero im-hero">
+      <div class="im-copy"><p class="v-kicker">Open nights · every clear Friday</p><h3 class="v-head"><span class="im-line">Look up.</span> <span class="im-line">Keep looking.</span></h3><p class="v-sub">A public observatory on the ridge above town. Bring a coat. We bring the telescopes.</p><button type="button" class="v-btn">Plan a visit</button></div>
+      <figure class="im-sky" aria-label="The constellation Orion, drawn in points of light"><img data-poster alt="" src="${ORION_SVG}"></figure>
+    </section>
+    <section class="im-tonight"><p class="v-kicker">Tonight’s sky</p><div class="v-cards">${IM_TONIGHT.map(([kind, name, meta]) => `<article class="v-card"><span class="v-art"><img data-sky="${kind}" alt="${name}"></span><b>${name}</b><span class="v-meta">${meta}</span></article>`).join("")}</div></section>
+    <section class="im-flight"><div class="im-pin"><figure class="im-view" aria-label="A flight through ten pictures of the night sky"><img data-poster alt=""></figure><p class="v-caption">Scroll to fly. Move the mouse to look around.</p></div></section>
+    <section class="v-quote"><p>Every photon you see tonight left its star before you were born.</p></section>
+    <footer class="v-foot"><span>Halcyon Observatory</span><span>Ridge Road · Fridays from dusk</span></footer>`,
+  intro: (p, tl) => {
+    const lines = all(p.win, ".im-line");
+    tl.from(p.nav, { autoAlpha: 0, duration: 1, ease: "power2.out", stagger: 0.12 }, 0)
+      .from(p.kicker, { autoAlpha: 0, y: 10, duration: 1, ease: "power3.out" }, 0.3)
+      .fromTo(lines, { yPercent: 100, clipPath: "inset(0% 0% 100% 0%)" }, { yPercent: 0, clipPath: "inset(0% 0% -10% 0%)", duration: 1.2, ease: "expo.out", stagger: 0.16 }, 0.5)
+      .from(p.sub, { autoAlpha: 0, y: 12, duration: 1, ease: "power3.out" }, 1.0)
+      .from(p.btn, { autoAlpha: 0, y: 10, duration: 0.9, ease: "power3.out" }, 1.2);
+    return () => gsap.set([...lines, ...p.nav, p.kicker, p.sub, p.btn], { clearProps: "transform,opacity,visibility,clipPath" });
+  },
+  wire: (p, layer) => {
+    // The pictures are painted here, in the browser, so the flight's textures and the cards share them.
+    const pictures = new Map<string, string>();
+    const picture = (kind: string, seed: number) => {
+      const key = `${kind}-${seed}`;
+      if (!pictures.has(key)) pictures.set(key, skyPicture(kind, seed));
+      return pictures.get(key)!;
+    };
+    all(p.win, "[data-sky]").forEach((img, i) => ((img as HTMLImageElement).src = picture(img.dataset.sky!, i + 1)));
+    const flightImages = IM_FLIGHT.map((kind, i) => picture(kind, i + 4));
+    one<HTMLImageElement>(p.win, ".im-view img").src = flightImages[0]!;
+    // Hero: dust scattered across the frame gathers into Orion, then parts around the pointer.
+    const sky = one(p.win, ".im-sky");
+    const dust = particleMorph(sky, { shapes: [scatterShape(5000, 1.2), orionShape(5000)], count: 5000, size: 2, fill: 0.84, poster: one<HTMLImageElement>(sky, "img"), clip: p.win });
+    const push = pointerPush(dust, { touch: true, strength: 0.8 });
+    let gone = false;
+    const gather = () =>
+      dust.view.ready.then((drawn) => {
+        if (!drawn || gone) return;
+        dust.uniforms.uShape.value = 0;
+        dust.to(1, { duration: 3.2, ease: "power2.inOut" });
+      });
+    gather();
+    const replay = layer.querySelector(".v-replay");
+    replay?.addEventListener("click", gather);
+    // The flight: the page scrolls a camera down a spiral of the sky's pictures while the view holds still.
+    const view = one(p.win, ".im-view");
+    const ride = flight(view, { images: flightImages, fog: 22, poster: one<HTMLImageElement>(view, "img"), clip: p.win });
+    const travel = scrollFlight(ride, { trigger: one(p.win, ".im-flight"), scroller: p.win, start: "top top", end: "bottom bottom", scrub: 1 });
+    const lean = pointerLean(ride);
+    return [
+      () => {
+        gone = true;
+        replay?.removeEventListener("click", gather);
+        travel();
+        lean();
+        ride.revert();
+        push();
+        dust.revert();
+      },
+      cta(p, one(p.win, ".v-cards"), { duration: 1.8, ease: "power2.inOut" }),
+      revealOnScroll(p.cards, { scroller: p.win, y: 30, duration: 1.4, stagger: 0.18, ease: "power3.out" }),
+      ...p.cards.map((c) => imageZoom(c, { image: one<HTMLElement>(c, ".v-art img"), scale: 1.08, duration: 1.4, touch: true })),
+      scrubStatement(p.quote, { by: "words", scroller: p.win, scrub: 1.4 }),
+      ...all(p.win, ".v-links a").map((a) => underlineSweep(a, { touch: true })),
+      pressFeedback(p.btn, { squash: 0.97, ink: 0.15 }),
+    ];
+  },
+});
+
 /** The title tears: magenta and cyan copies jump out of register in sliced bands, then snap back. */
 function tear(ghosts: HTMLElement[], head: HTMLElement) {
   const slice = () => `inset(${gsap.utils.random(0, 70, 1)}% 0 ${gsap.utils.random(0, 70, 1)}% 0)`;
@@ -1415,4 +1622,5 @@ export const VIBE_STAGES: Record<string, StageDef> = {
   glitchy,
   printed,
   liquid,
+  immersive,
 };

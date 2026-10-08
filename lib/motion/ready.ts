@@ -10,6 +10,7 @@ export const LIVE_STAGES = new Set([
   "ambient",
   "printed",
   "liquid",
+  "immersive",
   "mask",
   "timeline",
   "stagger",

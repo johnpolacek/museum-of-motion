@@ -659,6 +659,14 @@ const DATA: Exhibit[] = [
     builders: "pourReveal, liquidImage, beadUnderline, pourFill, jelly, scrubStatement",
     src: "media-effects",
     desc: "Molten and slow: ink floods out from behind a liquid-chrome sculpture, works pour into view and into its window, and a picture of the sea ripples under the hand."
+  },
+  {
+    name: "Immersive",
+    group: "vibes",
+    builders: "particleMorph, pointerPush, flight, scrollFlight, pointerLean",
+    src: "scene-flight",
+    desc: "Deep and slow: dust drifts into a constellation that parts around the pointer, and the scroll flies a camera through a spiral of the night sky's pictures.",
+    gl: true
   }
 ];
 
