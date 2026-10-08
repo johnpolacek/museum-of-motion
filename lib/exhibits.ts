@@ -658,8 +658,7 @@ const DATA: Exhibit[] = [
     group: "vibes",
     builders: "pourReveal, liquidImage, beadUnderline, pourFill, jelly, scrubStatement",
     src: "media-effects",
-    desc: "Molten and slow: ink floods out from behind a liquid-chrome sculpture, works pour into view and into its window, and a picture of the sea ripples under the hand.",
-    gl: true
+    desc: "Molten and slow: ink floods out from behind a liquid-chrome sculpture, works pour into view and into its window, and a picture of the sea ripples under the hand."
   }
 ];
 
