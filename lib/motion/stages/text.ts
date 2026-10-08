@@ -161,26 +161,33 @@ export const characters = def(
   { duration: 0.6, stagger: 0.03, hold: 2, ease: "signature" },
   (text, p) => {
     const splits: SplitText[] = [];
+    // Implode gathers on the middle of the stage, so its line sits centered.
+    const centered = p.variation === "implode";
+    const align = text.style.textAlign;
+    if (centered) text.style.textAlign = "center";
     const masked = p.variation === "rise" || p.variation === "fall";
     const s = split(text, { type: "words,chars", ...(masked ? { mask: "chars" as const } : {}) }, splits);
     const chars = s.chars as HTMLElement[];
     const n = chars.length;
     const out = Math.max(0.2, p.duration * 0.4);
     const box = text.getBoundingClientRect();
-    // From split-entrances' charsImplodeIn and charsExplodeOut: each character sits straight out from
-    // the line's center, farther the farther it rests from it. Drawn once, so every pass is the same.
-    const cx = box.left + box.width / 2;
-    const cy = box.top + box.height / 2;
-    const reach = Math.max(box.width * 0.6, 240);
-    const burst = chars.map((c) => {
-      const r = c.getBoundingClientRect();
-      let dx = r.left + r.width / 2 - cx;
-      let dy = r.top + r.height / 2 - cy;
-      const length = Math.hypot(dx, dy);
-      const angle = rnd(0, Math.PI * 2);
-      [dx, dy] = length < 1 ? [Math.cos(angle), Math.sin(angle)] : [dx / length, dy / length];
-      const distance = (reach + length) * rnd(0.7, 1.3);
-      return { x: dx * distance, y: dy * distance * 0.7 + rnd(-reach, reach) * 0.15, rotation: rnd(-120, 120), scale: rnd(1.6, 2.6) };
+    // From split-entrances' charsImplodeIn and charsExplodeOut, opened up: the letters come from every
+    // direction around the line, not only out from its center. Each takes its own slot on the circle,
+    // shuffled so neighbors arrive from far apart, at its own distance, and spun on all three axes.
+    // Drawn once, so every pass is the same.
+    const reach = Math.max(box.width * 0.55, 260);
+    const slots = chars.map((_, i) => (i + rnd(-0.35, 0.35)) / n).sort(() => rnd(-1, 1));
+    const burst = chars.map((_, i) => {
+      const angle = slots[i]! * Math.PI * 2;
+      const distance = reach * rnd(0.75, 1.6);
+      return {
+        x: Math.cos(angle) * distance,
+        y: Math.sin(angle) * distance * 0.8,
+        rotation: rnd(-140, 140),
+        rotationX: rnd(-220, 220),
+        rotationY: rnd(-220, 220),
+        scale: rnd(1.4, 2.6),
+      };
     });
     const fall = (tl: gsap.core.Timeline, at: number, dir: 1 | -1) =>
       tl.to(chars, { yPercent: 115 * dir, duration: out, ease: EXIT, stagger: 0.012 }, at);
@@ -189,8 +196,17 @@ export const characters = def(
         enter: (tl) => (
           tl.fromTo(
             chars,
-            { autoAlpha: 0, x: (i: number) => burst[i].x, y: (i: number) => burst[i].y, rotation: (i: number) => burst[i].rotation, scale: (i: number) => burst[i].scale },
-            { autoAlpha: 1, x: 0, y: 0, rotation: 0, scale: 1, duration: p.duration, ease: p.ease, stagger: { each: p.stagger, from: "edges" } },
+            {
+              autoAlpha: 0,
+              x: (i: number) => burst[i].x,
+              y: (i: number) => burst[i].y,
+              rotation: (i: number) => burst[i].rotation,
+              rotationX: (i: number) => burst[i].rotationX,
+              rotationY: (i: number) => burst[i].rotationY,
+              scale: (i: number) => burst[i].scale,
+              transformPerspective: 700,
+            },
+            { autoAlpha: 1, x: 0, y: 0, rotation: 0, rotationX: 0, rotationY: 0, scale: 1, duration: p.duration, ease: p.ease, stagger: { each: p.stagger, from: "random" } },
             0,
           ),
           end(n, p)
@@ -198,7 +214,18 @@ export const characters = def(
         exit: (tl, at) =>
           tl.to(
             chars,
-            { autoAlpha: 0, x: (i: number) => burst[i].x, y: (i: number) => burst[i].y, rotation: (i: number) => -burst[i].rotation, scale: (i: number) => burst[i].scale, duration: Math.max(0.3, out), ease: EXIT, stagger: { each: 0.008, from: "center" } },
+            {
+              autoAlpha: 0,
+              x: (i: number) => -burst[i].x,
+              y: (i: number) => -burst[i].y,
+              rotation: (i: number) => -burst[i].rotation,
+              rotationX: (i: number) => -burst[i].rotationX,
+              rotationY: (i: number) => -burst[i].rotationY,
+              scale: (i: number) => burst[i].scale,
+              duration: Math.max(0.3, out),
+              ease: EXIT,
+              stagger: { each: 0.008, from: "center" },
+            },
             at,
           ),
       },
@@ -256,7 +283,9 @@ export const characters = def(
           ),
       },
     };
-    return assemble(text, p, splits, acts[p.variation] ?? acts.implode);
+    return assemble(text, p, splits, acts[p.variation] ?? acts.implode, () => {
+      if (centered) text.style.textAlign = align;
+    });
   },
   {
     implode: { ease: "power4.out", duration: 0.9, stagger: 0.01 },
