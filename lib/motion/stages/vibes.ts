@@ -11,7 +11,8 @@ import { beadUnderline, imageZoom, jelly, textRoll, underlineSweep } from "../re
 import { dragPull, inkText, paintReveal, pullCorner, registrationSlip, writeOn, type Pull } from "../recipes/print-effects";
 import { pourStream } from "../recipes/webgl/metaballs";
 import { pourReveal } from "../recipes/media-effects";
-import { cursorFollower, spotlight, tilt } from "../recipes/pointer-effects";
+import { archPolygon, shapeFlight, type DoorwayEffect } from "../recipes/doorways";
+import { cursorFollower, dragTrack, spotlight, tilt } from "../recipes/pointer-effects";
 import { burstFrom, pile } from "../recipes/physics-effects";
 import { horizontalRun } from "../recipes/scroll-effects";
 import { sortable } from "../recipes/sortable";
@@ -1235,6 +1236,14 @@ const LQ_WORKS: Array<[string, string, string]> = [
   ["117627", "Odd Company", "Form Practice"],
   ["117491", "Everyday Orbit", "Orbit Office"],
   ["119952", "Big Little Things", "Paper Social"],
+  ["120476", "Aftertone", "Sine Workshop"],
+  ["119861", "Low Frequency", "Sine Workshop"],
+  ["117905", "Echo Season", "Interval Press"],
+  ["116131", "Night Signal", "Interval Press"],
+  ["118887", "Salt Horizon", "Tide Office"],
+  ["120116", "Painted Quarter", "Block Studios"],
+  ["116698", "Moss House", "Block Studios"],
+  ["117780", "Stillwater", "Tide Office"],
 ];
 const LQ_INDEX: Array<[string, string, string]> = [
   ["Soft Assembly", "Form Practice", "Geometry · Color"],
@@ -1270,15 +1279,17 @@ const liquid = vibe("liquid", {
   page: `<div class="lq-stage">
       <div class="lq-art" aria-hidden="true">
         <div class="lq-ink"><div class="lq-field"></div></div>
-        <div class="lq-opening"><img class="lq-sky" src="${LQ}/opening-sky.webp" alt=""></div>
+        <div class="lq-opening"><img class="lq-sky" src="${LQ}/opening-sky.webp" alt=""><img class="lq-sky lq-hung" alt="" hidden></div>
+        <div class="lq-transfer"></div>
         <div class="lq-chrome"><img src="${LQ}/chrome.webp" alt=""></div>
       </div>
       <img class="lq-hand" src="${LQ}/handwriting.webp" alt="Ideas change everything">
       <header class="v-nav lq-mast"><b class="v-brand lq-mark"><span>Living</span> <span>Exhibition</span></b><p class="lq-tagline">An exhibition of imaginary projects</p><span class="v-links"><a href="#v">Exhibition</a><a href="#v">Index</a></span></header>
-      <section class="v-hero lq-intro"><h3 class="v-head"><span class="lq-word">Living</span> <span class="lq-word">Exhibition</span></h3><p class="v-kicker">Websites breathe too</p><p class="v-sub">An experimental design festival where the identity evolves with the work on display.</p><button type="button" class="v-btn lq-pill"><span class="lq-pill-label">Explore the projects</span> <span class="lq-pill-arrow" aria-hidden="true">→</span></button></section>
+      <section class="v-hero lq-intro"><h3 class="v-head"><span class="lq-word">Living</span> <span class="lq-word">Exhibition</span></h3><p class="lq-echo" aria-live="polite"></p><p class="v-kicker">Websites breathe too</p><p class="v-sub">An experimental design festival where the identity evolves with the work on display.</p><button type="button" class="v-btn lq-pill"><span class="lq-pill-label">Explore the projects</span> <span class="lq-pill-arrow" aria-hidden="true">→</span></button></section>
       <p class="lq-margin">Different sites. A brighter internet.</p>
       <div class="lq-notes"><p class="lq-note"><span class="lq-dot" aria-hidden="true"></span>Art<br>Code<br>People<br>A brighter web</p><p class="lq-claim">A living exhibition for a more curious internet.</p></div>
-      <ul class="lq-shelf">${LQ_WORKS.map(([id, title, by], i) => `<li><a class="lq-work" href="#v"><span class="lq-arch"><img src="${LQ}/${id}.svg" alt=""></span><span class="lq-meta"><span>0${i + 1}</span><span class="lq-ring" aria-hidden="true">→</span></span><b class="lq-title">${title}</b><span class="lq-by">by ${by}</span></a></li>`).join("")}</ul>
+      <div class="lq-shelfbar"><span class="lq-count">Shelf 01 / 03</span><span class="lq-browse">Browse this edition <button type="button" class="lq-ring" data-shelf="-1" aria-label="Previous shelf">←</button><button type="button" class="lq-ring" data-shelf="1" aria-label="Next shelf">→</button></span></div>
+      <div class="lq-shelf"><ul class="lq-track">${LQ_WORKS.map(([id, title, by], i) => `<li><a class="lq-work" href="#v" data-work="${id}" aria-label="Hang ${title} in the window"><span class="lq-arch"><img src="${LQ}/${id}.svg" alt=""></span><span class="lq-meta"><span>${String(i + 1).padStart(2, "0")}</span><span class="lq-ring" aria-hidden="true">→</span></span><b class="lq-title">${title}</b><span class="lq-by">by ${by}</span></a></li>`).join("")}</ul></div>
     </div>
     <section class="lq-index"><div class="lq-gutter" aria-hidden="true"></div><div class="lq-list"><h4 class="lq-index-head">Index <small>Every work in this edition, in the order it hangs.</small></h4><ol class="lq-rows">${LQ_INDEX.map(([title, by, tags], i) => `<li><span class="lq-no">${String(i + 1).padStart(2, "0")}</span><b>${title}</b><span>by ${by}</span><small>${tags}</small></li>`).join("")}</ol></div></section>
     <footer class="v-foot lq-colophon"><span>Living Exhibition: an exhibition of imaginary projects.</span><span>Projects and studios are fictional.</span></footer>`,
@@ -1286,7 +1297,7 @@ const liquid = vibe("liquid", {
     const all2 = (sel: string) => all(p.win, sel);
     const ink = one(p.win, ".lq-ink");
     const chrome = one(p.win, ".lq-chrome");
-    const sky = one(p.win, ".lq-sky");
+    const sky = one(p.win, ".lq-sky:not(.lq-hung)");
     const opening = one(p.win, ".lq-opening");
     const pill = p.btn;
     // The chrome pours in from the seam, the way the poster's sculpture forms.
@@ -1314,18 +1325,19 @@ const liquid = vibe("liquid", {
       .fromTo(one(p.win, ".lq-claim"), { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.9, ease: "power2.inOut" }, 2.0)
       // Written on, left to right, once the chrome it sits on has settled.
       .fromTo(one(p.win, ".lq-hand"), { clipPath: "inset(-5% 100% -5% 0%)" }, { clipPath: "inset(-5% 0% -5% 0%)", duration: 1.3, ease: "power1.inOut" }, 2.1)
-      .from(all2(".lq-shelf li"), { autoAlpha: 0, yPercent: 18, duration: 0.8, ease: "power3.out", stagger: 0.08 }, 1.9);
+      .from(all2(".lq-shelf li").slice(0, 4), { autoAlpha: 0, yPercent: 18, duration: 0.8, ease: "power3.out", stagger: 0.08 }, 1.9)
+      .from(one(p.win, ".lq-shelfbar"), { autoAlpha: 0, y: -6, duration: 0.5, ease: "power3.out" }, 1.8);
     return () => {
       pour.revert();
       ink.style.removeProperty("clip-path");
-      gsap.set([opening, sky, ...all2(".lq-word, .lq-mark span, .lq-tagline, .lq-margin, .lq-dot, .lq-note, .lq-claim, .lq-hand, .lq-shelf li, .lq-pill-label"), ...p.nav, p.kicker, p.sub, pill], { clearProps: "transform,opacity,visibility,clipPath" });
+      gsap.set([opening, sky, ...all2(".lq-word, .lq-mark span, .lq-tagline, .lq-margin, .lq-dot, .lq-note, .lq-claim, .lq-hand, .lq-shelf li, .lq-pill-label, .lq-shelfbar"), ...p.nav, p.kicker, p.sub, pill], { clearProps: "transform,opacity,visibility,clipPath" });
     };
   },
   wire: (p) => {
     // The sky drifts a little with the pointer, as if the window were deep. Mouse only.
-    const sky = one(p.win, ".lq-sky");
-    const toX = gsap.quickTo(sky, "xPercent", { duration: 1.2, ease: "power3.out" });
-    const toY = gsap.quickTo(sky, "yPercent", { duration: 1.2, ease: "power3.out" });
+    const skyImg = all(p.win, ".lq-sky");
+    const toX = gsap.quickTo(skyImg, "xPercent", { duration: 1.2, ease: "power3.out" });
+    const toY = gsap.quickTo(skyImg, "yPercent", { duration: 1.2, ease: "power3.out" });
     const drift = (e: PointerEvent) => {
       if (e.pointerType !== "mouse" || prefersReducedMotion()) return;
       const box = p.win.getBoundingClientRect();
@@ -1335,12 +1347,85 @@ const liquid = vibe("liquid", {
     p.win.addEventListener("pointermove", drift);
     // A chrome stream pours down the index beside its rows as you read, and a bead settles at each.
     const stream = pourStream(one(p.win, ".lq-gutter"), { rows: all(p.win, ".lq-rows li"), width: 5, lead: 0.6, scroller: p.win });
+    // Each arch is a polygon, so a flight can spread its points onto the window's edges.
+    const arches = all(p.win, ".lq-arch");
+    arches.forEach((a) => (a.style.clipPath = archPolygon(0.63)));
+    // The shelf: drag or throw it, or step a shelf of four at a time with the arrows.
+    const shelf = one(p.win, ".lq-shelf");
+    const track = one(p.win, ".lq-track");
+    const row = dragTrack(shelf, track, { snap: true });
+    const count = one(p.win, ".lq-count");
+    const shelves = Math.ceil(LQ_WORKS.length / 4);
+    const showCount = () => {
+      const items = all(track, "li");
+      const x = -Number(gsap.getProperty(track, "x"));
+      const first = items.findIndex((li) => li.offsetLeft >= x - 4);
+      count.textContent = `Shelf ${String(Math.floor(Math.max(0, first) / 4) + 1).padStart(2, "0")} / ${String(shelves).padStart(2, "0")}`;
+    };
+    const step = (e: Event) => {
+      const dir = Number((e.currentTarget as HTMLElement).dataset.shelf);
+      const items = all(track, "li");
+      const x = -Number(gsap.getProperty(track, "x"));
+      const at = Math.max(0, items.findIndex((li) => li.offsetLeft >= x - 4));
+      const to = items[gsap.utils.clamp(0, items.length - 1, Math.round(at / 4) * 4 + dir * 4)]!;
+      const min = Math.min(0, shelf.clientWidth - track.scrollWidth);
+      gsap.to(track, { x: gsap.utils.clamp(min, 0, -to.offsetLeft), duration: prefersReducedMotion() ? 0 : 0.7, ease: "power3.inOut", onUpdate: () => row.draggable?.update(), onComplete: showCount });
+    };
+    const stepButtons = all(p.win, "[data-shelf]");
+    stepButtons.forEach((b) => b.addEventListener("click", step));
+    row.draggable?.addEventListener("throwcomplete", showCount);
+    row.draggable?.addEventListener("dragend", () => gsap.delayedCall(0.8, showCount));
+    // A work flies from its arch into the sculpture's window, its arch spreading to fill the opening. It flies
+    // beneath the chrome, so the sculpture's rim passes over it. The same arch again, or Escape, brings back the sky.
+    const hung = one<HTMLImageElement>(p.win, ".lq-hung");
+    const echo = one(p.win, ".lq-echo");
+    const layer = one(p.win, ".lq-transfer");
+    let hanging = "";
+    let flight: DoorwayEffect | undefined;
+    const sky = () => {
+      flight?.revert();
+      hanging = "";
+      echo.textContent = "";
+      gsap.to(hung, { autoAlpha: 0, duration: 0.5, ease: "power2.out", onComplete: () => void (hung.hidden = true) });
+    };
+    const hang = (e: Event) => {
+      e.preventDefault();
+      const work = (e.currentTarget as HTMLElement);
+      const id = work.dataset.work!;
+      if (id === hanging) return sky();
+      flight?.revert();
+      hanging = id;
+      hung.hidden = false;
+      gsap.set(hung, { autoAlpha: 1 });
+      hung.src = `${LQ}/${id}.svg`;
+      echo.textContent = `Now hanging: ${work.querySelector(".lq-title")?.textContent ?? ""}`;
+      // On a stacked phone layout the window has scrolled away: go up to it and let the work fade in there.
+      const box = one(p.win, ".lq-opening").getBoundingClientRect();
+      const view = p.win.getBoundingClientRect();
+      if (box.bottom < view.top + view.height * 0.3) {
+        gsap.fromTo(hung, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6, delay: prefersReducedMotion() ? 0 : 0.5, ease: "power2.out" });
+        scrollWin(p.win, one(p.win, ".lq-stage"), { duration: 0.7, ease: "power3.inOut" });
+        return;
+      }
+      flight = shapeFlight(one(work, ".lq-arch"), hung, { duration: 0.8, ease: "power3.inOut", layer });
+    };
+    const works = all(p.win, ".lq-work");
+    works.forEach((w) => w.addEventListener("click", hang));
+    const escape = (e: KeyboardEvent) => e.key === "Escape" && hanging && sky();
+    p.win.addEventListener("keydown", escape);
     return [
       () => {
         p.win.removeEventListener("pointermove", drift);
-        gsap.killTweensOf(sky);
-        gsap.set(sky, { clearProps: "transform" });
+        gsap.killTweensOf(skyImg);
+        gsap.set(skyImg, { clearProps: "transform" });
         stream.revert();
+        stepButtons.forEach((b) => b.removeEventListener("click", step));
+        works.forEach((w) => w.removeEventListener("click", hang));
+        p.win.removeEventListener("keydown", escape);
+        flight?.revert();
+        gsap.killTweensOf([hung, track]);
+        row.revert();
+        arches.forEach((a) => a.style.removeProperty("clip-path"));
       },
       cta(p, one(p.win, ".lq-index"), { duration: 1.4, ease: "power3.inOut" }),
       jelly(p.btn, { highlight: "rgb(255 255 255 / 0.4)", touch: true }),
