@@ -52,6 +52,7 @@ export const LIVE_STAGES = new Set([
   "tabs",
   "particles",
   "physics",
+  "confetti",
   "explode",
   "throw",
   "card-stack",

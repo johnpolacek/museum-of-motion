@@ -837,18 +837,21 @@ const launchStage = (text: HTMLElement) =>
     "piled",
   );
 
-const confetti = play(
-  ["Pile", "Bounce", "Launch", "Confetti", "Emoji", "Rain"],
-  ["pile", "bounce", "launch", "confetti", "emoji", "rain"],
+const physicsStage = play(
+  ["Pile", "Bounce", "Launch"],
+  ["pile", "bounce", "launch"],
   "Tap or click anywhere to drop more. Shake the heap, or clear it.",
+  (text, p) => (p.variation === "bounce" ? bounceStage(text) : p.variation === "launch" ? launchStage(text) : pileStage(text)),
+);
+
+// Confetti: celebrations thrown from a press. Pieces arc under gravity, but nothing collides or rests: they
+// are a moment, not a system, so they sit apart from Physics.
+const confetti = play(
+  ["Confetti", "Emoji", "Rain"],
+  ["confetti", "emoji", "rain"],
+  "Press the button.",
   (text, p) =>
-    p.variation === "pile"
-      ? pileStage(text)
-      : p.variation === "bounce"
-      ? bounceStage(text)
-      : p.variation === "launch"
-      ? launchStage(text)
-      : p.variation === "rain"
+    p.variation === "rain"
       ? live(text, `<div class="rain-layer" aria-hidden="true"></div><button type="button" class="pill big rain-btn">Make it rain</button>`, (layer) => {
           // Rain falls inside the stage: the skill's rain, from above its top edge to below its bottom.
           const sky = one(layer, ".rain-layer");
@@ -1087,9 +1090,10 @@ export const POINTER_STAGES: Record<string, StageDef> = {
   tabs,
   particles,
   physics: {
-    ...confetti,
-    hints: { pile: "Tap or click anywhere to drop more. Shake the heap, or clear it.", bounce: "Tap, click, or press Kick to send them flying.", launch: "Drag the slingshot back and let go. Or Tab to it, aim with the arrow keys, and press Enter.", confetti: "Press the button.", emoji: "Press the button.", rain: "Press the button." },
+    ...physicsStage,
+    hints: { pile: "Tap or click anywhere to drop more. Shake the heap, or clear it.", bounce: "Tap, click, or press Kick to send them flying.", launch: "Drag the slingshot back and let go. Or Tab to it, aim with the arrow keys, and press Enter." },
   },
+  confetti,
   explode,
   // Throw: content you drag and throw, bounded, endless, or wrapping both ways.
   throw: merge([

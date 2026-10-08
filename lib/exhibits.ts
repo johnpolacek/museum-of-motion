@@ -537,13 +537,21 @@ const DATA: Exhibit[] = [
   {
     name: "Physics",
     group: "pointer",
-    builders: "pile, slingshot, burst, burstFrom, rain",
+    builders: "pile, slingshot",
     src: "physics-effects",
-    desc: "Pieces under gravity: they fall, bounce off the floor and each other, and heap up, bounce around a box, fly from a slingshot, or a cone of confetti arcs up and falls away, or it rains from above.",
+    desc: "Pieces under gravity that collide and come to rest: they fall and heap up, bounce around a box, or fly from a slingshot.",
     vars: [
       "Bounce",
-      "Launch",
-      "Confetti",
+      "Launch"
+    ]
+  },
+  {
+    name: "Confetti",
+    group: "pointer",
+    builders: "burst, burstFrom, rain",
+    src: "physics-effects",
+    desc: "A celebration from a press: a cone of confetti or emoji arcs up and falls away, or it rains from above.",
+    vars: [
       "Emoji",
       "Rain"
     ]
