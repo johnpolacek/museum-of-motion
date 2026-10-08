@@ -430,14 +430,7 @@ const DATA: Exhibit[] = [
     desc: "Scrolling flies a camera through a spiral of posters.",
     gl: true
   },
-  {
-    name: "Pour",
-    group: "scroll",
-    builders: "pourStream",
-    src: "metaballs",
-    desc: "A stream of liquid metal pours down beside an index as you read, dropping a bead at each row.",
-    gl: true
-  },
+
   {
     name: "Hover",
     group: "pointer",
@@ -490,11 +483,11 @@ const DATA: Exhibit[] = [
     ]
   },
   {
-    name: "Open and close",
+    name: "Open",
     group: "pointer",
     builders: "menuOverlay, dialogMotion, disclosure, enterExit",
     src: "component-motion",
-    desc: "Panels come and go: a full-screen menu, a dialog that grows out of its button, a drawer, an accordion, and an open that turns back if you change your mind halfway.",
+    desc: "Panels open and close again: a full-screen menu, a dialog that grows out of its button, a drawer, an accordion, and an open that turns back if you change your mind halfway.",
     vars: [
       "Dialog",
       "Drawer",
@@ -503,19 +496,26 @@ const DATA: Exhibit[] = [
     ]
   },
   {
-    name: "Tab indicator",
+    name: "Tabs",
     group: "pointer",
-    builders: "tabIndicator",
+    builders: "tabIndicator, panelSwap",
     src: "component-motion",
-    desc: "An underline slides onto the selected tab."
+    desc: "The selected tab is marked by motion: an underline slides to it, a pill glides behind it, a bar stretches across to it, or the panel slides in from the side you moved toward.",
+    vars: [
+      "Pill",
+      "Stretch",
+      "Panels"
+    ]
   },
   {
     name: "Flip",
     group: "pointer",
     builders: "captureLayout, captureShared, playShared, shapeFlight",
     src: "layout-flip",
-    desc: "Flip records where things were and animates them to where they are: tiles sliding as a layout filters, a thumbnail morphing into the hero it opens, or a card's picture flying into an arch and taking its shape.",
+    desc: "Flip records where things were and animates them to where they are: tiles sliding as a layout filters, stacks into a list, or shuffles, a thumbnail morphing into the hero it opens, or a card's picture flying into an arch and taking its shape.",
     vars: [
+      "List",
+      "Shuffle",
       "Shared",
       "Shape"
     ]

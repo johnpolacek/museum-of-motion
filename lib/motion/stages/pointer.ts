@@ -12,7 +12,7 @@ import { COUNT_WORDS } from "../../exhibits";
 import { morphSequence, morphToggle } from "../recipes/svg-effects";
 import { pressFeedback } from "../recipes/press-feedback";
 import { shake } from "../recipes/accents";
-import { dialogMotion, disclosure, enterExit, menuOverlay, stateButton, tabIndicator } from "../recipes/component-motion";
+import { dialogMotion, disclosure, enterExit, menuOverlay, panelSwap, stateButton, tabIndicator } from "../recipes/component-motion";
 import { captureLayout, captureShared, playShared } from "../recipes/layout-flip";
 import { archPolygon, shapeFlight, type DoorwayEffect } from "../recipes/doorways";
 import { burstFrom, pile, rain } from "../recipes/physics-effects";
@@ -478,7 +478,7 @@ const accordion = play(["Disclosure"], ["disclosure"], "Open and close the secti
   ),
 );
 
-const tabs = play(["Tab indicator"], ["tabs"], "Pick a tab, by click or arrow keys.", (text) => {
+const tabs = play(["Underline", "Pill", "Stretch", "Panels"], ["underline", "pill", "stretch", "panels"], "Pick a tab, by click or arrow keys.", (text, p) => {
   // The collection's own groups and notes.
   const TABS = ["Type", "Play", "Scroll", "Pointer", "Drag"];
   const notes = [
@@ -490,18 +490,24 @@ const tabs = play(["Tab indicator"], ["tabs"], "Pick a tab, by click or arrow ke
   ];
   return live(
     text,
-    `<div class="tabbed"><div class="tablist" role="tablist" aria-label="Groups">${TABS.map((t, i) => `<button type="button" role="tab" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${t}</button>`).join("")}<span class="tab-indicator" aria-hidden="true"></span></div><p class="tab-panel" role="tabpanel">${notes.map((n, i) => `<span${i === 0 ? ' class="on"' : ""}>${n}</span>`).join("")}</p></div>`,
+    `<div class="tabbed is-${p.variation}"><div class="tablist" role="tablist" aria-label="Groups">${TABS.map((t, i) => `<button type="button" role="tab" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${t}</button>`).join("")}<span class="tab-indicator" aria-hidden="true"></span></div><p class="tab-panel" role="tabpanel">${notes.map((n, i) => `<span${i === 0 ? ' class="on"' : ""}>${n}</span>`).join("")}</p></div>`,
     (layer) => {
       const list = one(layer, ".tablist");
       const buttons = all(list, "[role=tab]");
       const lines = all(layer, ".tab-panel > span");
-      const ind = tabIndicator(one(layer, ".tab-indicator"), list);
+      const ind = tabIndicator(one(layer, ".tab-indicator"), list, p.variation === "stretch" ? { duration: 0.5, stretch: true } : p.variation === "pill" ? { duration: 0.45, ease: "signature" } : {});
+      let current = 0;
       const select = (i: number, focus = false) => {
         buttons.forEach((b, j) => {
           b.setAttribute("aria-selected", String(i === j));
           b.tabIndex = i === j ? 0 : -1;
         });
-        lines.forEach((line, j) => line.classList.toggle("on", i === j));
+        // Panels: the new note slides in from the side the indicator moves toward.
+        if (p.variation === "panels" && i !== current) {
+          lines[i]!.classList.add("on");
+          panelSwap(lines[current]!, lines[i]!, i > current ? 1 : -1).eventCallback("onComplete", () => lines.forEach((line, j) => line.classList.toggle("on", i === j)));
+        } else lines.forEach((line, j) => line.classList.toggle("on", i === j));
+        current = i;
         ind.moveTo(buttons[i]);
         if (focus) buttons[i].focus();
       };
@@ -518,7 +524,28 @@ const tabs = play(["Tab indicator"], ["tabs"], "Pick a tab, by click or arrow ke
       buttons.forEach((b) => b.addEventListener("click", click));
       list.addEventListener("keydown", key);
       ind.moveTo(buttons[0]);
+      // Pill: a blue copy of the labels shows only inside the pill, clipped to it every frame, so each
+      // letter turns blue exactly as the pill passes under it. No color is ever tweened.
+      let follow = () => {};
+      if (p.variation === "pill") {
+        const ink = document.createElement("div");
+        ink.className = "tab-ink";
+        ink.setAttribute("aria-hidden", "true");
+        ink.innerHTML = buttons.map((b) => `<span>${b.textContent}</span>`).join("");
+        list.append(ink);
+        const pill = one(layer, ".tab-indicator");
+        follow = () => {
+          const a = ink.getBoundingClientRect();
+          const b = pill.getBoundingClientRect();
+          ink.style.clipPath = `inset(0 ${Math.round(a.right - b.right)}px 0 ${Math.round(b.left - a.left)}px round 999px)`;
+        };
+        gsap.ticker.add(follow);
+      }
       return [
+        () => {
+          gsap.ticker.remove(follow);
+          layer.querySelector(".tab-ink")?.remove();
+        },
         () => {
           buttons.forEach((b) => b.removeEventListener("click", click));
           list.removeEventListener("keydown", key);
@@ -558,6 +585,38 @@ const layoutFlip = play(["Layout Flip"], ["flip"], "Filter the tiles.", (text) =
       };
       buttons.forEach((b) => b.addEventListener("click", click));
       return [() => buttons.forEach((b) => b.removeEventListener("click", click))];
+    },
+  ),
+);
+
+// List and Shuffle: the same tiles, rearranged. List stacks them into a column and back into a wrapped
+// grid; Shuffle deals them into a new order. Each tile keeps its size, so Flip only moves them.
+const arrange = play(["List", "Shuffle"], ["list", "shuffle"], "Press the button to rearrange the tiles.", (text, p) =>
+  live(
+    text,
+    `<div class="arrange"><div class="filters"><button type="button" class="pill" data-arrange aria-pressed="false">${p.variation === "list" ? "Show as list" : "Shuffle"}</button></div>
+     <ul class="tiles" data-view="grid">${GROUPED.slice(0, 5).map(([n]) => `<li class="tile-card">${n}</li>`).join("")}</ul></div>`,
+    (layer) => {
+      const list = one(layer, ".tiles");
+      const button = one(layer, "[data-arrange]");
+      const tiles = () => all(list, ".tile-card");
+      let deal = 0;
+      const go = () => {
+        const flip = captureLayout(tiles(), { duration: 0.6, ease: "power3.inOut", stagger: 0.03 });
+        if (p.variation === "list") {
+          const listed = list.dataset.view === "grid";
+          list.dataset.view = listed ? "list" : "grid";
+          button.textContent = listed ? "Show as grid" : "Show as list";
+          button.setAttribute("aria-pressed", String(listed));
+        } else {
+          // A fixed series of deals, so every visit shuffles the same way.
+          const order = tiles().map((t, i) => [t, Math.sin((i + 1) * 12.9898 + ++deal * 78.233) % 1] as const).sort((a, b) => a[1] - b[1]);
+          order.forEach(([t]) => list.append(t));
+        }
+        flip.play();
+      };
+      button.addEventListener("click", go);
+      return [() => button.removeEventListener("click", go)];
     },
   ),
 );
@@ -950,7 +1009,7 @@ const attractMerged = merge([
   { label: "Momentum", key: "momentum", def: momentum },
 ]);
 
-// Open and close: one exhibit, one tab per stage it gathers.
+// Open: one exhibit, one tab per stage it gathers.
 const openAndCloseMerged = merge([
   { label: "Menu", key: "menu", def: menu },
   { label: "Dialog", key: "dialog", def: dialog },
@@ -962,6 +1021,8 @@ const openAndCloseMerged = merge([
 // Flip: one exhibit, one tab per stage it gathers.
 const flipMerged = merge([
   { label: "Layout", key: "layout", def: layoutFlip },
+  { label: "List", key: "list", def: arrange, variation: "list" },
+  { label: "Shuffle", key: "shuffle", def: arrange, variation: "shuffle" },
   { label: "Shared", key: "shared", def: shared },
   { label: "Shape", key: "shape", def: shape },
 ]);
@@ -971,10 +1032,10 @@ export const POINTER_STAGES: Record<string, StageDef> = {
   "feedback": feedbackMerged,
   "cursor": cursorMerged,
   "attract": attractMerged,
-  "open-and-close": openAndCloseMerged,
+  open: openAndCloseMerged,
   "flip": flipMerged,
   morph: morphMerged,
-  "tab-indicator": tabs,
+  tabs,
   particles,
   physics: {
     ...confetti,

@@ -498,7 +498,12 @@ The app owns `aria-selected`, the roving `tabindex`, and arrow keys, and calls `
 ```
 
 ```ts
-export type TabIndicatorOptions = { duration?: number; ease?: string };
+export type TabIndicatorOptions = {
+  duration?: number;
+  ease?: string;
+  /** The leading edge reaches the new tab first and the trailing edge catches up, so the indicator stretches as it travels. */
+  stretch?: boolean;
+};
 
 export type TabIndicator = {
   /** Slides and resizes the indicator onto `tab`. Call it when the selected tab changes. */
@@ -509,7 +514,7 @@ export type TabIndicator = {
 export function tabIndicator(
   indicator: HTMLElement,
   tablist: HTMLElement,
-  { duration = 0.3, ease = "power3.out" }: TabIndicatorOptions = {},
+  { duration = 0.3, ease = "power3.out", stretch = false }: TabIndicatorOptions = {},
 ): TabIndicator {
   const run = relay();
   let active: HTMLElement | undefined;
@@ -551,7 +556,18 @@ export function tabIndicator(
     const tl = run.next();
     if (prefersReducedMotion()) return tl.set(indicator, fit(tab));
     sliding = true;
-    return tl.to(indicator, { ...fit(tab), duration, ease, onComplete: () => void (sliding = false) });
+    const done = () => void (sliding = false);
+    if (!stretch) return tl.to(indicator, { ...fit(tab), duration, ease, onComplete: done });
+    // Stretch: span from the edge it leaves to the far edge of the new tab, then let the tail catch up.
+    const from = indicator.getBoundingClientRect();
+    const to = tab.getBoundingClientRect();
+    const end = fit(tab);
+    const width = to.width / end.scaleX;
+    const left = to.left - end.x;
+    const span = { x: Math.min(from.left, to.left) - left, scaleX: (Math.max(from.right, to.right) - Math.min(from.left, to.left)) / width };
+    return tl
+      .to(indicator, { ...span, duration: duration * 0.55, ease: "power2.in" })
+      .to(indicator, { ...end, duration: duration * 0.75, ease: "back.out(1.6)", onComplete: done });
   }
   return {
     moveTo: slide,
@@ -561,6 +577,46 @@ export function tabIndicator(
 ```
 
 Revert before the tabs change and rebuild after the new ones render; the observer only knows tabs present at build.
+
+
+## panelSwap
+
+Tab panels swap with the direction of travel, so a tab to the right brings its panel in from the right. Pair it with `tabIndicator`: the indicator and the panel move the same way.
+
+```css
+.panels { display: grid; }
+.panels > [role="tabpanel"] { grid-area: 1 / 1; }
+.panels > [role="tabpanel"]:not(.on) { visibility: hidden; }
+```
+
+```ts
+export type PanelSwapOptions = { distance?: number; duration?: number };
+
+/**
+ * Tab panels swap with the direction of travel: the old panel slides away and the new one comes in from
+ * the side the indicator moved toward. Stack the panels in one grid cell so the area keeps the tallest's
+ * height. Pass `direction` 1 for a tab to the right, -1 for one to the left. Hidden panels stay hidden
+ * through `autoAlpha`, so only the shown one is in the accessibility tree.
+ */
+export function panelSwap(
+  outgoing: HTMLElement | null,
+  incoming: HTMLElement,
+  direction: 1 | -1,
+  { distance = 36, duration = 0.4 }: PanelSwapOptions = {},
+): gsap.core.Timeline {
+  const tl = gsap.timeline();
+  if (outgoing === incoming) return tl;
+  if (prefersReducedMotion()) {
+    if (outgoing) tl.set(outgoing, { autoAlpha: 0 });
+    return tl.set(incoming, { autoAlpha: 1 });
+  }
+  if (outgoing) tl.to(outgoing, { x: -direction * distance, autoAlpha: 0, duration: duration * 0.5, ease: "power2.in", overwrite: true });
+  return tl
+    // The new panel waits until the old one has mostly gone, so the two texts never overlap to read.
+    .fromTo(incoming, { x: direction * distance, autoAlpha: 0 }, { x: 0, autoAlpha: 1, duration, ease: "back.out(1.4)", overwrite: true }, outgoing ? duration * 0.45 : 0)
+    .set(outgoing ? [incoming, outgoing] : [incoming], { clearProps: "x,transform" });
+}
+```
 
 ## Wiring
 
@@ -620,12 +676,14 @@ export type StateButtonOptions = {
   hold?: number;
   /** Seconds per spinner turn. */
   turn?: number;
+  /** Sparks that burst from the button on success; 0 for none. */
+  sparks?: number;
 };
 export type StateButton = {
   loading(): gsap.core.Timeline;
-  /** Finishes the spin, draws the check, announces `message`, then returns to the label. */
+  /** Finishes the spin, draws the check as the button pops and sparks burst, announces `message`, then returns to the label. */
   success(message?: string): gsap.core.Timeline;
-  /** Stops the spin, shakes, announces `message`, and returns to the label. */
+  /** Stops the spin, draws a cross, shakes, announces `message`, and returns to the label. */
   error(message?: string): gsap.core.Timeline;
   /** Straight back to the label. */
   reset(): gsap.core.Timeline;
@@ -634,12 +692,13 @@ export type StateButton = {
 
 const SPINNER = `<svg viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-dasharray="42 100"/></svg>`;
 const CHECK = `<svg viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12.5 10 17.5 19 7"/></svg>`;
+const CROSS = `<svg viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M7 7 17 17"/><path d="M17 7 7 17"/></svg>`;
 /** Swings for the error shake, narrowing to rest. */
 const SWINGS = [1, -0.8, 0.55, -0.3, 0.12, 0];
 
 export function stateButton(
   button: HTMLElement,
-  { label = button.querySelector<HTMLElement>("[data-state-label]") ?? undefined, hold = 1.4, turn = 0.8 }: StateButtonOptions = {},
+  { label = button.querySelector<HTMLElement>("[data-state-label]") ?? undefined, hold = 1.4, turn = 0.8, sparks = 8 }: StateButtonOptions = {},
 ): StateButton {
   if (!label) throw new Error("stateButton needs a [data-state-label] element inside the button");
   const target = label;
@@ -648,6 +707,7 @@ export function stateButton(
   let spin: gsap.core.Tween | undefined;
   let spinner!: HTMLElement;
   let check!: HTMLElement;
+  let cross!: HTMLElement;
   let status!: HTMLElement;
   let mark!: SVGPolylineElement;
 
@@ -677,6 +737,7 @@ export function stateButton(
     spinner = icon(SPINNER);
     check = icon(CHECK);
     mark = check.querySelector("polyline")!;
+    cross = icon(CROSS);
     status = document.createElement("span");
     status.setAttribute("role", "status");
     Object.assign(status.style, { position: "absolute", width: "1px", height: "1px", overflow: "hidden", clipPath: "inset(50%)", whiteSpace: "nowrap" });
@@ -685,7 +746,8 @@ export function stateButton(
     dispose(() => {
       runs.kill();
       spin?.kill();
-      gsap.killTweensOf([button, target, spinner, check, mark]);
+      gsap.killTweensOf([button, target, spinner, check, mark, cross, ...cross.querySelectorAll("path")]);
+      button.querySelectorAll("[data-state-spark]").forEach((spark) => spark.remove());
     });
   });
 
@@ -693,7 +755,7 @@ export function stateButton(
   /** The label returns and every icon goes. */
   const settle = (tl: gsap.core.Timeline, at: number | string) =>
     tl
-      .to([spinner, check], { autoAlpha: 0, duration: reduced ? 0 : 0.2 }, at)
+      .to([spinner, check, cross], { autoAlpha: 0, duration: reduced ? 0 : 0.2 }, at)
       .fromTo(target, { autoAlpha: 0, y: reduced ? 0 : 10 }, { autoAlpha: 1, y: 0, duration: reduced ? 0 : 0.35, ease: "back.out(1.8)" }, "<0.05")
       .call(() => button.removeAttribute("aria-busy"));
 
@@ -718,19 +780,48 @@ export function stateButton(
         .set(mark, { attr: { "stroke-dasharray": length, "stroke-dashoffset": reduced ? 0 : length } })
         .set(check, { autoAlpha: 1 })
         .to(mark, { attr: { "stroke-dashoffset": 0 }, duration: reduced ? 0 : 0.4, ease: "power2.out" });
+      if (!reduced) {
+        // The button pops as the check lands, and sparks burst from its edge.
+        const at = tl.duration() - 0.4;
+        tl.to(button, { keyframes: { scale: [1, 1.08, 0.98, 1] }, duration: 0.5, ease: "power1.out" }, at);
+        const box = button.getBoundingClientRect();
+        const reach = Math.max(box.width, box.height) / 2;
+        for (let i = 0; i < sparks; i++) {
+          const spark = document.createElement("i");
+          spark.setAttribute("aria-hidden", "true");
+          spark.dataset.stateSpark = "";
+          const angle = (i / sparks) * 360;
+          Object.assign(spark.style, {
+            position: "absolute", left: "50%", top: "50%", width: "14px", height: "2px", marginLeft: "-7px", marginTop: "-1px",
+            borderRadius: "2px", background: "currentColor", pointerEvents: "none", opacity: "0",
+          });
+          button.append(spark);
+          const [dx, dy] = [Math.cos((angle * Math.PI) / 180), Math.sin((angle * Math.PI) / 180)];
+          tl.fromTo(
+            spark,
+            { rotation: angle, x: dx * reach * 0.6, y: dy * reach * 0.35, scaleX: 0.4, opacity: 1 },
+            { x: dx * (reach + 26), y: dy * (box.height / 2 + 26), scaleX: 1.4, opacity: 0, duration: 0.55, ease: "power3.out", onComplete: () => spark.remove() },
+            at + 0.05,
+          );
+        }
+      }
       return settle(tl, `+=${hold}`);
     },
     error(message = "That didn't work. Try again.") {
       const tl = runs.next();
       status.textContent = message;
       spin?.kill();
-      tl.to(spinner, { autoAlpha: 0, duration: reduced ? 0 : 0.15 });
-      settle(tl, ">");
+      // The spinner snaps into a cross: each stroke draws in turn, then the button shakes its head.
+      const strokes = Array.from(cross.querySelectorAll("path"));
+      tl.to(spinner, { autoAlpha: 0, duration: reduced ? 0 : 0.15 })
+        .set(strokes, { attr: { "stroke-dasharray": 15, "stroke-dashoffset": reduced ? 0 : 15 } })
+        .set(cross, { autoAlpha: 1 });
       if (!reduced) {
-        const width = 8;
-        for (const swing of SWINGS) tl.to(button, { x: swing * width, duration: 0.4 / SWINGS.length, ease: "sine.inOut" }, swing === SWINGS[0] ? "<" : ">");
+        tl.to(strokes, { attr: { "stroke-dashoffset": 0 }, duration: 0.18, ease: "power2.out", stagger: 0.1 });
+        const width = 9;
+        for (const swing of SWINGS) tl.to(button, { x: swing * width, rotation: swing * 2.5, duration: 0.5 / SWINGS.length, ease: "sine.inOut" }, ">");
       }
-      return tl;
+      return settle(tl, `+=${hold * 0.6}`);
     },
     reset() {
       const tl = runs.next();
@@ -754,6 +845,7 @@ The check's stroke is drawn by its dash offset, with no plugin. The spinner turn
 | `dialogMotion` | Settled, once per `<dialog>` | `{ open, close, revert }` | `open()` shows at once; `close()` closes on the next tick |
 | `disclosure` | Settled, once per panel | `{ open, close, revert }` | Height snaps; inline height still clears once open |
 | `tabIndicator` | Settled, once tab widths are final | `{ moveTo, revert }` | Jumps onto the tab |
+| `panelSwap` | On each tab change, after the selection state | Timeline | Swaps visibility at once |
 | `stateButton` | Settled, once the button is mounted; call `loading`, `success`, `error`, or `reset` as the request runs | `{ loading, success, error, reset, revert }` | Label swaps at once, nothing spins or shakes; the status still announces |
 
 - State first, motion second, in the same task: set `aria-expanded`, `inert`, `hidden`, or `open`, then call the builder. Hang the closing state change on the returned timeline's `onComplete`, or `enterExit`'s `onClose`; every timeline completes, under reduced motion too.

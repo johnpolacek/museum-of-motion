@@ -10,7 +10,7 @@ import { hoverDistortion, ripple, scrollWave } from "../recipes/webgl/uniform-ef
 import { flight, pointerLean, scrollFlight } from "../recipes/webgl/scene-flight";
 import { particleMorph, pointerPush, scatterShape, sphereShape, textShape, type PointShape } from "../recipes/webgl/particle-morph";
 import { liquidImage } from "../recipes/webgl/liquid-image";
-import { drawText, melt, pourStream } from "../recipes/webgl/metaballs";
+import { drawText, melt } from "../recipes/webgl/metaballs";
 
 const TONES: [string, string][] = [
   ["#0b0b0b", "#2130ff"],
@@ -222,23 +222,6 @@ const meltStage = play(["Word", "Number"], ["word", "number"], "Press the button
   ),
 );
 
-/* ---------- Pour ---------- */
-
-// A stream of liquid metal runs down beside an index as the page scrolls, its head following the reader,
-// and a drop settles beside each row it reaches. The stage scrolls the page itself, as Flight does.
-const POUR_ROWS = ["Mask", "Stagger", "Explode", "Slide", "Scramble", "Glitch", "Speak", "Wave", "Pulse", "Count", "In and Out", "Cycle"];
-const pourStage = play(["Pour"], ["pour"], "Scroll the page down the index, and back up.", (text) =>
-  live(
-    text,
-    `<div class="pour-index"><div class="pour-gutter" aria-hidden="true"></div><ol class="pour-rows">${POUR_ROWS.map((name, i) => `<li><span>${two(i + 1)}</span>${name}</li>`).join("")}</ol></div>`,
-    (layer) => {
-      const stream = pourStream(layer.querySelector<HTMLElement>(".pour-gutter")!, { rows: Array.from(layer.querySelectorAll<HTMLElement>(".pour-rows li")), width: 7 });
-      return [() => stream.revert()];
-    },
-    "flow",
-  ),
-);
-
 /* ---------- Flight ---------- */
 
 /**
@@ -353,7 +336,6 @@ export const WEBGL_STAGES: Record<string, StageDef> = {
   pixels,
   flight: flightStage,
   melt: meltStage,
-  pour: pourStage,
   distort,
   "curl": scrollWaveStage,
 };
