@@ -9,6 +9,7 @@ import { pinnedScene } from "../recipes/scroll-effects";
 import { dragPull, inkText, paintReveal, pullCorner, writeOn, type Pull } from "../recipes/print-effects";
 import { lenisScroll } from "../recipes/smooth/lenis-scroll";
 import { archAt, archPath, DOOR_SHARE, type Door } from "../recipes/doorways";
+import { breathe, bump, drift, float, heartbeat, orbit, ping, watch, type Loop, type Pulse } from "../recipes/ambient";
 import { EXHIBITS } from "../../exhibits";
 
 const OPEN = "inset(0% 0% 0% 0%)";
@@ -281,6 +282,87 @@ const archUnveil = def(["Arch"], ["arch"], ["duration", "hold"], { duration: 1.6
     },
   );
 });
+
+/* ---------- Pulse ---------- */
+
+// From ambient's pulses: a beat that draws the eye, a few times, then rests. Each tab beats on arrival, and
+// its button beats it again. Nothing loops, so nothing needs a pause.
+const HEART = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5C6 16.4 2.5 13 2.5 8.8 2.5 6 4.6 4 7.2 4c1.9 0 3.6 1.1 4.8 2.8C13.2 5.1 14.9 4 16.8 4c2.6 0 4.7 2 4.7 4.8 0 4.2-3.5 7.6-9.5 11.7Z"/></svg>`;
+const BELL = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v4.5L4 17h16l-2-3.5V9a6 6 0 0 0-6-6Zm-2.5 16a2.5 2.5 0 0 0 5 0Z"/></svg>`;
+const PULSE_HTML: Record<string, string> = {
+  ping: `<div class="pulse-stage"><p class="pulse-live"><span class="pulse-dot"></span>On air</p><button type="button" class="pill pulse-again">Ping again</button></div>`,
+  heartbeat: `<div class="pulse-stage"><button type="button" class="pulse-heart" aria-pressed="true" aria-label="Liked">${HEART}</button><button type="button" class="pill pulse-again">Beat again</button></div>`,
+  badge: `<div class="pulse-stage"><span class="pulse-bell">${BELL}<b class="pulse-count" aria-live="polite">3</b></span><button type="button" class="pill pulse-again">New message</button></div>`,
+};
+const pulse = play(["Ping", "Heartbeat", "Badge"], ["ping", "heartbeat", "badge"], "Press the button to beat again.", (text, p) =>
+  live(text, PULSE_HTML[p.variation] ?? PULSE_HTML.ping!, (layer) => {
+    const again = one(layer, ".pulse-again");
+    let beat: Pulse;
+    let more: () => void;
+    const offs: Array<() => void> = [];
+    if (p.variation === "heartbeat") {
+      const heart = one(layer, ".pulse-heart");
+      beat = heartbeat(heart, { beats: 2 });
+      more = () => beat.again();
+      // The heart itself toggles the like, and beats when it is liked again.
+      const like = () => {
+        const liked = heart.getAttribute("aria-pressed") !== "true";
+        heart.setAttribute("aria-pressed", String(liked));
+        heart.setAttribute("aria-label", liked ? "Liked" : "Like");
+        if (liked) beat.again();
+      };
+      heart.addEventListener("click", like);
+      offs.push(() => heart.removeEventListener("click", like));
+    } else if (p.variation === "badge") {
+      const count = one(layer, ".pulse-count");
+      beat = bump(count);
+      more = () => {
+        count.textContent = String(Math.min(99, Number(count.textContent) + 1));
+        beat.again();
+      };
+    } else {
+      beat = ping(one(layer, ".pulse-dot"), { beats: 3 });
+      more = () => beat.again();
+    }
+    again.addEventListener("click", more);
+    return [() => again.removeEventListener("click", more), ...offs, () => beat.revert()];
+  }),
+);
+
+/* ---------- Ambient ---------- */
+
+// From ambient's loops: motion that keeps going while nothing else happens. The loops play only while the
+// stage is on screen and stop at the Pause button; under reduced motion they never start.
+const SHAPES = [
+  `<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#fff"/></svg>`,
+  `<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="#fff" stroke-width="4"/></svg>`,
+  `<svg viewBox="0 0 40 40"><rect x="4" y="4" width="32" height="32" fill="#0b0b0b"/></svg>`,
+  `<svg viewBox="0 0 40 40"><path d="M20 3 37 35H3Z" fill="#fff"/></svg>`,
+  `<svg viewBox="0 0 40 40"><path d="M4 20h32M20 4v32" stroke="#0b0b0b" stroke-width="6"/></svg>`,
+];
+const shapes = (n: number, size: (i: number) => number) =>
+  Array.from({ length: n }, (_, i) => `<i class="amb-shape" style="width:${size(i)}px;height:${size(i)}px">${SHAPES[i % SHAPES.length]}</i>`).join("");
+const AMBIENT_HTML: Record<string, string> = {
+  float: `<div class="amb-field amb-float">${shapes(7, (i) => [72, 44, 56, 64, 40, 52, 36][i]!)}</div>`,
+  drift: `<div class="amb-field amb-drift">${shapes(14, (i) => 16 + ((i * 7) % 22))}</div>`,
+  breathe: `<div class="amb-field amb-breathe"><i class="amb-ring"></i><i class="amb-ring"></i><i class="amb-core"></i></div>`,
+  orbit: `<div class="amb-field amb-orbit"><b class="amb-center">${String(EXHIBITS.find((e) => e.slug === "ambient")?.no ?? 0).padStart(2, "0")}</b>${shapes(6, () => 28)}</div>`,
+};
+const ambientStage = play(["Float", "Drift", "Breathe", "Orbit"], ["float", "drift", "breathe", "orbit"], "It keeps going while it is on screen. Pause it with the button.", (text, p) =>
+  live(text, `<div class="amb-stage" aria-hidden="true">${AMBIENT_HTML[p.variation] ?? AMBIENT_HTML.float}</div><button type="button" class="pill amb-pause">Pause</button>`, (layer) => {
+    const field = one(layer, ".amb-field");
+    const items = Array.from(field.querySelectorAll<HTMLElement>(".amb-shape"));
+    const loops: Loop[] =
+      p.variation === "drift"
+        ? [drift(field, items, { speed: 22 })]
+        : p.variation === "breathe"
+          ? [breathe(Array.from(field.querySelectorAll<HTMLElement>(".amb-ring, .amb-core")), { scale: 1.12, duration: 4 })]
+          : p.variation === "orbit"
+            ? [orbit(items, { radius: Math.min(field.clientWidth, field.clientHeight * 2.2) * 0.4, duration: 16, tilt: 0.42 })]
+            : [float(items, { distance: 18, tilt: 4, duration: 3.6 })];
+    return [watch(layer, loops, { button: layer.querySelector<HTMLButtonElement>(".amb-pause") })];
+  }),
+);
 
 /* ---------- Line draw ---------- */
 
@@ -898,6 +980,8 @@ const timeline = play(["Clock", "Scroll"], ["clock", "scroll"], TL_HINTS.clock, 
 const timelineStage: StageDef = { ...timeline, hints: TL_HINTS };
 
 export const TIME_STAGES: Record<string, StageDef> = {
+  pulse,
+  ambient: ambientStage,
   timeline: timelineStage,
   paint,
   unveil: merge([{ def: imageReveal, all: true }, { def: pourUnveil, label: "Pour", key: "pour" }, { def: archUnveil, label: "Arch", key: "arch" }]),

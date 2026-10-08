@@ -233,6 +233,29 @@ const DATA: Exhibit[] = [
     desc: "One cell at a time swaps to the next item in the pool: logos, names, figures, anything."
   },
   {
+    name: "Pulse",
+    group: "play",
+    builders: "ping, heartbeat, bump",
+    src: "ambient",
+    desc: "A beat that draws the eye, then rests: rings spread from a live dot, a heart thumps twice, a badge bumps as its count goes up.",
+    vars: [
+      "Heartbeat",
+      "Badge"
+    ]
+  },
+  {
+    name: "Ambient",
+    group: "play",
+    builders: "float, drift, breathe, orbit, watch",
+    src: "ambient",
+    desc: "Motion that keeps going while nothing else happens: shapes float, wander, breathe, or circle, only while on screen, with a pause.",
+    vars: [
+      "Drift",
+      "Breathe",
+      "Orbit"
+    ]
+  },
+  {
     name: "Curtain",
     group: "play",
     builders: "curtain, curveCover",
