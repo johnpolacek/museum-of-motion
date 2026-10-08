@@ -508,6 +508,7 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
   /* The count on its own line, then previous and next at either edge. */
   .ex .bar { flex-direction: column; gap: 10px; }
   .ex .bar nav { justify-content: space-between; }
+  .ex .bar nav .next { margin-left: auto; }
   .hero h1 { font-size: 19.5vw; }
   .names { font-size: 30px; }
   .foot .big { white-space: normal; }

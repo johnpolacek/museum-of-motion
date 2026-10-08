@@ -24,8 +24,9 @@ export default async function ExhibitPage({ params }: PageProps<"/exhibits/[slug
   if (!e) notFound();
 
   const total = EXHIBITS.length;
-  const prev = EXHIBITS[(e.no - 2 + total) % total];
-  const next = EXHIBITS[e.no % total];
+  // The first exhibit has no previous and the last has no next: the collection is a line, not a loop.
+  const prev = e.no > 1 ? EXHIBITS[e.no - 2] : undefined;
+  const next = e.no < total ? EXHIBITS[e.no] : undefined;
   const specs: [string, string][] = SPECS[e.slug] ?? [
     ["Builders", e.builders],
     ["Group", groupName(e.group)],
@@ -38,8 +39,12 @@ export default async function ExhibitPage({ params }: PageProps<"/exhibits/[slug
           {groupName(e.group)} · {two(e.no)} of {total}
         </span>
         <nav aria-label="Exhibits">
-          <TransitionLink href={`/exhibits/${prev.slug}`}>← {prev.name}</TransitionLink>
-          <TransitionLink href={`/exhibits/${next.slug}`}>{next.name} →</TransitionLink>
+          {prev && <TransitionLink href={`/exhibits/${prev.slug}`}>← {prev.name}</TransitionLink>}
+          {next && (
+            <TransitionLink href={`/exhibits/${next.slug}`} className="next">
+              {next.name} →
+            </TransitionLink>
+          )}
         </nav>
       </div>
       <h1 id="ex-h" data-intro>
