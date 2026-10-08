@@ -537,14 +537,15 @@ const DATA: Exhibit[] = [
   {
     name: "Physics",
     group: "pointer",
-    builders: "pile, slingshot, swing",
+    builders: "pile, slingshot, swing, topple",
     src: "physics-effects",
-    desc: "Things under gravity that collide and come to rest: pieces fall and heap up, bounce around a box, fly from a slingshot, or tumble through pegs into bins, and a hanging sign swings until it hangs still.",
+    desc: "Things under gravity that collide and come to rest: pieces fall and heap up, bounce around a box, fly from a slingshot, or tumble through pegs into bins, a hanging sign swings until it hangs still, and a row of dominoes topples.",
     vars: [
       "Bounce",
       "Launch",
       "Plinko",
-      "Swing"
+      "Swing",
+      "Topple"
     ]
   },
   {
@@ -587,7 +588,7 @@ const DATA: Exhibit[] = [
 
 
   {
-    name: "Card stack",
+    name: "Stack",
     group: "drag",
     builders: "flickCards",
     src: "endless-drag",
@@ -605,11 +606,11 @@ const DATA: Exhibit[] = [
     ]
   },
   {
-    name: "Pull",
+    name: "Turn",
     group: "drag",
-    builders: "pullCorner, dragPull",
+    builders: "pageTurn",
     src: "print-effects",
-    desc: "A print's corner lifts and folds back under the hand, and the sheet peels off the stack."
+    desc: "A book you leaf through: drag a page across the spine and it lifts, bends over with its shading deepening, and lands on the next spread."
   },
   {
     name: "Calm",

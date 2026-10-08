@@ -14,7 +14,7 @@ import { shake } from "../recipes/accents";
 import { dialogMotion, disclosure, enterExit, menuOverlay, panelSwap, stateButton, tabIndicator } from "../recipes/component-motion";
 import { captureLayout, captureShared, playShared } from "../recipes/layout-flip";
 import { archPolygon, shapeFlight, type DoorwayEffect } from "../recipes/doorways";
-import { burstFrom, pile, rain, slingshot, swing } from "../recipes/physics-effects";
+import { burstFrom, pile, rain, slingshot, swing, topple } from "../recipes/physics-effects";
 import { blastOff } from "../recipes/blast-off";
 import { dragGrid, dragLoop, flickCards } from "../recipes/endless-drag";
 import { attachParticleEffect, type ParticleEffectDefinition } from "../recipes/particles/attach";
@@ -922,9 +922,35 @@ const swingStage = (text: HTMLElement) =>
     },
   );
 
+// Topple: a row of dominoes. Push the first and the push runs down the row, each falling onto the next,
+// until the last lies flat and the rest lean along the row. Stand them up to go again.
+const toppleStage = (text: HTMLElement) =>
+  live(
+    text,
+    `<div class="tp"><div class="tp-row" aria-hidden="true">${Array.from({ length: 9 }, (_, i) => `<i class="tp-domino${i === 0 ? " first" : ""}"></i>`).join("")}</div><div class="pile-btns"><button type="button" class="pill" data-push>Push</button><button type="button" class="pill" data-up>Stand them up</button></div></div>`,
+    (layer) => {
+      const row = topple(all(layer, ".tp-domino"), { pull: 900, carry: 0.8 });
+      const push = () => row.push(160);
+      const up = () => row.reset();
+      // Tapping the first domino pushes it too.
+      const tap = (e: Event) => (e.target as Element).closest(".tp-domino.first") && push();
+      one(layer, "[data-push]").addEventListener("click", push);
+      one(layer, "[data-up]").addEventListener("click", up);
+      one(layer, ".tp-row").addEventListener("pointerdown", tap);
+      return [
+        () => {
+          one(layer, "[data-push]").removeEventListener("click", push);
+          one(layer, "[data-up]").removeEventListener("click", up);
+          one(layer, ".tp-row").removeEventListener("pointerdown", tap);
+        },
+        row.revert,
+      ];
+    },
+  );
+
 const physicsStage = play(
-  ["Pile", "Bounce", "Launch", "Plinko", "Swing"],
-  ["pile", "bounce", "launch", "plinko", "swing"],
+  ["Pile", "Bounce", "Launch", "Plinko", "Swing", "Topple"],
+  ["pile", "bounce", "launch", "plinko", "swing", "topple"],
   "Tap or click anywhere to drop more. Shake the heap, or clear it.",
   (text, p) =>
     p.variation === "bounce"
@@ -935,7 +961,9 @@ const physicsStage = play(
           ? plinkoStage(text)
           : p.variation === "swing"
             ? swingStage(text)
-            : pileStage(text),
+            : p.variation === "topple"
+              ? toppleStage(text)
+              : pileStage(text),
 );
 
 // Confetti: celebrations thrown from a press. Pieces arc under gravity, but nothing collides or rests: they
@@ -1174,7 +1202,7 @@ export const POINTER_STAGES: Record<string, StageDef> = {
   particles,
   physics: {
     ...physicsStage,
-    hints: { pile: "Tap or click anywhere to drop more. Shake the heap, or clear it.", bounce: "Tap, click, or press Kick to send them flying.", launch: "Drag the slingshot back and let go. Or Tab to it, aim with the arrow keys, and press Enter.", plinko: "Drop balls through the pegs. Over many, the bins fill toward a bell curve.", swing: "Drag the sign and let go, flick it, or tap it. Or Tab to it and press Enter." },
+    hints: { pile: "Tap or click anywhere to drop more. Shake the heap, or clear it.", bounce: "Tap, click, or press Kick to send them flying.", launch: "Drag the slingshot back and let go. Or Tab to it, aim with the arrow keys, and press Enter.", plinko: "Drop balls through the pegs. Over many, the bins fill toward a bell curve.", swing: "Drag the sign and let go, flick it, or tap it. Or Tab to it and press Enter.", topple: "Push the first domino, or tap it. Stand them up to go again." },
   },
   confetti,
   explode,
@@ -1186,6 +1214,6 @@ export const POINTER_STAGES: Record<string, StageDef> = {
     { def: loop, label: "Loop drift", key: "drift", variation: "drift" },
     { def: grid, label: "Grid", key: "grid" },
   ]),
-  "card-stack": deck,
+  stack: deck,
   swipe,
 };

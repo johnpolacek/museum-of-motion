@@ -6,7 +6,7 @@ import { gsap, prefersReducedMotion, ScrollTrigger, SplitText } from "../gsap";
 import { art, assemble, def, EXIT, live, merge, pinWidths, play, type StageDef } from "../stage-core";
 import { drawIn, pathLoop } from "../recipes/svg-effects";
 import { pinnedScene } from "../recipes/scroll-effects";
-import { dragPull, inkText, paintReveal, pullCorner, type Pull } from "../recipes/print-effects";
+import { inkText, pageTurn, paintReveal } from "../recipes/print-effects";
 import { lenisScroll } from "../recipes/smooth/lenis-scroll";
 import { archAt, archPath, DOOR_SHARE, type Door } from "../recipes/doorways";
 import { breathe, bump, drift, float, heartbeat, orbit, ping, watch, type Loop, type Pulse } from "../recipes/ambient";
@@ -116,58 +116,36 @@ const paint = play(["Image", "Type", "Roller"], ["image", "type", "roller"], "Pu
   ),
 );
 
-/* ---------- Pull ---------- */
+/* ---------- Turn ---------- */
 
-// A stack of prints. Grab the top sheet anywhere and drag: its corner lifts and folds back. Let go past a
-// third of the way and it peels off, showing the next; short of that it lies flat again. Enter pulls it too.
-const PULL_SHEETS = 4;
-const pullStage = play(["Pull"], ["pull"], "Drag a print to pull it off the stack, or press Enter on it.", (text) =>
+// From print effects' pageTurn: a small book that opens on 1 | 2. Drag the right page across the spine, or
+// use the buttons or arrow keys, and it turns to 3 | 4, and so on. Each page is a numbered poster page.
+const BOOK_PAGES = ["Every", "way", "a", "page", "can", "move", "and", "then", "rest", "."];
+const bookPage = (n: number) =>
+  `<span class="bk-num">${String(n).padStart(2, "0")}</span><b class="bk-word">${BOOK_PAGES[n - 1] ?? ""}</b>`;
+const turnStage = play(["Turn"], ["turn"], "Drag a page across the spine, or use the buttons or arrow keys.", (text) =>
   live(
     text,
-    `<div class="pull-stage"><div class="pull-stack">${Array.from({ length: PULL_SHEETS }, (_, i) => {
-      const n = PULL_SHEETS - i;
-      // Each sheet sits in its own turned slot, so the fold's flap, a sibling of the sheet, turns with it.
-      return `<div class="pull-slot"><figure class="pull-sheet" tabindex="-1" aria-label="Print ${n} of ${PULL_SHEETS}: drag or press Enter to pull it off">${PLATE_KEY(String(n).padStart(2, "0"))}<div class="plate-color">${PLATE_COLOR}</div></figure></div>`;
-    }).join("")}</div><button type="button" class="pill pull-reset">Restack</button></div>`,
+    `<div class="bk"><div class="bk-book" tabindex="0" role="group" aria-roledescription="book" aria-label="A book: drag a page, or use the arrow keys">
+      <div class="bk-page bk-left" data-page="first">${bookPage(1)}</div>
+      ${[2, 4, 6, 8].map((n) => `<div class="bk-leaf" data-leaf><div class="bk-page" data-front>${bookPage(n)}</div><div class="bk-page bk-left" data-back>${bookPage(n + 1)}</div></div>`).join("")}
+      <div class="bk-page" data-page="last">${bookPage(10)}</div>
+    </div>
+    <div class="bk-btns"><button type="button" class="pill" data-prev>Previous</button><span class="lab bk-at" aria-live="polite">Pages 1 and 2</span><button type="button" class="pill" data-next>Next</button></div></div>`,
     (layer) => {
-      const sheets = Array.from(layer.querySelectorAll<HTMLElement>(".pull-sheet"));
-      const reset = layer.querySelector<HTMLButtonElement>(".pull-reset")!;
-      let pulls: Pull[] = [];
-      let drags: Array<() => void> = [];
-      /** The last sheet in the stack is on top. Only it takes the pointer and focus. */
-      const arm = (index: number) => {
-        sheets.forEach((sheet, i) => {
-          sheet.tabIndex = i === index ? 0 : -1;
-          sheet.style.pointerEvents = i === index ? "auto" : "none";
-        });
-        if (index < 0) return;
-        const sheet = sheets[index]!;
-        const pull = pullCorner(sheet, { back: "#f4efe6" });
-        pulls.push(pull);
-        drags.push(
-          dragPull(sheet, pull, {
-            onPulled: () => {
-              sheet.style.visibility = "hidden";
-              arm(index - 1);
-              (index > 0 ? sheets[index - 1]! : reset).focus();
-            },
-          }),
-        );
-      };
-      const clear = () => {
-        drags.forEach((off) => off());
-        pulls.forEach((pull) => pull.revert());
-        drags = [];
-        pulls = [];
-        sheets.forEach((sheet) => sheet.style.removeProperty("visibility"));
-      };
-      const restack = () => {
-        clear();
-        arm(sheets.length - 1);
-      };
-      arm(sheets.length - 1);
-      reset.addEventListener("click", restack);
-      return [() => reset.removeEventListener("click", restack), clear];
+      const at = one(layer, ".bk-at");
+      const book = pageTurn(one(layer, ".bk-book"), { duration: 0.9, onTurn: (s) => (at.textContent = `Pages ${s * 2 + 1} and ${s * 2 + 2}`) });
+      const prev = () => book.previous();
+      const next = () => book.next();
+      one(layer, "[data-prev]").addEventListener("click", prev);
+      one(layer, "[data-next]").addEventListener("click", next);
+      return [
+        () => {
+          one(layer, "[data-prev]").removeEventListener("click", prev);
+          one(layer, "[data-next]").removeEventListener("click", next);
+        },
+        book.revert,
+      ];
     },
   ),
 );
@@ -965,7 +943,7 @@ export const TIME_STAGES: Record<string, StageDef> = {
   paint,
   unveil: merge([{ def: imageReveal, all: true }, { def: pourUnveil, label: "Pour", key: "pour" }, { def: archUnveil, label: "Arch", key: "arch" }]),
   path: merge([{ def: pathFollow, all: true }, { def: textOnPath, all: true }, { def: lineDraw, label: "Draw", key: "draw" }]),
-  pull: pullStage,
+  turn: turnStage,
   count: merge([{ def: countUp, label: "Count-up", key: "count" }, { def: odometer, label: "Odometer", key: "odometer" }]),
   marquee,
   cycle: logoCycle,

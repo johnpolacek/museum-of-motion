@@ -436,3 +436,133 @@ export function dragPull(sheet: HTMLElement, pull: Pull, { threshold = 0.35, onP
   };
 }
 
+export type PageTurnOptions = {
+  /** Seconds a full turn takes when it is not dragged. */
+  duration?: number;
+  /** Called with the index of the left page now showing, 0 for the first spread. */
+  onTurn?: (spread: number) => void;
+};
+
+export type PageTurn = {
+  next(): gsap.core.Timeline | null;
+  previous(): gsap.core.Timeline | null;
+  revert: Teardown;
+};
+
+export function pageTurn(book: HTMLElement, { duration = 0.9, onTurn }: PageTurnOptions = {}): PageTurn {
+  const leaves = Array.from(book.querySelectorAll<HTMLElement>(":scope > [data-leaf]"));
+  const faces = leaves.flatMap((leaf) => [leaf.querySelector<HTMLElement>("[data-front]")!, leaf.querySelector<HTMLElement>("[data-back]")!]);
+  const saved = [...leaves, ...faces].map((el) => [el, el.getAttribute("style")] as const);
+  const reduced = prefersReducedMotion();
+  // The leaf turns about its left edge, the spine, with depth; each face hides when turned away.
+  gsap.set(leaves, { transformOrigin: "0% 50%", transformPerspective: 1800, transformStyle: "preserve-3d" });
+  faces.forEach((face, i) => {
+    face.style.backfaceVisibility = "hidden";
+    (face.style as CSSStyleDeclaration & { webkitBackfaceVisibility: string }).webkitBackfaceVisibility = "hidden";
+    if (i % 2) gsap.set(face, { rotationY: 180 });
+  });
+  // A shade on each face, darkest as the leaf stands on edge.
+  const shades = faces.map((face, i) => {
+    const shade = document.createElement("i");
+    shade.setAttribute("aria-hidden", "true");
+    Object.assign(shade.style, {
+      position: "absolute", inset: "0", pointerEvents: "none", opacity: "0",
+      background: `linear-gradient(${i % 2 ? "270deg" : "90deg"}, rgb(0 0 0 / 0.35), rgb(0 0 0 / 0) 70%)`,
+    });
+    face.append(shade);
+    return shade;
+  });
+  /** Each leaf's angle: 0 lying on the right, -180 turned onto the left. */
+  const angles = leaves.map(() => 0);
+  let turned = 0;
+  const stack = () =>
+    leaves.forEach((leaf, i) => {
+      // Unturned leaves: the next to turn on top. Turned ones: the latest on top. The moving one above all.
+      leaf.style.zIndex = String(angles[i]! !== 0 && angles[i]! !== -180 ? 100 : i < turned ? 10 + i : 50 - i);
+    });
+  const draw = (i: number, angle: number) => {
+    angles[i] = angle;
+    gsap.set(leaves[i]!, { rotationY: angle });
+    const lift = Math.sin((-angle * Math.PI) / 180);
+    gsap.set([shades[i * 2]!, shades[i * 2 + 1]!], { opacity: lift * 0.9 });
+  };
+  stack();
+  const settle = (i: number, to: 0 | -180, seconds: number) => {
+    const state = { angle: angles[i]! };
+    return gsap.to(state, {
+      angle: to,
+      duration: reduced ? 0 : seconds,
+      ease: "power2.inOut",
+      overwrite: true,
+      onUpdate: () => (draw(i, state.angle), stack()),
+      onComplete: () => {
+        draw(i, to);
+        stack();
+      },
+    });
+  };
+  const turnTo = (forward: boolean) => {
+    const i = forward ? turned : turned - 1;
+    if (i < 0 || i >= leaves.length) return null;
+    turned += forward ? 1 : -1;
+    onTurn?.(turned);
+    const tl = gsap.timeline();
+    tl.add(settle(i, forward ? -180 : 0, duration * (forward ? 1 + angles[i]! / 180 : -angles[i]! / 180) || duration));
+    return tl;
+  };
+  const aborter = new AbortController();
+  const on = { signal: aborter.signal };
+  let held: { i: number; id: number; spine: number; width: number } | undefined;
+  book.style.touchAction = "pan-y";
+  book.addEventListener("pointerdown", (event) => {
+    const box = book.getBoundingClientRect();
+    const spine = box.left + box.width / 2;
+    // The right half lifts the next leaf, the left half the last turned one.
+    const i = event.clientX >= spine ? turned : turned - 1;
+    if (i < 0 || i >= leaves.length) return;
+    held = { i, id: event.pointerId, spine, width: box.width / 2 };
+    book.setPointerCapture(event.pointerId);
+    gsap.killTweensOf(leaves[i]!);
+  }, on);
+  book.addEventListener("pointermove", (event) => {
+    if (!held || event.pointerId !== held.id) return;
+    // The page's edge follows the pointer: right edge at 0, the spine at -90, the left edge at -180.
+    const x = gsap.utils.clamp(-1, 1, (event.clientX - held.spine) / held.width);
+    draw(held.i, (-Math.acos(x) * 180) / Math.PI);
+    stack();
+  }, on);
+  const release = (event: PointerEvent) => {
+    if (!held || event.pointerId !== held.id) return;
+    const { i } = held;
+    held = undefined;
+    const over = angles[i]! < -90;
+    const wasTurned = i < turned;
+    if (over && !wasTurned) {
+      turned += 1;
+      onTurn?.(turned);
+    } else if (!over && wasTurned) {
+      turned -= 1;
+      onTurn?.(turned);
+    }
+    settle(i, over ? -180 : 0, 0.45);
+  };
+  book.addEventListener("pointerup", release, on);
+  book.addEventListener("pointercancel", release, on);
+  book.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+    event.preventDefault();
+    turnTo(event.key === "ArrowRight");
+  }, on);
+  return {
+    next: () => turnTo(true),
+    previous: () => turnTo(false),
+    revert() {
+      aborter.abort();
+      gsap.killTweensOf(leaves);
+      shades.forEach((shade) => shade.remove());
+      saved.forEach(([el, style]) => (style === null ? el.removeAttribute("style") : el.setAttribute("style", style)));
+      book.style.removeProperty("touch-action");
+    },
+  };
+}
+

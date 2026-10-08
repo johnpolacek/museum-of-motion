@@ -489,6 +489,162 @@ export function dragPull(sheet: HTMLElement, pull: Pull, { threshold = 0.35, onP
 
 The flap's shading is a gradient of the back color toward a little black, so the fold reads as a curl in light; pass a `back` from the palette. The sheet's content never changes; only its clip does. Reduced motion: drags still follow the hand, and a release or key press jumps to the end.
 
+## pageTurn
+
+A book you leaf through. It opens on a spread, such as 1 | 2. Drag the right page across the spine, or press the right arrow, and the leaf lifts, bends over in 3D with its shading deepening, and lands to show 3 | 4. Dragging the left page back, or the left arrow, turns it back. Released short of the spine, a page falls back where it was.
+
+Each leaf is one element with two faces: its front shows on the right before it turns, its back on the left after. The first left page and the last right page are plain pages that never move. Leaves stack by their order: the next to turn is on top.
+
+```html
+<div class="book" tabindex="0" aria-label="A book: drag a page, or use the arrow keys">
+  <div class="page" data-page="first">1</div>
+  <div data-leaf><div data-front>2</div><div data-back>3</div></div>
+  <div data-leaf><div data-front>4</div><div data-back>5</div></div>
+  <div class="page" data-page="last">6</div>
+</div>
+```
+
+```css
+.book { position: relative; display: grid; grid-template-columns: 1fr 1fr; }
+.book > [data-page="first"] { grid-column: 1; }
+.book > [data-page="last"], .book > [data-leaf] { grid-column: 2; grid-row: 1; }
+.book [data-front], .book [data-back] { position: absolute; inset: 0; }
+```
+
+```ts
+export type PageTurnOptions = {
+  /** Seconds a full turn takes when it is not dragged. */
+  duration?: number;
+  /** Called with the index of the left page now showing, 0 for the first spread. */
+  onTurn?: (spread: number) => void;
+};
+
+export type PageTurn = {
+  next(): gsap.core.Timeline | null;
+  previous(): gsap.core.Timeline | null;
+  revert: Teardown;
+};
+
+export function pageTurn(book: HTMLElement, { duration = 0.9, onTurn }: PageTurnOptions = {}): PageTurn {
+  const leaves = Array.from(book.querySelectorAll<HTMLElement>(":scope > [data-leaf]"));
+  const faces = leaves.flatMap((leaf) => [leaf.querySelector<HTMLElement>("[data-front]")!, leaf.querySelector<HTMLElement>("[data-back]")!]);
+  const saved = [...leaves, ...faces].map((el) => [el, el.getAttribute("style")] as const);
+  const reduced = prefersReducedMotion();
+  // The leaf turns about its left edge, the spine, with depth; each face hides when turned away.
+  gsap.set(leaves, { transformOrigin: "0% 50%", transformPerspective: 1800, transformStyle: "preserve-3d" });
+  faces.forEach((face, i) => {
+    face.style.backfaceVisibility = "hidden";
+    (face.style as CSSStyleDeclaration & { webkitBackfaceVisibility: string }).webkitBackfaceVisibility = "hidden";
+    if (i % 2) gsap.set(face, { rotationY: 180 });
+  });
+  // A shade on each face, darkest as the leaf stands on edge.
+  const shades = faces.map((face, i) => {
+    const shade = document.createElement("i");
+    shade.setAttribute("aria-hidden", "true");
+    Object.assign(shade.style, {
+      position: "absolute", inset: "0", pointerEvents: "none", opacity: "0",
+      background: `linear-gradient(${i % 2 ? "270deg" : "90deg"}, rgb(0 0 0 / 0.35), rgb(0 0 0 / 0) 70%)`,
+    });
+    face.append(shade);
+    return shade;
+  });
+  /** Each leaf's angle: 0 lying on the right, -180 turned onto the left. */
+  const angles = leaves.map(() => 0);
+  let turned = 0;
+  const stack = () =>
+    leaves.forEach((leaf, i) => {
+      // Unturned leaves: the next to turn on top. Turned ones: the latest on top. The moving one above all.
+      leaf.style.zIndex = String(angles[i]! !== 0 && angles[i]! !== -180 ? 100 : i < turned ? 10 + i : 50 - i);
+    });
+  const draw = (i: number, angle: number) => {
+    angles[i] = angle;
+    gsap.set(leaves[i]!, { rotationY: angle });
+    const lift = Math.sin((-angle * Math.PI) / 180);
+    gsap.set([shades[i * 2]!, shades[i * 2 + 1]!], { opacity: lift * 0.9 });
+  };
+  stack();
+  const settle = (i: number, to: 0 | -180, seconds: number) => {
+    const state = { angle: angles[i]! };
+    return gsap.to(state, {
+      angle: to,
+      duration: reduced ? 0 : seconds,
+      ease: "power2.inOut",
+      overwrite: true,
+      onUpdate: () => (draw(i, state.angle), stack()),
+      onComplete: () => {
+        draw(i, to);
+        stack();
+      },
+    });
+  };
+  const turnTo = (forward: boolean) => {
+    const i = forward ? turned : turned - 1;
+    if (i < 0 || i >= leaves.length) return null;
+    turned += forward ? 1 : -1;
+    onTurn?.(turned);
+    const tl = gsap.timeline();
+    tl.add(settle(i, forward ? -180 : 0, duration * (forward ? 1 + angles[i]! / 180 : -angles[i]! / 180) || duration));
+    return tl;
+  };
+  const aborter = new AbortController();
+  const on = { signal: aborter.signal };
+  let held: { i: number; id: number; spine: number; width: number } | undefined;
+  book.style.touchAction = "pan-y";
+  book.addEventListener("pointerdown", (event) => {
+    const box = book.getBoundingClientRect();
+    const spine = box.left + box.width / 2;
+    // The right half lifts the next leaf, the left half the last turned one.
+    const i = event.clientX >= spine ? turned : turned - 1;
+    if (i < 0 || i >= leaves.length) return;
+    held = { i, id: event.pointerId, spine, width: box.width / 2 };
+    book.setPointerCapture(event.pointerId);
+    gsap.killTweensOf(leaves[i]!);
+  }, on);
+  book.addEventListener("pointermove", (event) => {
+    if (!held || event.pointerId !== held.id) return;
+    // The page's edge follows the pointer: right edge at 0, the spine at -90, the left edge at -180.
+    const x = gsap.utils.clamp(-1, 1, (event.clientX - held.spine) / held.width);
+    draw(held.i, (-Math.acos(x) * 180) / Math.PI);
+    stack();
+  }, on);
+  const release = (event: PointerEvent) => {
+    if (!held || event.pointerId !== held.id) return;
+    const { i } = held;
+    held = undefined;
+    const over = angles[i]! < -90;
+    const wasTurned = i < turned;
+    if (over && !wasTurned) {
+      turned += 1;
+      onTurn?.(turned);
+    } else if (!over && wasTurned) {
+      turned -= 1;
+      onTurn?.(turned);
+    }
+    settle(i, over ? -180 : 0, 0.45);
+  };
+  book.addEventListener("pointerup", release, on);
+  book.addEventListener("pointercancel", release, on);
+  book.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+    event.preventDefault();
+    turnTo(event.key === "ArrowRight");
+  }, on);
+  return {
+    next: () => turnTo(true),
+    previous: () => turnTo(false),
+    revert() {
+      aborter.abort();
+      gsap.killTweensOf(leaves);
+      shades.forEach((shade) => shade.remove());
+      saved.forEach(([el, style]) => (style === null ? el.removeAttribute("style") : el.setAttribute("style", style)));
+      book.style.removeProperty("touch-action");
+    },
+  };
+}
+```
+
+Pair the arrows with visible Previous and Next buttons for touch and pointer visitors who will not drag, and announce the spread, such as "Pages 3 and 4", in a live region from `onTurn`.
+
 ## Controller contract
 
 | Builder | Phase | Returns | Reduced motion |
@@ -498,6 +654,7 @@ The flap's shading is a gradient of the back color toward a little black, so the
 | `registrationSlip` | Intro, after the heading's font has loaded | `{ timeline, revert }` | Empty timeline; no copy |
 | `writeOn` | Intro; target hidden by the pre-paint marker until built | `{ timeline, revert }` | Empty timeline; text shows |
 | `pullCorner`, `dragPull` | Settled, once the sheet has its size | `{ set, progress, to, revert }`, teardown | Drags follow the hand; releases jump |
+| `pageTurn` | Settled, once the book has its size | `{ next, previous, revert }` | Drags follow the hand; turns and releases jump |
 
 - Each intro builder runs once and leaves nothing behind at rest: the cover, the masks, and the copy are removed when their timeline ends. `pullCorner` holds its flap until reverted.
 - `paintReveal` draws on the CPU, a few hundred thousand pixels per changed step. Keep it to one or two at a time, and to intros, not scroll scrubbing on long pages.

@@ -720,6 +720,134 @@ export function swing(sign: HTMLElement, { damping = 0.55, pull = 30, limit = 75
 }
 ```
 
+## topple
+
+A row of dominoes. Push the first and it tips over, strikes the next, and the push runs down the row; each fallen piece comes to rest leaning on the one beyond, and the last lies flat. Each domino turns about its bottom right corner. Only the one falling freely is stepped by gravity; every domino behind it is placed to lean exactly against its neighbor, so the row never passes through itself.
+
+Lay the dominoes out in CSS as a row of upright blocks on one floor, left to right, with gaps narrower than their height. Make the first a button, or give the row a button, to push.
+
+```ts
+export type ToppleOptions = {
+  /** Angular pull in degrees per second², at the top of a domino. Higher falls faster. */
+  pull?: number;
+  /** Share of the falling domino's speed passed to the next on contact. */
+  carry?: number;
+};
+
+export type Topple = {
+  /** Tips the first domino over with an angular speed in degrees per second. */
+  push(speed?: number): void;
+  /** Stands every domino back up. */
+  reset(): gsap.core.Tween;
+  revert: () => void;
+};
+
+export function topple(dominoes: HTMLElement[], { pull = 900, carry = 0.75 }: ToppleOptions = {}): Topple {
+  const reduced = prefersReducedMotion();
+  const n = dominoes.length;
+  gsap.set(dominoes, { transformOrigin: "100% 100%" });
+  // Geometry from layout boxes, which rotation never changes: x of each left edge, and each size.
+  const geo = () => dominoes.map((d) => ({ x: d.offsetLeft, w: d.offsetWidth, h: d.offsetHeight }));
+  const deg = Math.PI / 180;
+  const angles = dominoes.map(() => 0);
+  let lead = -1;
+  let speed = 0;
+  let running = false;
+  const set = (i: number, a: number) => {
+    angles[i] = a;
+    gsap.set(dominoes[i]!, { rotation: a });
+  };
+  /**
+   * How far domino i must lean to rest its top right corner against domino i + 1, leaning at `next`.
+   * Found by halving: the gap from the corner to the next one's left face shrinks as i leans further.
+   */
+  const leanOn = (i: number, next: number) => {
+    const g = geo();
+    const a = g[i]!;
+    const b = g[i + 1]!;
+    const pivot = { x: a.x + a.w, y: 0 };
+    const nPivot = { x: b.x + b.w, y: 0 };
+    const p = next * deg;
+    // The next domino's left face: through its bottom left corner, pointing up its side.
+    const corner = { x: nPivot.x - b.w * Math.cos(p), y: b.w * Math.sin(p) };
+    const normal = { x: -Math.cos(p), y: Math.sin(p) };
+    const gap = (lean: number) => {
+      const r = lean * deg;
+      const top = { x: pivot.x + a.h * Math.sin(r), y: a.h * Math.cos(r) };
+      return -((top.x - corner.x) * normal.x + (top.y - corner.y) * normal.y);
+    };
+    let [lo, hi] = [0, 90];
+    if (gap(hi) < 0) return 90;
+    for (let k = 0; k < 24; k++) {
+      const mid = (lo + hi) / 2;
+      if (gap(mid) < 0) lo = mid;
+      else hi = mid;
+    }
+    return lo;
+  };
+  /** Every domino behind the falling one leans on its neighbor. */
+  const lean = () => {
+    for (let i = lead - 1; i >= 0; i--) set(i, leanOn(i, angles[i + 1]!));
+  };
+  const step = (_time: number, deltaMs: number) => {
+    const h = Math.min(deltaMs, 32) / 1000;
+    const g = geo()[lead]!;
+    // A tipping block: the further over, the harder gravity pulls it down.
+    speed += pull * (200 / g.h) * Math.sin(Math.max(angles[lead]!, 2) * deg) * h;
+    let next = angles[lead]! + speed * h;
+    // Striking the next domino hands the push on.
+    if (lead < n - 1 && leanOn(lead, angles[lead + 1]!) <= next) {
+      next = leanOn(lead, angles[lead + 1]!);
+      set(lead, next);
+      lead += 1;
+      speed *= carry;
+    } else if (next >= 90) {
+      set(lead, 90);
+      lean();
+      stop();
+      return;
+    } else set(lead, next);
+    lean();
+  };
+  const stop = () => {
+    running = false;
+    gsap.ticker.remove(step);
+  };
+  return {
+    push(start = 120) {
+      if (lead >= 0) return;
+      lead = 0;
+      speed = start;
+      if (reduced) {
+        // Straight to the end: the last flat, the rest leaning back along the row.
+        lead = n - 1;
+        set(lead, 90);
+        lean();
+        return;
+      }
+      running = true;
+      gsap.ticker.add(step);
+    },
+    reset() {
+      stop();
+      lead = -1;
+      const from = [...angles];
+      angles.fill(0);
+      return gsap.fromTo(
+        dominoes,
+        { rotation: (i: number) => from[i]! },
+        { rotation: 0, duration: reduced ? 0 : 0.5, ease: "back.out(1.6)", stagger: { each: 0.04, from: "end" }, overwrite: true },
+      );
+    },
+    revert() {
+      if (running) stop();
+      gsap.killTweensOf(dominoes);
+      gsap.set(dominoes, { clearProps: "rotation,transform,transformOrigin" });
+    },
+  };
+}
+```
+
 ## Wiring
 
 ```ts
@@ -744,6 +872,7 @@ runs.forEach((confetti) => confetti.stop());
 | `pile` | Once the box is mounted and sized | `{ drop, shake, launch, clear, stop, gravity }` | Every call does nothing; no pieces, no ticker |
 | `slingshot` | Settled, with a pile and its handle mounted | Teardown | Does nothing; the handle is an ordinary button |
 | `swing` | Settled, once the sign is placed | `{ push, revert }` | Does nothing; the sign hangs still |
+| `topple` | Settled, once the row is laid out | `{ push, reset, revert }` | A push lays the row down at once; reset stands it up at once |
 
 - The layer belongs to the persistent shell; a run never creates or removes it.
 - Never gate an action on `finished`: navigation, submission, and focus move on at once.
