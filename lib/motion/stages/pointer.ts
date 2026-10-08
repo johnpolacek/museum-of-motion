@@ -7,7 +7,6 @@ import { characters } from "./text";
 import { beadUnderline, directionalFill, imageZoom, jelly, pourFill, textRoll, underlineSweep } from "../recipes/hover-effects";
 import { hoverPreview } from "../recipes/media-effects";
 import { cursorFollower, dragTrack, imageTrail, magnetic, momentumHover, proximity, spotlight, swipeDismiss, tilt } from "../recipes/pointer-effects";
-import { sortable } from "../recipes/sortable";
 import { COUNT_WORDS } from "../../exhibits";
 import { morphSequence, morphToggle } from "../recipes/svg-effects";
 import { pressFeedback } from "../recipes/press-feedback";
@@ -15,7 +14,7 @@ import { shake } from "../recipes/accents";
 import { dialogMotion, disclosure, enterExit, menuOverlay, panelSwap, stateButton, tabIndicator } from "../recipes/component-motion";
 import { captureLayout, captureShared, playShared } from "../recipes/layout-flip";
 import { archPolygon, shapeFlight, type DoorwayEffect } from "../recipes/doorways";
-import { burstFrom, pile, rain, slingshot } from "../recipes/physics-effects";
+import { burstFrom, pile, rain, slingshot, swing } from "../recipes/physics-effects";
 import { blastOff } from "../recipes/blast-off";
 import { dragGrid, dragLoop, flickCards } from "../recipes/endless-drag";
 import { attachParticleEffect, type ParticleEffectDefinition } from "../recipes/particles/attach";
@@ -837,11 +836,106 @@ const launchStage = (text: HTMLElement) =>
     "piled",
   );
 
+// Plinko: balls fall through a triangle of pegs, knocked left or right at each, and stack in bins below.
+// Drop one at a time or a handful; over many, the bins fill toward a bell curve.
+const PLINKO_ROWS = 8;
+const plinkoStage = (text: HTMLElement) =>
+  live(
+    text,
+    `<div class="pile-box plinko-box" aria-hidden="true"></div><div class="pile-btns"><button type="button" class="pill" data-drop>Drop one</button><button type="button" class="pill" data-drop-many>Drop ten</button><button type="button" class="pill" data-clear>Clear</button></div>`,
+    (layer) => {
+      const box = one(layer, ".pile-box");
+      // The board is exactly as wide as the bins, so its sides are the outer walls and no ball escapes.
+      const fit = () => {
+        const gap = Math.min((layer.clientWidth * 0.92) / (PLINKO_ROWS + 3), (layer.clientHeight * 0.5) / PLINKO_ROWS);
+        const width = Math.round(gap * (PLINKO_ROWS + 3));
+        Object.assign(box.style, { width: `${width}px`, left: `calc(50% - ${width / 2}px)`, right: "auto" });
+      };
+      fit();
+      // Pegs in a triangle under the drop point, and bin walls between the bottom row's gaps.
+      const layout = () => {
+        const w = box.clientWidth;
+        const h = box.clientHeight;
+        const gap = w / (PLINKO_ROWS + 3);
+        // Below the buttons, so balls are seen entering the pegs.
+        const top = h * 0.24;
+        const pegs = Array.from({ length: PLINKO_ROWS }, (_, row) =>
+          Array.from({ length: row + 3 }, (_, i) => ({ x: w / 2 + (i - (row + 2) / 2) * gap, y: top + row * gap, r: 4 })),
+        ).flat();
+        const walls = Array.from({ length: PLINKO_ROWS + 4 }, (_, i) => w / 2 + (i - (PLINKO_ROWS + 3) / 2) * gap);
+        return { pegs, walls, wallHeight: h - (top + PLINKO_ROWS * gap) };
+      };
+      const draw = () => {
+        const { pegs, walls, wallHeight } = layout();
+        box.querySelectorAll(".plinko-peg, .plinko-wall").forEach((el) => el.remove());
+        for (const peg of pegs) {
+          const dot = document.createElement("i");
+          dot.className = "plinko-peg";
+          Object.assign(dot.style, { left: `${peg.x - peg.r}px`, top: `${peg.y - peg.r}px`, width: `${peg.r * 2}px`, height: `${peg.r * 2}px` });
+          box.append(dot);
+        }
+        for (const x of walls) {
+          const wall = document.createElement("i");
+          wall.className = "plinko-wall";
+          Object.assign(wall.style, { left: `${x - 1}px`, height: `${wallHeight}px` });
+          box.append(wall);
+        }
+      };
+      draw();
+      const resize = new ResizeObserver(() => (fit(), draw()));
+      resize.observe(layer);
+      const ball = document.createElement("span");
+      Object.assign(ball.style, { width: "14px", height: "14px", borderRadius: "50%", background: "#fff" });
+      const balls = pile(box, { pieces: [ball], bounce: 0.35, grip: 0.9, pegs: () => layout().pegs, walls: () => layout().walls, wallHeight: layout().wallHeight });
+      const dropOne = () => balls.launch(box.clientWidth / 2 + gsap.utils.random(-3, 3), -10, gsap.utils.random(-15, 15), 0);
+      let timers: number[] = [];
+      const dropMany = () => {
+        for (let i = 0; i < 10; i++) timers.push(window.setTimeout(dropOne, i * 160));
+      };
+      const clear = () => balls.clear();
+      const buttons: Array<[string, () => void]> = [["[data-drop]", dropOne], ["[data-drop-many]", dropMany], ["[data-clear]", clear]];
+      buttons.forEach(([sel, f]) => one(layer, sel).addEventListener("click", f));
+      return [
+        () => {
+          buttons.forEach(([sel, f]) => one(layer, sel).removeEventListener("click", f));
+          timers.forEach(clearTimeout);
+          timers = [];
+          resize.disconnect();
+        },
+        balls.stop,
+      ];
+    },
+    "piled",
+  );
+
+// Swing: a sign hangs from a hook. Drag it and let go, flick it, or tap it, and it swings back and forth,
+// each swing smaller, until it hangs still. Tab to it and press Enter, or the arrows, to push it.
+const swingStage = (text: HTMLElement) =>
+  live(
+    text,
+    `<div class="swing-rig"><i class="swing-hook" aria-hidden="true"></i><button type="button" class="swing-sign" aria-label="Open sign: drag, flick, or press Enter to swing it"><svg class="swing-strings" viewBox="0 0 200 60" aria-hidden="true"><path d="M100 0 20 60M100 0 180 60" stroke="#fff" stroke-width="2" fill="none"/></svg><span class="swing-plate">Open</span></button></div>`,
+    (layer) => {
+      const s = swing(one(layer, ".swing-sign"), { damping: 0.5, pull: 26 });
+      // It arrives with a nudge, so it is plainly a thing that swings.
+      const nudge = window.setTimeout(() => s.push(90), 500);
+      return [() => clearTimeout(nudge), s.revert];
+    },
+  );
+
 const physicsStage = play(
-  ["Pile", "Bounce", "Launch"],
-  ["pile", "bounce", "launch"],
+  ["Pile", "Bounce", "Launch", "Plinko", "Swing"],
+  ["pile", "bounce", "launch", "plinko", "swing"],
   "Tap or click anywhere to drop more. Shake the heap, or clear it.",
-  (text, p) => (p.variation === "bounce" ? bounceStage(text) : p.variation === "launch" ? launchStage(text) : pileStage(text)),
+  (text, p) =>
+    p.variation === "bounce"
+      ? bounceStage(text)
+      : p.variation === "launch"
+        ? launchStage(text)
+        : p.variation === "plinko"
+          ? plinkoStage(text)
+          : p.variation === "swing"
+            ? swingStage(text)
+            : pileStage(text),
 );
 
 // Confetti: celebrations thrown from a press. Pieces arc under gravity, but nothing collides or rests: they
@@ -928,26 +1022,14 @@ const explode = merge([
   { label: "Page", key: "page", def: blastLoop },
 ]);
 
-/* ---------- Sortable ---------- */
-
-const sortList = play(["Sortable"], ["sort"], "Drag a handle to reorder. Or Tab to a handle: Space, arrows, Space.", (text) =>
-  live(
-    text,
-    `<p id="sort-help" hidden>Press Space to pick up, arrow keys to move, Space to drop, Escape to cancel.</p><ol class="sorts" aria-label="Exhibits to see first">${NAMES.slice(0, 5)
-      .map((n) => `<li data-sortable-item><button type="button" class="sort-handle" data-sortable-handle aria-describedby="sort-help" aria-label="Move ${n}"><span aria-hidden="true">⠿</span></button><span data-sortable-name>${n}</span></li>`)
-      .join("")}</ol>`,
-    (layer) => [sortable(one(layer, ".sorts")).revert],
-  ),
-);
-
-/* ---------- Swipe to dismiss ---------- */
+/* ---------- Swipe ---------- */
 
 const NOTES = ["Mask is back on view", "Two new exhibits this week", "Your tour starts at noon", "The gift shop is open late"];
 
-const swipe = play(["Swipe to dismiss"], ["swipe"], "Drag a note sideways, or flick it. Tab to one and press Delete.", (text) =>
+const swipe = play(["Slide", "Tilt", "Fold"], ["slide", "tilt", "fold"], "Drag a note sideways, or flick it. Tab to one and press Delete.", (text, p) =>
   live(
     text,
-    `<ul class="swipes" aria-label="Notes">${NOTES.map((n) => `<li class="swipe-note" tabindex="0" data-swipe><span>${n}</span><button type="button" class="swipe-x" data-swipe-dismiss aria-label="Dismiss ${n}">×</button></li>`).join("")}</ul><button type="button" class="pill swipe-reset" hidden>Bring them back</button>`,
+    `<ul class="swipes is-${p.variation}" aria-label="Notes">${NOTES.map((n) => `<li class="swipe-note" tabindex="0" data-swipe>${p.variation === "tilt" ? '<b class="swipe-stamp keep" data-swipe-label="1" aria-hidden="true">Keep</b><b class="swipe-stamp toss" data-swipe-label="-1" aria-hidden="true">Toss</b>' : ""}<span>${n}</span><button type="button" class="swipe-x" data-swipe-dismiss aria-label="Dismiss ${n}">×</button></li>`).join("")}</ul><button type="button" class="pill swipe-reset" hidden>Bring them back</button>`,
     (layer) => {
       const reset = one<HTMLButtonElement>(layer, ".swipe-reset");
       let swipes: ReturnType<typeof swipeDismiss>[] = [];
@@ -956,6 +1038,7 @@ const swipe = play(["Swipe to dismiss"], ["swipe"], "Drag a note sideways, or fl
         left = NOTES.length;
         swipes = all(layer, ".swipe-note").map((note) =>
           swipeDismiss(note, {
+            look: p.variation === "tilt" ? "tilt" : p.variation === "fold" ? "fold" : "slide",
             onDismiss: () => {
               left -= 1;
               // Focus moves on to the next note, or to the reset when none are left.
@@ -1091,7 +1174,7 @@ export const POINTER_STAGES: Record<string, StageDef> = {
   particles,
   physics: {
     ...physicsStage,
-    hints: { pile: "Tap or click anywhere to drop more. Shake the heap, or clear it.", bounce: "Tap, click, or press Kick to send them flying.", launch: "Drag the slingshot back and let go. Or Tab to it, aim with the arrow keys, and press Enter." },
+    hints: { pile: "Tap or click anywhere to drop more. Shake the heap, or clear it.", bounce: "Tap, click, or press Kick to send them flying.", launch: "Drag the slingshot back and let go. Or Tab to it, aim with the arrow keys, and press Enter.", plinko: "Drop balls through the pegs. Over many, the bins fill toward a bell curve.", swing: "Drag the sign and let go, flick it, or tap it. Or Tab to it and press Enter." },
   },
   confetti,
   explode,
@@ -1104,6 +1187,5 @@ export const POINTER_STAGES: Record<string, StageDef> = {
     { def: grid, label: "Grid", key: "grid" },
   ]),
   "card-stack": deck,
-  sortable: sortList,
-  "swipe-to-dismiss": swipe,
+  swipe,
 };

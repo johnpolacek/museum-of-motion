@@ -251,6 +251,11 @@ export type PileOptions = {
   grip?: number;
   /** The box's top edge is solid too, so pieces thrown up bounce back down instead of leaving and falling in again. */
   ceiling?: boolean;
+  /** Fixed round pegs that pieces bounce off, in the box's pixels. A function, so they follow a resize. */
+  pegs?: () => Array<{ x: number; y: number; r: number }>;
+  /** Fixed upright walls standing on the floor, as x positions in the box's pixels, `wallHeight` tall: bins. */
+  walls?: () => number[];
+  wallHeight?: number;
 };
 
 export type Pile = {
@@ -286,7 +291,10 @@ const REST_SPEED = 25;
 /** Still frames before a piece sleeps. Sleeping stops the buzz of a heap pushing back against gravity. */
 const SLEEP = 20;
 
-export function pile(box: HTMLElement, { pieces, gravity = 2600, bounce = 0.42, grip = 0.97, ceiling = false }: PileOptions): Pile {
+export function pile(
+  box: HTMLElement,
+  { pieces, gravity = 2600, bounce = 0.42, grip = 0.97, ceiling = false, pegs, walls, wallHeight = 0 }: PileOptions,
+): Pile {
   if (prefersReducedMotion()) return { drop: () => {}, shake: () => {}, launch: () => {}, clear: () => {}, stop: () => {}, gravity };
   const bodies: Body[] = [];
   let width = box.clientWidth;
@@ -296,6 +304,17 @@ export function pile(box: HTMLElement, { pieces, gravity = 2600, bounce = 0.42, 
     height = box.clientHeight;
   });
   resize.observe(box);
+  let fixedPegs = pegs?.() ?? [];
+  let fixedWalls = walls?.() ?? [];
+  if (pegs || walls) {
+    const refit = new ResizeObserver(() => {
+      fixedPegs = pegs?.() ?? [];
+      fixedWalls = walls?.() ?? [];
+    });
+    refit.observe(box);
+    const disconnect = resize.disconnect.bind(resize);
+    resize.disconnect = () => (refit.disconnect(), disconnect());
+  }
   const remove = (body: Body) => {
     body.el.remove();
     live -= 1;
@@ -347,6 +366,34 @@ export function pile(box: HTMLElement, { pieces, gravity = 2600, bounce = 0.42, 
             c.vx += impulse * nx * cShare;
             c.vy += impulse * ny * cShare;
           }
+        }
+      }
+      for (const b of bodies) {
+        if (b.still >= SLEEP) continue;
+        // Pegs: pushed out along the line from the peg's center, the speed into it reflected.
+        for (const peg of fixedPegs) {
+          const dx = b.x - peg.x;
+          const dy = b.y - peg.y;
+          const reach = b.r + peg.r;
+          const d2 = dx * dx + dy * dy;
+          if (d2 >= reach * reach || d2 === 0) continue;
+          const d = Math.sqrt(d2);
+          const [nx, ny] = [dx / d, dy / d];
+          b.x = peg.x + nx * reach;
+          b.y = peg.y + ny * reach;
+          const into = b.vx * nx + b.vy * ny;
+          if (into < 0) {
+            b.vx -= (1 + bounce) * into * nx;
+            b.vy -= (1 + bounce) * into * ny;
+          }
+        }
+        // Walls: thin uprights from the floor; a piece beside one is pushed back to its side.
+        for (const wall of fixedWalls) {
+          if (b.y + b.r < height - wallHeight || Math.abs(b.x - wall) >= b.r) continue;
+          // The side it came from, judged by its travel, so a fast piece that crossed in one step is sent back.
+          const side = b.vx < -1 ? 1 : b.vx > 1 ? -1 : b.x < wall ? -1 : 1;
+          b.x = wall + side * b.r;
+          b.vx = side * Math.abs(b.vx) * bounce;
         }
       }
       for (const b of bodies) {
@@ -558,6 +605,121 @@ export function slingshot(box: HTMLElement, handle: HTMLElement, heap: Pile, { r
 }
 ```
 
+## swing
+
+A sign hangs from a hook and swings: drag it and let go, flick it, or tap it, and it swings back and forth, each swing smaller, until it hangs still. It is a pendulum, stepped every frame while it moves and asleep once it rests. The sign rotates about its top center, the hook; place it in CSS where it hangs at rest.
+
+Keyboard: make the sign a button. Enter or Space pushes it, and the arrow keys push it that way.
+
+```ts
+export type SwingOptions = {
+  /** Share of swing speed kept per second; lower settles sooner. */
+  damping?: number;
+  /** How quickly it swings, as gravity over the arm's length, in 1/s². */
+  pull?: number;
+  /** Widest swing in degrees, however hard it is pushed. */
+  limit?: number;
+};
+
+export type Swing = {
+  /** Pushes the sign with an angular speed in degrees per second; negative swings it left. */
+  push(speed: number): void;
+  revert: () => void;
+};
+
+export function swing(sign: HTMLElement, { damping = 0.55, pull = 30, limit = 75 }: SwingOptions = {}): Swing {
+  if (prefersReducedMotion()) return { push: () => {}, revert: () => {} };
+  const aborter = new AbortController();
+  const on = { signal: aborter.signal };
+  const touchAction = sign.style.touchAction;
+  sign.style.touchAction = "none";
+  gsap.set(sign, { transformOrigin: "50% 0%" });
+  const setAngle = gsap.quickSetter(sign, "rotation", "deg");
+  let angle = 0;
+  let speed = 0;
+  let running = false;
+  let held: { id: number; samples: Array<[number, number]> } | undefined;
+  let pivot = { x: 0, y: 0 };
+  /** The hook, in viewport pixels: the sign's top center from its layout box, which a rotation never moves. */
+  const hook = () => {
+    const parent = (sign.offsetParent as HTMLElement | null) ?? document.body;
+    const box = parent.getBoundingClientRect();
+    return { x: box.left + parent.clientLeft + sign.offsetLeft + sign.offsetWidth / 2, y: box.top + parent.clientTop + sign.offsetTop };
+  };
+  const step = (_time: number, deltaMs: number) => {
+    if (held) return;
+    const h = Math.min(deltaMs, 32) / 1000;
+    const r = (angle * Math.PI) / 180;
+    speed += -pull * Math.sin(r) * (180 / Math.PI) * h;
+    speed *= Math.pow(damping, h);
+    angle = gsap.utils.clamp(-limit, limit, angle + speed * h);
+    setAngle(angle);
+    if (Math.abs(speed) < 2 && Math.abs(angle) < 0.3) {
+      angle = speed = 0;
+      setAngle(0);
+      stop();
+    }
+  };
+  const start = () => {
+    if (running) return;
+    running = true;
+    gsap.ticker.add(step);
+  };
+  const stop = () => {
+    running = false;
+    gsap.ticker.remove(step);
+  };
+  const push = (deg: number) => {
+    speed += deg;
+    start();
+  };
+  /** The angle from the hook to a pointer, 0 straight down. */
+  const angleTo = (x: number, y: number) => (Math.atan2(pivot.x - x, y - pivot.y) * 180) / Math.PI;
+  sign.addEventListener("pointerdown", (event) => {
+    pivot = hook();
+    held = { id: event.pointerId, samples: [[angle, event.timeStamp]] };
+    sign.setPointerCapture(event.pointerId);
+    speed = 0;
+    start();
+  }, on);
+  sign.addEventListener("pointermove", (event) => {
+    if (!held || event.pointerId !== held.id) return;
+    angle = gsap.utils.clamp(-limit, limit, angleTo(event.clientX, event.clientY));
+    setAngle(angle);
+    held.samples.push([angle, event.timeStamp]);
+    while (held.samples.length > 2 && event.timeStamp - held.samples[0]![1] > 100) held.samples.shift();
+  }, on);
+  const release = (event: PointerEvent) => {
+    if (!held || event.pointerId !== held.id) return;
+    const samples = held.samples.filter(([, time]) => event.timeStamp - time <= 100);
+    held = undefined;
+    const [a, b] = [samples[0], samples[samples.length - 1]];
+    const moved = a && b && b[1] > a[1] ? ((b[0] - a[0]) / (b[1] - a[1])) * 1000 : 0;
+    // A tap that barely moved still swings it, away from where it was touched.
+    speed = Math.abs(moved) > 20 ? moved : (event.clientX < pivot.x ? 1 : -1) * 140;
+    start();
+  };
+  sign.addEventListener("pointerup", release, on);
+  sign.addEventListener("pointercancel", release, on);
+  sign.addEventListener("keydown", (event) => {
+    const push = event.key === "ArrowLeft" ? -160 : event.key === "ArrowRight" || event.key === "Enter" || event.key === " " ? 160 : 0;
+    if (!push) return;
+    event.preventDefault();
+    speed += push;
+    start();
+  }, on);
+  return {
+    push,
+    revert() {
+      aborter.abort();
+      stop();
+      gsap.set(sign, { clearProps: "rotation,transform,transformOrigin" });
+      sign.style.touchAction = touchAction;
+    },
+  };
+}
+```
+
 ## Wiring
 
 ```ts
@@ -581,6 +743,7 @@ runs.forEach((confetti) => confetti.stop());
 | `rain` | From an interaction or a settled page | `{ stop, finished }` | Spawns nothing; `finished` is already resolved |
 | `pile` | Once the box is mounted and sized | `{ drop, shake, launch, clear, stop, gravity }` | Every call does nothing; no pieces, no ticker |
 | `slingshot` | Settled, with a pile and its handle mounted | Teardown | Does nothing; the handle is an ordinary button |
+| `swing` | Settled, once the sign is placed | `{ push, revert }` | Does nothing; the sign hangs still |
 
 - The layer belongs to the persistent shell; a run never creates or removes it.
 - Never gate an action on `finished`: navigation, submission, and focus move on at once.

@@ -56,6 +56,5 @@ export const LIVE_STAGES = new Set([
   "explode",
   "throw",
   "card-stack",
-  "sortable",
-  "swipe-to-dismiss",
+  "swipe",
 ]);

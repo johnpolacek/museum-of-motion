@@ -142,14 +142,16 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .signin input { flex: 1; min-width: 0; font: 600 18px/1 var(--sans); color: inherit; background: none; border: 0; border-bottom: 2px solid #fff; padding: 10px 0; }
 .ex .stage-art .signin input:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
 .ex .stage-art .signin-error { min-height: 1.2em; margin: 0; }
-.ex .stage-art .sorts { list-style: none; margin: 0; padding: 0; width: min(92%, 520px); display: grid; gap: 8px; }
-.ex .stage-art .sorts li { position: relative; display: flex; align-items: center; gap: 14px; padding: 10px 14px; background: #fff; color: var(--ink); font-weight: 700; font-stretch: 85%; font-size: clamp(16px, 2vw, 21px); }
-.ex .stage-art .sort-handle { touch-action: none; cursor: grab; display: grid; place-items: center; width: 32px; height: 32px; font-size: 20px; color: var(--blue); background: none; border: 0; }
 .ex .stage-art .swipes { list-style: none; margin: 0; padding: 0; width: min(92%, 520px); min-height: 264px; display: grid; gap: 8px; align-content: start; }
 .ex .stage-art .swipe-note { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; background: #fff; color: var(--ink); font-weight: 600; font-size: clamp(15px, 1.8vw, 19px); cursor: grab; user-select: none; }
 .ex .stage-art .swipe-note:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 .ex .stage-art .swipe-x { width: 32px; height: 32px; font-size: 22px; line-height: 1; color: var(--ink); background: none; border: 0; cursor: pointer; }
 .ex .stage-art .swipe-reset { margin-top: 16px; }
+/* Tilt: each note carries two stamps that fade in by the side it is dragged toward. */
+.ex .stage-art .swipes.is-tilt .swipe-note { position: relative; }
+.ex .stage-art .swipe-stamp { position: absolute; top: -12px; padding: 2px 8px; background: #fff; border: 2px solid currentColor; font: 800 13px/1 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--blue); visibility: hidden; opacity: 0; pointer-events: none; }
+.ex .stage-art .swipe-stamp.keep { left: 12px; rotate: -8deg; }
+.ex .stage-art .swipe-stamp.toss { right: 12px; rotate: 8deg; }
 .ex .stage-art .btns { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
 .ex .stage-art .pill { font: 600 14px/1 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: inherit; background: none; border: 1px solid rgba(255,255,255,0.6); border-radius: 99px; padding: 12px 20px; cursor: pointer; }
 .ex .stage-art .pill.big { font-size: clamp(14px, 1.6vw, 20px); padding: 18px 30px; }
@@ -286,6 +288,16 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .pile-box { position: absolute; inset: 0; overflow: hidden; }
 .ex .stage-art .pile-box > * { position: absolute; left: 0; top: 0; display: block; will-change: transform; }
 .ex .stage-art .launch-box { color: #fff; }
+.ex .stage-art .pile-box > .plinko-peg { border-radius: 50%; background: rgb(255 255 255 / 0.75); will-change: auto; }
+.ex .stage-art .pile-box > .plinko-wall { top: auto; bottom: 0; width: 2px; background: rgb(255 255 255 / 0.45); will-change: auto; }
+.ex .stage-art .swing-rig { position: relative; display: grid; justify-items: center; padding-top: 6px; }
+.ex .stage-art .swing-hook { width: 14px; height: 14px; border-radius: 50%; background: #fff; margin-bottom: -7px; z-index: 1; }
+.ex .stage-art .swing-sign { display: grid; justify-items: center; padding: 0; border: 0; background: none; cursor: grab; touch-action: none; }
+.ex .stage-art .swing-sign:active { cursor: grabbing; }
+.ex .stage-art .swing-strings { display: block; width: clamp(160px, 22vw, 260px); height: auto; }
+.ex .stage-art .swing-plate { display: block; width: clamp(180px, 25vw, 290px); padding: 0.18em 0 0.12em; background: #fff; color: var(--blue); font: 800 clamp(48px, 7vw, 92px)/1 var(--sans); font-stretch: 75%; text-transform: uppercase; text-align: center; }
+.ex .stage-art .swing-sign:focus-visible { outline: none; }
+.ex .stage-art .swing-sign:focus-visible .swing-plate { outline: 2px solid #fff; outline-offset: 6px; }
 .ex .stage-art .pile-box > .launch-handle { left: clamp(40px, 12%, 140px); top: auto; bottom: 34%; width: 44px; height: 44px; padding: 0; border-radius: 50%; border: 3px solid #fff; background: var(--ink); cursor: grab; will-change: auto; }
 .ex .stage-art .launch-handle:active { cursor: grabbing; }
 .ex .stage-art .launch-handle:focus-visible { outline: 2px solid #fff; outline-offset: 6px; }

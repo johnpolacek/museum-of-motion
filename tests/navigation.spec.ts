@@ -47,8 +47,8 @@ test("Back, Forward, and reload return to the exact spot", async ({ page }) => {
   await expect.poll(() => y(page)).toBe(1400);
   await page.waitForTimeout(200);
   // A click, not a scroll into view first, so the home page is left at 1400.
-  await page.evaluate(() => document.querySelector<HTMLAnchorElement>('.names a[href="/exhibits/sortable"]')!.click());
-  await settled(page, "/exhibits/sortable");
+  await page.evaluate(() => document.querySelector<HTMLAnchorElement>('.names a[href="/exhibits/swipe"]')!.click());
+  await settled(page, "/exhibits/swipe");
   expect(await y(page)).toBe(0);
   await page.evaluate(() => window.scrollTo(0, 150));
   await page.waitForTimeout(200);
@@ -58,7 +58,7 @@ test("Back, Forward, and reload return to the exact spot", async ({ page }) => {
   await page.waitForTimeout(800);
   expect(await y(page)).toBe(1400);
   await page.goForward();
-  await settled(page, "/exhibits/sortable");
+  await settled(page, "/exhibits/swipe");
   await page.waitForTimeout(800);
   expect(await y(page)).toBe(150);
   await page.goBack();

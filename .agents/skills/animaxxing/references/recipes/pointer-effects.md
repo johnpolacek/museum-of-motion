@@ -875,6 +875,12 @@ export type SwipeDismissOptions = {
   flick?: number;
   /** Called once the item has gone and the gap has closed. Remove it from the app's state here. */
   onDismiss?: (item: HTMLElement) => void;
+  /**
+   * How it moves. `slide` fades as it travels and leaves straight. `tilt` leans with the drag like a card
+   * held by its bottom, shows `[data-swipe-label="1"]` or `[data-swipe-label="-1"]` inside it as it goes
+   * that way, and flings off turning. `fold` folds away from its top edge instead of leaving sideways.
+   */
+  look?: "slide" | "tilt" | "fold";
 };
 export type SwipeDismiss = {
   /** Dismisses toward a side: 1 right, -1 left. */
@@ -882,7 +888,7 @@ export type SwipeDismiss = {
   revert: Teardown;
 };
 
-export function swipeDismiss(item: HTMLElement, { threshold = 0.4, flick = 800, onDismiss }: SwipeDismissOptions = {}): SwipeDismiss {
+export function swipeDismiss(item: HTMLElement, { threshold = 0.4, flick = 800, onDismiss, look = "slide" }: SwipeDismissOptions = {}): SwipeDismiss {
   const reduced = prefersReducedMotion();
   let gone = false;
   let dismiss: (direction?: 1 | -1) => void = () => {};
@@ -890,7 +896,7 @@ export function swipeDismiss(item: HTMLElement, { threshold = 0.4, flick = 800, 
     // The item's style attribute comes back exactly, including the display a dismiss sets.
     const itemStyle = item.getAttribute("style");
     after(() => {
-      gsap.set(item, { clearProps: "transform,translate,opacity,visibility" });
+      gsap.set(item, { clearProps: "transform,translate,opacity,visibility,transformOrigin,transformPerspective" });
       // Read first: Chrome can write a just-cleared inline style back as style="" after a removal.
       void item.getAttribute("style");
       if (itemStyle === null) item.removeAttribute("style");
@@ -911,16 +917,31 @@ export function swipeDismiss(item: HTMLElement, { threshold = 0.4, flick = 800, 
         else element.setAttribute("style", value);
       }),
     );
-    dispose(() => gsap.killTweensOf([item, ...moved.keys()]));
+    const labels = Array.from(item.querySelectorAll<HTMLElement>("[data-swipe-label]"));
+    after(snapshotStyles(labels, ["opacity", "transform", "visibility"]));
+    if (look === "tilt") gsap.set(labels, { autoAlpha: 0 });
+    /** Tilt: the lean and the label for a drag of `x`. */
+    const lean = (x: number) => {
+      const width = item.offsetWidth || 1;
+      gsap.set(item, { rotation: (x / width) * 14, transformOrigin: "50% 120%" });
+      labels.forEach((label) => gsap.set(label, { autoAlpha: Math.sign(x) === Number(label.dataset.swipeLabel) ? gsap.utils.clamp(0, 1, Math.abs(x) / (width * threshold)) : 0 }));
+    };
+    dispose(() => gsap.killTweensOf([item, ...moved.keys(), ...labels]));
 
     dismiss = (direction = 1) => {
       if (gone) return;
       gone = true;
       const width = item.getBoundingClientRect().width;
+      const leave =
+        look === "fold"
+          ? { rotationX: -90, scaleY: 0.4, autoAlpha: 0, transformOrigin: "50% 0%", transformPerspective: 700, duration: 0.3 }
+          : look === "tilt"
+            ? { x: direction * (width * 1.3 + 40), y: -30, rotation: direction * 28, autoAlpha: 0, duration: 0.32 }
+            : { x: direction * (width + 40), autoAlpha: 0, duration: 0.25 };
+      if (look === "tilt") labels.forEach((label) => gsap.set(label, { autoAlpha: Number(label.dataset.swipeLabel) === direction ? 1 : 0 }));
       gsap.to(item, {
-        x: direction * (width + 40),
-        autoAlpha: 0,
-        duration: reduced ? 0 : 0.25,
+        ...leave,
+        duration: reduced ? 0 : leave.duration,
         ease: "power2.in",
         overwrite: "auto",
         onComplete: () => {
@@ -944,7 +965,8 @@ export function swipeDismiss(item: HTMLElement, { threshold = 0.4, flick = 800, 
       zIndexBoost: false,
       dragClickables: false,
       onDrag(this: Draggable) {
-        gsap.set(item, { opacity: gsap.utils.clamp(0.35, 1, 1 - Math.abs(this.x) / (item.offsetWidth || 1)) });
+        if (look === "tilt") lean(this.x);
+        else gsap.set(item, { opacity: gsap.utils.clamp(0.35, 1, 1 - Math.abs(this.x) / (item.offsetWidth || 1)) });
       },
       onRelease(this: Draggable) {
         const width = item.offsetWidth || 1;
@@ -952,7 +974,10 @@ export function swipeDismiss(item: HTMLElement, { threshold = 0.4, flick = 800, 
         const far = Math.abs(this.x) > width * threshold;
         const fast = Math.abs(speed) > flick && Math.sign(speed) === Math.sign(this.x);
         if (this.x && (far || fast)) dismiss(this.x > 0 ? 1 : -1);
-        else gsap.to(item, { x: 0, opacity: 1, duration: reduced ? 0 : 0.5, ease: "elastic.out(1, 0.6)", overwrite: "auto" });
+        else {
+          gsap.to(item, { x: 0, rotation: 0, opacity: 1, duration: reduced ? 0 : 0.5, ease: "elastic.out(1, 0.6)", overwrite: "auto" });
+          if (labels.length) gsap.to(labels, { autoAlpha: 0, duration: 0.2, overwrite: "auto" });
+        }
       },
     });
     if (!drag) return;

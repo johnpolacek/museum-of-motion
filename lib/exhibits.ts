@@ -537,12 +537,14 @@ const DATA: Exhibit[] = [
   {
     name: "Physics",
     group: "pointer",
-    builders: "pile, slingshot",
+    builders: "pile, slingshot, swing",
     src: "physics-effects",
-    desc: "Pieces under gravity that collide and come to rest: they fall and heap up, bounce around a box, or fly from a slingshot.",
+    desc: "Things under gravity that collide and come to rest: pieces fall and heap up, bounce around a box, fly from a slingshot, or tumble through pegs into bins, and a hanging sign swings until it hangs still.",
     vars: [
       "Bounce",
-      "Launch"
+      "Launch",
+      "Plinko",
+      "Swing"
     ]
   },
   {
@@ -592,18 +594,15 @@ const DATA: Exhibit[] = [
     desc: "A drag or flick deals the next card to the front."
   },
   {
-    name: "Sortable",
-    group: "drag",
-    builders: "sortable",
-    src: "sortable",
-    desc: "Drag a handle to reorder a list, and its neighbors slide aside to make room."
-  },
-  {
-    name: "Swipe to dismiss",
+    name: "Swipe",
     group: "drag",
     builders: "swipeDismiss",
     src: "pointer-effects",
-    desc: "Throw an item sideways and the list closes up behind it."
+    desc: "Throw an item sideways and the list closes up behind it: it slides away, leans and flings off with a stamp, or folds up.",
+    vars: [
+      "Tilt",
+      "Fold"
+    ]
   },
   {
     name: "Pull",
