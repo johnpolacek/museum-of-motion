@@ -927,77 +927,52 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .tp-domino { display: block; width: clamp(10px, 1.5vw, 18px); height: 100%; background: #fff; }
 .ex .stage-art .tp-domino.first { cursor: pointer; }
 
-/* Liquid: after the Living Exhibition poster. Ivory and black, liquid chrome, Instrument Serif and Jost. The poster is one
-   stage at the image's own ratio, so the sculpture, its window, and the black field line up at every width. */
-.ex .win.vibe-liquid { --v-bg: #f1ede4; --v-fg: #0b0b0c; --v-muted: #5c5a55; --v-black: #0b0b0c; --v-light: #ebe7df; --v-accent: #0b0b0c; --v-on-accent: #f1ede4; --v-font: var(--font-jost), "Jost", system-ui, sans-serif; --v-serif: var(--font-instrument), "Instrument Serif", Georgia, serif; font-size: 15px; }
-.ex .win.vibe-liquid .lq-stage { position: relative; width: 100%; aspect-ratio: 1672 / 941; overflow: hidden; container-type: inline-size; background: linear-gradient(90deg, var(--v-bg) 70%, var(--v-black) 70%); }
-.ex .win.vibe-liquid .lq-art, .ex .win.vibe-liquid .lq-ink, .ex .win.vibe-liquid .lq-chrome, .ex .win.vibe-liquid .lq-opening { position: absolute; inset: 0; }
+/* Liquid: after the Living Exhibition poster, on the vibes' own frame. Ivory and black, liquid chrome, Instrument Serif and Jost.
+   The hero's frame crops the poster around the sculpture: the plate keeps the poster's ratio, so the window and the ink line up. */
+.ex .win.vibe-liquid { --v-bg: #f1ede4; --v-fg: #0b0b0c; --v-muted: #5c5a55; --v-black: #0b0b0c; --v-accent: #0b0b0c; --v-on-accent: #f1ede4; --v-font: var(--font-jost), "Jost", system-ui, sans-serif; --v-serif: var(--font-instrument), "Instrument Serif", Georgia, serif; --v-art: #e7e2d6; font-size: 16px; }
+.ex .win.vibe-liquid .v-nav { border-bottom: 1px solid rgb(11 11 12 / 0.12); }
+.ex .win.vibe-liquid .v-brand { display: inline-flex; gap: 0.25em; font: 400 22px/1 var(--v-serif); letter-spacing: -0.01em; }
+.ex .win.vibe-liquid .v-brand span { display: inline-block; }
+.ex .win.vibe-liquid .v-links { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; gap: 28px; --underline-offset: 6px; }
+.ex .win.vibe-liquid .v-kicker { font-size: 11px; letter-spacing: 0.32em; color: var(--v-fg); }
+.ex .win.vibe-liquid .lq-hero { grid-template-columns: 1.05fr 0.95fr; align-items: center; justify-items: stretch; gap: 40px; }
+.ex .win.vibe-liquid .lq-copy { display: grid; gap: 18px; justify-items: start; }
+.ex .win.vibe-liquid .v-head { font: 400 clamp(52px, 9cqw, 124px)/0.88 var(--v-serif); letter-spacing: -0.02em; max-width: none; }
+.ex .win.vibe-liquid .lq-word { display: block; }
+.ex .win.vibe-liquid .v-sub { max-width: 30ch; font-size: 17px; line-height: 1.5; color: var(--v-muted); }
+.ex .win.vibe-liquid .lq-pill { display: inline-flex; align-items: center; gap: 1.2em; padding: 15px 18px 15px 26px; border-radius: 999px; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; }
+.ex .win.vibe-liquid .lq-echo { min-height: 1.3em; margin: 0; font: italic 400 20px/1.2 var(--v-serif); color: var(--v-muted); }
+.ex .win.vibe-liquid .lq-frame { position: relative; justify-self: center; width: min(100%, 420px); aspect-ratio: 0.62; overflow: hidden; border-radius: 999px 999px 10px 10px; background: var(--v-bg); box-shadow: inset 0 0 0 1px rgb(11 11 12 / 0.08); }
+.ex .win.vibe-liquid .lq-plate { position: absolute; top: 0; left: -71.4%; width: 285.7%; aspect-ratio: 1672 / 941; isolation: isolate; }
+.ex .win.vibe-liquid .lq-ink, .ex .win.vibe-liquid .lq-chrome, .ex .win.vibe-liquid .lq-opening { position: absolute; inset: 0; }
 .ex .win.vibe-liquid .lq-field { position: absolute; inset: 0; background: var(--v-black); clip-path: polygon(41.3% 0, 100% 0, 100% 100%, 42% 100%, 46.5% 84%, 46.4% 66%, 44% 58%, 44% 20%, 40.2% 16%, 41.3% 13.4%); }
 .ex .win.vibe-liquid .lq-opening { -webkit-mask: url("/vibes/liquid/opening-mask.webp") 0 0 / 100% 100% no-repeat; mask: url("/vibes/liquid/opening-mask.webp") 0 0 / 100% 100% no-repeat; }
 .ex .win.vibe-liquid .lq-sky { position: absolute; left: 33%; top: 11.4%; width: 16.9%; height: 51%; max-width: none; object-fit: cover; object-position: 62% 38%; }
+.ex .win.vibe-liquid .lq-hung { object-position: 65% 48%; }
 .ex .win.vibe-liquid .lq-chrome img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.ex .win.vibe-liquid .lq-hand { position: absolute; left: 33.6%; top: 71.5%; width: 9.4%; height: auto; pointer-events: none; }
-.ex .win.vibe-liquid .lq-mast { position: absolute; inset: 0 0 auto 0; padding: 1.6cqw 2.2cqw; background: none; align-items: flex-start; }
-.ex .win.vibe-liquid .lq-mark { display: grid; font: 400 max(13px, 1.5cqw)/0.9 var(--v-serif); letter-spacing: -0.01em; }
-.ex .win.vibe-liquid .lq-tagline { position: absolute; left: 9.2cqw; top: 1.7cqw; margin: 0; max-width: 7em; font-size: max(7px, 0.6cqw); line-height: 1.5; letter-spacing: 0.16em; text-transform: uppercase; }
-.ex .win.vibe-liquid .lq-mast .v-links { color: var(--v-light); gap: 2.4cqw; font-size: max(9px, 0.7cqw); letter-spacing: 0.14em; text-transform: uppercase; --underline-color: var(--v-light); --underline-offset: 6px; }
-.ex .win.vibe-liquid .lq-intro { position: absolute; left: 2.2cqw; top: 14%; min-height: 0; padding: 0; display: block; width: 30%; }
-.ex .win.vibe-liquid .v-head { font: 400 7.6cqw/0.86 var(--v-serif); letter-spacing: -0.02em; max-width: none; }
-.ex .win.vibe-liquid .lq-word { display: block; }
-.ex .win.vibe-liquid .v-kicker { margin-top: 2.2cqw; font-size: max(8px, 0.82cqw); letter-spacing: 0.42em; color: var(--v-fg); }
-.ex .win.vibe-liquid .v-sub { margin-top: 1.6cqw; max-width: 24ch; font-size: max(10px, 1cqw); line-height: 1.45; color: var(--v-muted); }
-.ex .win.vibe-liquid .lq-pill { display: inline-flex; align-items: center; gap: 1.2em; margin-top: 1.8cqw; padding: 0.95em 1.1em 0.95em 1.6em; border-radius: 999px; font-size: max(9px, 0.74cqw); letter-spacing: 0.16em; text-transform: uppercase; }
-.ex .win.vibe-liquid .lq-margin { position: absolute; left: 2.2cqw; bottom: 6%; margin: 0; max-width: 8em; padding-left: 1em; border-left: 1px solid var(--v-fg); font-size: max(7px, 0.62cqw); line-height: 1.6; letter-spacing: 0.16em; text-transform: uppercase; }
-.ex .win.vibe-liquid .lq-notes { position: absolute; left: 50%; right: 2.2cqw; top: 11%; display: flex; justify-content: space-between; color: var(--v-light); font-size: max(7px, 0.62cqw); line-height: 1.6; letter-spacing: 0.16em; text-transform: uppercase; }
-.ex .win.vibe-liquid .lq-note, .ex .win.vibe-liquid .lq-claim { margin: 0; }
-.ex .win.vibe-liquid .lq-claim { max-width: 13em; }
-.ex .win.vibe-liquid .lq-dot { display: block; width: 1.4cqw; height: 1.4cqw; margin-bottom: 0.8cqw; border: 1px solid var(--v-light); border-radius: 50%; }
-.ex .win.vibe-liquid .lq-art { isolation: isolate; }
-.ex .win.vibe-liquid .lq-transfer { position: absolute; inset: 0; pointer-events: none; }
-.ex .win.vibe-liquid .lq-chrome { z-index: 1001; }
-.ex .win.vibe-liquid .lq-shelfbar { position: absolute; left: 52%; right: 2.2cqw; top: 27%; display: flex; justify-content: space-between; align-items: center; color: rgb(235 231 223 / 0.7); font-size: max(8px, 0.62cqw); letter-spacing: 0.16em; text-transform: uppercase; }
-.ex .win.vibe-liquid .lq-browse { display: flex; align-items: center; gap: 0.8em; }
-.ex .win.vibe-liquid .lq-browse .lq-ring { padding: 0; background: none; font: inherit; font-size: max(10px, 0.9cqw); cursor: pointer; }
-.ex .win.vibe-liquid .lq-shelf { position: absolute; left: 50.5%; right: 2.2cqw; top: 33%; overflow: hidden; color: var(--v-light); }
-.ex .win.vibe-liquid .lq-track { display: flex; gap: 1.15cqw; width: 100%; margin: 0; padding: 0; list-style: none; cursor: grab; }
-.ex .win.vibe-liquid .lq-track > li { flex: 0 0 calc((100% - 3 * 1.15cqw) / 4); }
-.ex .win.vibe-liquid .lq-echo { margin: 1.2cqw 0 0; min-height: 1.3em; font: italic 400 max(12px, 1.4cqw)/1.2 var(--v-serif); color: var(--v-muted); }
-.ex .win.vibe-liquid .lq-work { display: block; }
-.ex .win.vibe-liquid .lq-arch { display: block; aspect-ratio: 0.63; overflow: hidden; background: #19191b; }
-.ex .win.vibe-liquid .lq-arch img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 65% 48%; }
-.ex .win.vibe-liquid .lq-meta { display: flex; justify-content: space-between; margin-top: 1cqw; font-size: max(8px, 0.72cqw); letter-spacing: 0.1em; color: rgb(235 231 223 / 0.65); }
-.ex .win.vibe-liquid .lq-ring { display: grid; place-items: center; width: 1.9cqw; height: 1.9cqw; border: 1px solid rgb(235 231 223 / 0.6); border-radius: 50%; color: var(--v-light); }
-.ex .win.vibe-liquid .lq-title { display: block; margin-top: 0.3cqw; font: 400 max(12px, 1.3cqw)/1.08 var(--v-serif); }
-.ex .win.vibe-liquid .lq-by { display: block; font: 400 max(10px, 0.95cqw)/1.25 var(--v-serif); color: rgb(235 231 223 / 0.65); }
-.ex .win.vibe-liquid .lq-index { position: relative; display: grid; grid-template-columns: 6% 1fr; padding: 6% 4% 8% 2%; background: var(--v-black); color: var(--v-light); clip-path: polygon(0 26px, 12% 14px, 30% 30px, 52% 8px, 74% 26px, 100% 10px, 100% 100%, 0 100%); margin-top: -18px; }
-.ex .win.vibe-liquid .lq-gutter { position: relative; color: #d9dde6; }
-.ex .win.vibe-liquid .lq-index-head { margin: 0 0 1.4em; font: 400 clamp(36px, 5cqw, 64px)/1 var(--v-serif); }
-.ex .win.vibe-liquid .lq-index-head small { margin-left: 1em; font: 400 13px/1 var(--v-font); color: rgb(235 231 223 / 0.6); }
-.ex .win.vibe-liquid .lq-rows { list-style: none; margin: 0; padding: 0; }
-.ex .win.vibe-liquid .lq-rows li { display: grid; grid-template-columns: 3ch 1.3fr 1fr 1fr; align-items: baseline; gap: 18px; padding: 14px 0; border-top: 1px solid rgb(235 231 223 / 0.14); }
-.ex .win.vibe-liquid .lq-rows b { font: 400 clamp(20px, 2.2cqw, 30px)/1.1 var(--v-serif); }
-.ex .win.vibe-liquid .lq-rows span, .ex .win.vibe-liquid .lq-no { font-size: 13px; color: rgb(235 231 223 / 0.65); }
-.ex .win.vibe-liquid .lq-rows small { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgb(235 231 223 / 0.55); }
-.ex .win.vibe-liquid .lq-colophon { display: flex; justify-content: space-between; gap: 12px; padding: 28px 2.2cqw 40px; }
-.ex .win.vibe-liquid a:focus-visible, .ex .win.vibe-liquid button:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+.ex .win.vibe-liquid .lq-hand { position: absolute; left: 33.6%; top: 71.5%; width: 9.4%; height: auto; z-index: 2; }
+.ex .win.vibe-liquid .lq-works { padding: 40px 24px 24px; }
+.ex .win.vibe-liquid .v-cards { padding: 18px 0 0; gap: 22px; }
+.ex .win.vibe-liquid .v-card { gap: 12px; }
+.ex .win.vibe-liquid .lq-work { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; }
+.ex .win.vibe-liquid .lq-arch { display: block; aspect-ratio: 0.72; overflow: hidden; border-radius: 999px 999px 8px 8px; background: #19191b; }
+.ex .win.vibe-liquid .lq-arch img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 65% 48%; transition: scale 0.6s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.ex .win.vibe-liquid .lq-work:hover .lq-arch img, .ex .win.vibe-liquid .lq-work:focus-visible .lq-arch img { scale: 1.06; }
+.ex .win.vibe-liquid .lq-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.ex .win.vibe-liquid .lq-row b { display: block; font: 400 26px/1.05 var(--v-serif); }
+.ex .win.vibe-liquid .v-meta { font: 400 16px/1.3 var(--v-serif); color: var(--v-muted); }
+.ex .win.vibe-liquid .lq-go { position: relative; isolation: isolate; display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 50%; overflow: hidden; border: 1px solid rgb(11 11 12 / 0.4); font-size: 17px; }
+.ex .win.vibe-liquid .lq-fill { position: absolute; inset: 0; z-index: -1; border-radius: 50%; background: var(--v-black); }
+.ex .win.vibe-liquid .lq-go[data-poured] { color: var(--v-bg); }
+.ex .win.vibe-liquid .lq-water { padding: 56px 24px 24px; display: grid; gap: 16px; }
+.ex .win.vibe-liquid .lq-pool { margin: 0; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 18px; }
+.ex .win.vibe-liquid .lq-pool img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 60%; }
+.ex .win.vibe-liquid .v-caption { font: italic 400 19px/1.3 var(--v-serif); }
+.ex .win.vibe-liquid .v-quote p { font: 400 clamp(36px, 6cqw, 80px)/1.02 var(--v-serif); letter-spacing: -0.01em; }
+.ex .win.vibe-liquid .v-foot { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid rgb(11 11 12 / 0.12); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
+.ex .win.vibe-liquid a:focus-visible, .ex .win.vibe-liquid button:focus-visible { outline: 2px solid var(--v-fg); outline-offset: 4px; }
 @container (max-width: 640px) {
-  .ex .win.vibe-liquid .lq-stage { aspect-ratio: auto; height: auto; padding-bottom: 6px; background: var(--v-bg); }
-  .ex .win.vibe-liquid .lq-art { position: relative; inset: auto; width: 170%; margin-left: -48%; aspect-ratio: 1672 / 941; }
-  .ex .win.vibe-liquid .lq-hand, .ex .win.vibe-liquid .lq-notes, .ex .win.vibe-liquid .lq-margin, .ex .win.vibe-liquid .lq-tagline, .ex .win.vibe-liquid .lq-mark { display: none; }
-  .ex .win.vibe-liquid .lq-mast { justify-content: flex-end; }
-  .ex .win.vibe-liquid .lq-index { padding-top: 48px; }
-  .ex .win.vibe-liquid .lq-index-head small { display: block; margin: 10px 0 0; }
-  .ex .win.vibe-liquid .lq-mast .v-links { color: var(--v-light); }
-  .ex .win.vibe-liquid .lq-intro { position: relative; left: auto; top: auto; width: auto; padding: 18px 18px 26px; }
-  .ex .win.vibe-liquid .v-head { font-size: 15cqw; }
-  .ex .win.vibe-liquid .v-sub, .ex .win.vibe-liquid .lq-pill { font-size: 13px; }
-  .ex .win.vibe-liquid .v-kicker { font-size: 10px; }
-  .ex .win.vibe-liquid .lq-shelfbar { position: relative; left: auto; right: auto; top: auto; padding: 18px 18px 0; background: var(--v-black); font-size: 10px; }
-  .ex .win.vibe-liquid .lq-shelf { position: relative; left: auto; right: auto; top: auto; padding: 16px 18px 22px; background: var(--v-black); }
-  .ex .win.vibe-liquid .lq-track { gap: 16px; }
-  .ex .win.vibe-liquid .lq-track > li { flex-basis: calc((100% - 16px) / 2); }
-  .ex .win.vibe-liquid .lq-meta { margin-top: 8px; }
-  .ex .win.vibe-liquid .lq-ring { width: 22px; height: 22px; }
-  .ex .win.vibe-liquid .lq-rows li { grid-template-columns: 3ch 1fr; }
-  .ex .win.vibe-liquid .lq-rows li span:not(.lq-no), .ex .win.vibe-liquid .lq-rows small { grid-column: 2; }
+  .ex .win.vibe-liquid .lq-hero { grid-template-columns: 1fr; }
+  .ex .win.vibe-liquid .lq-frame { order: -1; width: min(72%, 300px); }
+  .ex .win.vibe-liquid .lq-pool { aspect-ratio: 4 / 5; }
 }
