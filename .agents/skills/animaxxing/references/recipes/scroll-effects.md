@@ -767,10 +767,14 @@ The header names the section beneath it. As a new `[data-header-section]` passes
 ```
 
 ```css
-/* Both names share one cell while they cross, clipped to the line. */
-[data-header-label] { display: inline-grid; overflow: clip; }
+/* Both names share one cell while they cross, clipped to the line. Anchor them to the label's fixed edge:
+   the cell is as wide as the wider name while both show, so on a label at the header's right, start-aligned
+   names would jump sideways as a longer or shorter one arrives. */
+[data-header-label] { display: inline-grid; justify-items: end; overflow: clip; }
 [data-header-label] > * { grid-area: 1 / 1; }
 ```
+
+Use `justify-items: start` for a label on the header's left, or `center` for one centered in it.
 
 ```ts
 export type HeaderSectionOptions = {

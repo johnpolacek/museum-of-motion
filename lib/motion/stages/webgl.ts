@@ -226,7 +226,7 @@ const meltStage = play(["Word", "Number"], ["word", "number"], "Press the button
 
 // A stream of liquid metal runs down beside an index as the page scrolls, its head following the reader,
 // and a drop settles beside each row it reaches. The stage scrolls the page itself, as Flight does.
-const POUR_ROWS = ["Mask", "Stagger", "Explode", "Slide", "Scramble", "Glitch", "Speak", "Wave", "Route", "Count", "In and Out", "Cycle"];
+const POUR_ROWS = ["Mask", "Stagger", "Explode", "Slide", "Scramble", "Glitch", "Speak", "Wave", "Pulse", "Count", "In and Out", "Cycle"];
 const pourStage = play(["Pour"], ["pour"], "Scroll the page down the index, and back up.", (text) =>
   live(
     text,

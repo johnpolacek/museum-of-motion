@@ -150,13 +150,6 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .swipe-note:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 .ex .stage-art .swipe-x { width: 32px; height: 32px; font-size: 22px; line-height: 1; color: var(--ink); background: none; border: 0; cursor: pointer; }
 .ex .stage-art .swipe-reset { margin-top: 16px; }
-.ex .stage-art .mini-page { width: min(92%, 760px); display: grid; gap: 14px; justify-items: start; padding: 22px 26px; background: #fff; color: var(--ink); }
-.ex .stage-art .mini-page .lab { color: var(--blue); }
-.ex .stage-art .mp-title { margin: 0; font-weight: 800; font-stretch: 75%; font-size: clamp(40px, 6vw, 84px); line-height: 0.9; letter-spacing: -0.02em; }
-.ex .stage-art .mp-body { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: center; width: 100%; }
-.ex .stage-art .mp-body p { margin: 0; font-size: clamp(15px, 1.6vw, 19px); line-height: 1.35; }
-.ex .stage-art .mp-pic { margin: 0; aspect-ratio: 16 / 9; background: var(--blue); }
-.ex .stage-art .mini-page .pill { color: var(--ink); border-color: var(--ink); }
 .ex .stage-art .btns { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
 .ex .stage-art .pill { font: 600 14px/1 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: inherit; background: none; border: 1px solid rgba(255,255,255,0.6); border-radius: 99px; padding: 12px 20px; cursor: pointer; }
 .ex .stage-art .pill.big { font-size: clamp(14px, 1.6vw, 20px); padding: 18px 30px; }
@@ -331,11 +324,6 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win .d-dot { width: 14px; height: 14px; background: #fff; justify-self: start; align-self: center; margin-left: 18%; }
 .ex .win .d-dot-b { width: 22px; height: 22px; background: var(--ink); justify-self: end; margin: 0 22% 0 0; align-self: start; margin-top: 30%; }
 .ex .win .d-dot-c { width: 10px; height: 10px; justify-self: center; align-self: end; margin-bottom: 18%; }
-.ex .win .w-windows { display: grid; grid-template-columns: repeat(3, minmax(0, min(26vw, 52cqh))); justify-content: center; gap: calc(var(--gut) * 1.5); padding: 40cqh var(--gut); }
-.ex .win .w-window { margin: 0; display: grid; gap: 10px; align-content: start; }
-.ex .win .w-window:nth-child(2) { margin-top: 18cqh; }
-/* The frame stays put and clips; the picture inside is taller than the frame and slides past it. */
-.ex .win .w-window-in { position: absolute; left: 0; right: 0; top: -22%; height: 144%; }
 .ex .win .w-sec { min-height: 100%; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: center; gap: var(--gut); padding: 40px var(--gut); }
 .ex .win h3 { margin: 0; font-weight: 800; font-stretch: 75%; text-transform: uppercase; font-size: clamp(28px, 4vw, 60px); line-height: 0.9; }
 .ex .win .w-scene { position: relative; height: 100%; min-height: 260px; }
@@ -363,7 +351,7 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win .w-tallhead > * { pointer-events: auto; }
 .ex .win .w-tallhead [data-header-bg] { position: absolute; inset: 0; z-index: -1; background: #fff; transform-origin: 50% 0; }
 .ex .win .w-tallhead [data-header-mark] { font-size: clamp(22px, 6cqw, 84px); font-stretch: 125%; line-height: 1; transform-origin: 0 50%; white-space: nowrap; }
-.ex .win .w-room { display: inline-grid; overflow: clip; font-weight: 800; font-stretch: 75%; text-transform: uppercase; font-size: 22px; line-height: 1.1; }
+.ex .win .w-room { display: inline-grid; justify-items: end; overflow: clip; font-weight: 800; font-stretch: 75%; text-transform: uppercase; font-size: 22px; line-height: 1.1; }
 .ex .win .w-room > * { grid-area: 1 / 1; }
 @container (max-width: 560px) { .ex .win .w-tallhead [data-header-nav] { display: none; } }
 .ex .win .w-head[data-nav-theme="dark"] { color: #fff; background: rgba(11,11,11,0.92); }

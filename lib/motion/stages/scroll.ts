@@ -120,14 +120,8 @@ const DEPTH = `<section class="w-depth">
 </section>`;
 
 // Windows: each frame holds still while the picture inside slides past it, taller than its frame.
-const WINDOWS = `<section class="w-windows">${[0, 1, 2]
-  .map((i) => `<figure class="w-window"><div class="w-frame"><div class="w-window-in" data-parallax="${[-70, 90, -110][i]}">${poster(25 + i, i + 1)}</div></div><figcaption class="lab" data-parallax="${[24, -24, 32][i]}">Window ${i + 1}</figcaption></figure>`)
-  .join("")}</section>`;
-
-const parallaxStage = play(["Depth", "Windows"], ["depth", "windows"], SCROLL_HINT, (text, p) =>
-  windowed(text, `${CUE}${p.variation === "windows" ? WINDOWS : DEPTH}${END}`, (win) =>
-    all(win, ".w-depth, .w-windows").map((sec) => parallax(sec, { scroller: win })),
-  ),
+const parallaxStage = play(["Depth"], ["depth"], SCROLL_HINT, (text) =>
+  windowed(text, `${CUE}${DEPTH}${END}`, (win) => [parallax(one(win, ".w-depth"), { scroller: win })]),
 );
 
 /* ---------- Pinned ---------- */
@@ -207,8 +201,8 @@ const ROOM_HEAD = `<header class="w-head"><b>Museum of Motion</b><span class="w-
 // Theme and Hide are the skill's navTheme and scrollDirection; Both runs them together, as most sites would.
 // Shrink is headerShrink, and Section is headerSection.
 const header = play(
-  ["Theme", "Hide", "Both", "Shrink", "Section"],
-  ["theme", "hide", "both", "shrink", "section"],
+  ["Shrink", "Theme", "Hide", "Both", "Section"],
+  ["shrink", "theme", "hide", "both", "section"],
   "Scroll down, then back up.",
   (text, p) =>
     windowed(

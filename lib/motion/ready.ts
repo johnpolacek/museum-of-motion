@@ -18,7 +18,6 @@ export const LIVE_STAGES = new Set([
   "glitch",
   "speak",
   "wave",
-  "route",
   "in-and-out",
   "unveil",
   "path",

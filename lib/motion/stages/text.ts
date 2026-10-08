@@ -1,8 +1,7 @@
 // Live stages for the text exhibits. Recipes from the animaxxing skill's split entrances,
 // speak-in, wave, route letters, and the motion vocabulary's shelf.
 import { gsap, SplitText } from "../gsap";
-import { type Act, art, assemble, def, end, EXIT, type LoopParams, merge, pinWidths, rnd, split, type StageDef } from "../stage-core";
-import { EXHIBITS } from "../../exhibits";
+import { type Act, assemble, def, end, EXIT, type LoopParams, merge, pinWidths, rnd, split, type StageDef } from "../stage-core";
 
 /* ---------- Mask ---------- */
 
@@ -508,82 +507,6 @@ export const letterWave = def(
   },
 );
 
-/* ---------- Route ---------- */
-
-// Route runs a whole page at once: one call takes every marked item. The stage is a small page:
-// a section label and a button slide, the text and picture rise as blocks, and the headline goes by letter.
-const PAGE_ART = `<article class="mini-page">
-  <span class="lab" data-route="slide">Exhibit · ${String(EXHIBITS.find((e) => e.slug === "route")?.no ?? 0).padStart(2, "0")}</span>
-  <h3 class="mp-title" data-route="letters">Route letters</h3>
-  <div class="mp-body">
-    <p data-route="rise">One call runs the whole page in, and back out on the way to the next one.</p>
-    <figure class="mp-pic" data-route="rise"></figure>
-  </div>
-  <button type="button" class="pill" data-route="slide" tabindex="-1">Next exhibit</button>
-</article>`;
-
-export const routeLetters = def(
-  ["Letters", "Sides"],
-  ["letters", "sides"],
-  ["duration", "stagger", "hold", "ease"],
-  { duration: 0.75, stagger: 0.02, hold: 2, ease: "power4.out" },
-  (text, p) => {
-    const { layer, remove } = art(text, PAGE_ART);
-    const page = layer.querySelector<HTMLElement>(".mini-page")!;
-    const title = page.querySelector<HTMLElement>("[data-route=letters]")!;
-    const rise = Array.from(page.querySelectorAll<HTMLElement>("[data-route=rise]"));
-    const slide = Array.from(page.querySelectorAll<HTMLElement>("[data-route=slide]"));
-    const splits: SplitText[] = [];
-    const chars = split(title, { type: "words,chars" }, splits).chars as HTMLElement[];
-    const box = page.getBoundingClientRect();
-    const sides = p.variation === "sides";
-    // As in the recipe: letters spread across the page, or zip in from alternate sides.
-    const spread = (i: number) =>
-      sides
-        ? { x: (i % 2 ? 1 : -1) * box.width * 0.6, y: 0, rotation: 0, scale: 1 }
-        : { x: rnd(-0.6, 0.6) * box.width, y: rnd(-0.6, 0.6) * box.height, rotation: rnd(-90, 90), scale: 0.5 };
-    const starts = chars.map((_, i) => spread(i));
-    const ends = chars.map((_, i) => spread(i));
-    const lettersEnd = end(chars.length, p);
-    return assemble(
-      text,
-      p,
-      splits,
-      {
-        enter: (tl) => {
-          tl.fromTo(
-            chars,
-            { autoAlpha: 0, x: (i: number) => starts[i].x, y: (i: number) => starts[i].y, rotation: (i: number) => starts[i].rotation, scale: (i: number) => starts[i].scale },
-            { autoAlpha: 1, x: 0, y: 0, rotation: 0, scale: 1, duration: p.duration, ease: p.ease, stagger: { each: p.stagger, from: sides ? "center" : "random" } },
-            0,
-          )
-            // The rest of the page follows as whole blocks, once the headline is mostly in.
-            .fromTo(rise, { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.42, ease: "power3.out", stagger: 0.09 }, lettersEnd * 0.55)
-            .fromTo(slide, { autoAlpha: 0, x: -16 }, { autoAlpha: 1, x: 0, duration: 0.3, ease: "power2.out", stagger: 0.09 }, lettersEnd * 0.55 + 0.09);
-          return lettersEnd * 0.55 + 0.6;
-        },
-        exit: (tl, at) => {
-          tl.to([...slide, ...rise], { autoAlpha: 0, y: -8, duration: 0.22, ease: EXIT, stagger: 0.055 }, at).to(
-            chars,
-            {
-              autoAlpha: 0,
-              x: (i: number) => ends[i].x,
-              y: (i: number) => ends[i].y,
-              rotation: (i: number) => ends[i].rotation,
-              scale: sides ? 1 : 1.6,
-              duration: 0.28,
-              ease: "power2.in",
-              stagger: { each: 0.012, from: sides ? "center" : "edges" },
-            },
-            at + 0.1,
-          );
-        },
-      },
-      remove,
-    );
-  },
-);
-
 /* ---------- In and Out ---------- */
 
 type Pair = { from: gsap.TweenVars; to: gsap.TweenVars; out: gsap.TweenVars };
@@ -930,8 +853,7 @@ export const TEXT_STAGES: Record<string, StageDef> = {
   "slide": wordSlide,
   scramble,
   glitch: merge([{ def: glitch, all: true }, { def: slip, label: "Slip", key: "slip" }]),
-  "speak": merge([{ def: typewriter, all: true }, { def: speakIn, label: "Speak", key: "speak" }]),
+  "speak": merge([{ def: speakIn, label: "Speak", key: "speak" }, { def: typewriter, all: true }]),
   wave: merge([{ def: weightWave, label: "Weight", key: "weight" }, { def: letterWave, all: true }]),
-  "route": routeLetters,
   "in-and-out": paired,
 };
