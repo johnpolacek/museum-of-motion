@@ -302,7 +302,10 @@ export function writeOn(target: HTMLElement, { duration = 0.55, ease = "power1.i
   // A slight rise and fall across each line, and strokes a little wider than the line, so descenders write too.
   const strokes = Array.from({ length: lines }, (_, i) => {
     const y = band * (i + 0.5);
-    return `<path d="M-0.02 ${(y + band * 0.04).toFixed(4)}Q0.4 ${(y - band * 0.06).toFixed(4)} 1.02 ${(y + band * 0.02).toFixed(4)}" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" fill="none" stroke="white" stroke-linecap="round" stroke-width="${(band * 1.12).toFixed(4)}"/>`;
+    // Parked past the line's end by more than the round cap's reach, so no sliver of the line shows before it is
+    // written: a cap is half the stroke wide, and the box's units stretch it across the width.
+    const park = (1 + band * 0.6 + 0.05).toFixed(4);
+    return `<path d="M-0.02 ${(y + band * 0.04).toFixed(4)}Q0.4 ${(y - band * 0.06).toFixed(4)} 1.02 ${(y + band * 0.02).toFixed(4)}" pathLength="1" stroke-dasharray="1 ${Number(park) + 1}" stroke-dashoffset="${park}" fill="none" stroke="white" stroke-linecap="round" stroke-width="${(band * 1.12).toFixed(4)}"/>`;
   }).join("");
   defs.innerHTML = `<defs><mask id="${id}" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">${strokes}</mask></defs>`;
   document.body.append(defs);
@@ -656,5 +659,6 @@ Pair the arrows with visible Previous and Next buttons for touch and pointer vis
 | `pullCorner`, `dragPull` | Settled, once the sheet has its size | `{ set, progress, to, revert }`, teardown | Drags follow the hand; releases jump |
 | `pageTurn` | Settled, once the book has its size | `{ next, previous, revert }` | Drags follow the hand; turns and releases jump |
 
+- For an effect that plays when scrolled to, build it at setup and pause its timeline, then play it on view. Built on view, the finished content shows for a moment before the mask hides it.
 - Each intro builder runs once and leaves nothing behind at rest: the cover, the masks, and the copy are removed when their timeline ends. `pullCorner` holds its flap until reverted.
 - `paintReveal` draws on the CPU, a few hundred thousand pixels per changed step. Keep it to one or two at a time, and to intros, not scroll scrubbing on long pages.

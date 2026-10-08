@@ -312,10 +312,9 @@ const DATA: Exhibit[] = [
     group: "play",
     builders: "paintReveal, inkText",
     src: "print-effects",
-    desc: "A print is pulled: an image brushed on with a dry edge, text inked in through grain, a block rolled on by a brayer.",
+    desc: "A print is pulled: an image brushed on with a dry edge, or text inked in through grain.",
     vars: [
-      "Type",
-      "Roller"
+      "Type"
     ]
   },
   {
@@ -652,7 +651,7 @@ const DATA: Exhibit[] = [
     group: "vibes",
     builders: "paintReveal, inkText, registrationSlip, pullCorner, dragPull, writeOn",
     src: "print-effects",
-    desc: "Ink and paper: the headline inks on and slips into register, a roller brushes the print on, covers print as they scroll in, prints peel off a drying rack, and a note is written by hand."
+    desc: "Ink and paper: the headline inks on and slips into register, the print is brushed on, covers print as they scroll in, prints peel off a drying rack, and a note is written by hand."
   },
   {
     name: "Liquid",

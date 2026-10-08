@@ -260,7 +260,10 @@ export function writeOn(target: HTMLElement, { duration = 0.55, ease = "power1.i
   // A slight rise and fall across each line, and strokes a little wider than the line, so descenders write too.
   const strokes = Array.from({ length: lines }, (_, i) => {
     const y = band * (i + 0.5);
-    return `<path d="M-0.02 ${(y + band * 0.04).toFixed(4)}Q0.4 ${(y - band * 0.06).toFixed(4)} 1.02 ${(y + band * 0.02).toFixed(4)}" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" fill="none" stroke="white" stroke-linecap="round" stroke-width="${(band * 1.12).toFixed(4)}"/>`;
+    // Parked past the line's end by more than the round cap's reach, so no sliver of the line shows before it is
+    // written: a cap is half the stroke wide, and the box's units stretch it across the width.
+    const park = (1 + band * 0.6 + 0.05).toFixed(4);
+    return `<path d="M-0.02 ${(y + band * 0.04).toFixed(4)}Q0.4 ${(y - band * 0.06).toFixed(4)} 1.02 ${(y + band * 0.02).toFixed(4)}" pathLength="1" stroke-dasharray="1 ${Number(park) + 1}" stroke-dashoffset="${park}" fill="none" stroke="white" stroke-linecap="round" stroke-width="${(band * 1.12).toFixed(4)}"/>`;
   }).join("");
   defs.innerHTML = `<defs><mask id="${id}" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">${strokes}</mask></defs>`;
   document.body.append(defs);

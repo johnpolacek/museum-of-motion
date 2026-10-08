@@ -1071,7 +1071,7 @@ const HM_ZINES: Array<[string, string, string, string]> = [
 const HM_RACK = ["hand", "stars", "fern", "moon"];
 
 // Ink and paper: the headline inks on and its second plate slips into register, the hero print is brushed
-// on with a roller and then gets its pink, covers print as they scroll in, prints peel off a drying rack,
+// on and then gets its pink, covers print as they scroll in, prints peel off a drying rack,
 // and a note is written by hand. Bowlby One, IBM Plex Mono, and Caveat for the hand.
 const printed = vibe("printed", {
   copy: { brand: "", links: ["", ""], kicker: "", head: "", sub: "", cta: "", cards: [], quote: "", foot: "" },
@@ -1080,7 +1080,7 @@ const printed = vibe("printed", {
   page: `<header class="v-nav"><b class="v-brand">Paper Moon Press</b><span class="v-links"><a href="#v">Zines</a><a href="#v">Drying rack</a></span></header>
     <section class="v-hero hm-hero">
       <div class="hm-copy"><p class="v-kicker">Risograph studio · Leeds</p><h3 class="v-head">Printed by hand, two colors at a time.</h3><p class="v-sub">Zines, posters, and small runs, inked one plate at a time on a drum that smells faintly of soy.</p><button type="button" class="v-btn">See the drying rack</button></div>
-      <figure class="hm-print hm-sheet" role="img" aria-label="A riso print of a pink moon over blue hills">${riso("hmh", ...HM_ART.moon!)}<i class="hm-brayer" aria-hidden="true"></i></figure>
+      <figure class="hm-print hm-sheet" role="img" aria-label="A riso print of a pink moon over blue hills">${riso("hmh", ...HM_ART.moon!)}</figure>
     </section>
     <section class="hm-zines"><h4 class="hm-title">This season’s zines</h4><div class="v-cards">${HM_ZINES.map(([name, meta, price, art], i) => `<article class="v-card"><span class="v-art hm-sheet">${riso(`hmz${i}`, ...HM_ART[art]!)}</span><a href="#v" class="hm-name">${name}</a><span class="v-meta">${meta}</span><span class="hm-price">${price}</span></article>`).join("")}</div></section>
     <section class="hm-rack"><h4 class="hm-title">The drying rack</h4><p class="hm-hint">Grab a print anywhere and pull it off the rack. Or press Enter on it.</p><div class="hm-stack">${HM_RACK.map((art, i) => `<div class="hm-slot"><figure class="hm-sheet hm-rack-sheet" tabindex="-1" aria-label="Print ${HM_RACK.length - i} of ${HM_RACK.length}: drag or press Enter to pull it off">${riso(`hmr${i}`, ...HM_ART[art]!)}</figure></div>`).join("")}</div><button type="button" class="hm-restack">Hang them back up</button></section>
@@ -1095,7 +1095,7 @@ const printed = vibe("printed", {
     const pink = one(sheet, ".hm-pink");
     // Build the pink plate's mask first, so it stays hidden while the blue is brushed on.
     const second = inkText([pink], { duration: 1.2, direction: "down" });
-    const first = paintReveal(sheet, { paper: PAPER, duration: 1.8, roller: one<HTMLElement>(sheet, ".hm-brayer") });
+    const first = paintReveal(sheet, { paper: PAPER, duration: 1.8 });
     tl.from(p.nav, { autoAlpha: 0, y: -8, duration: 0.4, ease: "power2.out", stagger: 0.06 }, 0)
       .from(p.kicker, { autoAlpha: 0, duration: 0.4 }, 0.1)
       .add(ink.timeline, 0.2)
@@ -1193,33 +1193,27 @@ const printed = vibe("printed", {
       gsap.killTweensOf(sheets.map((s) => s.parentElement!));
       clear();
     });
-    // The note is written by hand as it comes into view, then the signature.
-    const note = one(p.win, ".hm-hand");
-    const sign = one(p.win, ".hm-sign");
-    let written: Array<{ revert: () => void }> = [];
-    gsap.set(sign, { autoAlpha: 0 });
-    const writing = onView(one(p.win, ".hm-note"), p.win, () => {
-      const hand = writeOn(note, { duration: 2.4 });
-      gsap.set(sign, { autoAlpha: 1 });
-      const name = writeOn(sign, { duration: 0.6 });
-      name.timeline.pause(0);
-      hand.timeline.eventCallback("onComplete", () => name.timeline.play());
-      written = [hand, name];
-    }, "top 70%");
+    // The note is written by hand as it comes into view, then the signature. The masks are built now,
+    // paused, so the note starts hidden: built on view, the finished note would show for a moment first.
+    const hand = writeOn(one(p.win, ".hm-hand"), { duration: 2.4 });
+    const name = writeOn(one(p.win, ".hm-sign"), { duration: 0.6 });
+    hand.timeline.pause(0);
+    name.timeline.pause(0);
+    hand.timeline.eventCallback("onComplete", () => name.timeline.play());
+    const writing = onView(one(p.win, ".hm-note"), p.win, () => hand.timeline.play(), "top 70%");
     offs.push(() => {
       writing.kill();
-      written.forEach((w) => w.revert());
-      gsap.set(sign, { clearProps: "all" });
+      hand.revert();
+      name.revert();
     });
-    // The statement inks on as its words come into view. One mask over the whole paragraph: split into
-    // lines, the words wrap a little differently from the resting text, and a line break jumps as it ends.
-    let inked: { revert: () => void } | undefined;
-    const quoteSt = onView(p.quote, p.win, () => {
-      inked = inkText([p.quote], { duration: 1.4, direction: "right" });
-    }, "top 85%");
+    // The statement inks on as its words come into view: one mask over the whole paragraph, built now and
+    // paused for the same reason. Split into lines, the words would wrap differently from the resting text.
+    const inked = inkText([p.quote], { duration: 1.4, direction: "right" });
+    inked.timeline.pause(0);
+    const quoteSt = onView(p.quote, p.win, () => inked.timeline.play(), "top 85%");
     offs.push(() => {
       quoteSt.kill();
-      inked?.revert();
+      inked.revert();
     });
     return [
       ...offs,

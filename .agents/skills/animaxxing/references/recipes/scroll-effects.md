@@ -310,6 +310,8 @@ export function pinnedScene(
   if (prefersReducedMotion()) return () => {};
   return own((_dispose, after) => {
     const saved = new Map(gsap.utils.toArray<HTMLElement>("*", section).map((element) => [element, snapshotStyles([element])]));
+    // A closure below reads it before it is assigned, so it must stay `let`.
+    // eslint-disable-next-line prefer-const
     let animated: Set<unknown> | undefined;
     // Restore only what the scene animates; other effects inside it keep their inline values. A failed build restores all.
     after(() => saved.forEach((restore, element) => (!animated || animated.has(element)) && restore()));
