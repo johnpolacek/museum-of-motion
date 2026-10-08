@@ -45,7 +45,7 @@ export const LIVE_STAGES = new Set([
   "cursor",
   "attract",
   "open",
-  "flip",
+  "rearrange",
   "morph",
   "paint",
   "pull",

@@ -15,7 +15,7 @@ import { shake } from "../recipes/accents";
 import { dialogMotion, disclosure, enterExit, menuOverlay, panelSwap, stateButton, tabIndicator } from "../recipes/component-motion";
 import { captureLayout, captureShared, playShared } from "../recipes/layout-flip";
 import { archPolygon, shapeFlight, type DoorwayEffect } from "../recipes/doorways";
-import { burstFrom, pile, rain } from "../recipes/physics-effects";
+import { burstFrom, pile, rain, slingshot } from "../recipes/physics-effects";
 import { blastOff } from "../recipes/blast-off";
 import { dragGrid, dragLoop, flickCards } from "../recipes/endless-drag";
 import { attachParticleEffect, type ParticleEffectDefinition } from "../recipes/particles/attach";
@@ -728,7 +728,7 @@ const particles = play(
     const bleed = effect.bleed;
     return live(
       text,
-      `<div class="particle-btn" data-particle-button><canvas aria-hidden="true" style="left:-${bleed}px; top:-${bleed}px"></canvas><button type="button" class="pill big">Continue</button></div>`,
+      `<div class="particle-btn" data-particle-button><canvas aria-hidden="true" style="left:-${bleed}px; top:-${bleed}px"></canvas><button type="button" class="${p.variation === "ignite" ? "ignite-link" : "pill big"}">Continue</button></div>`,
       (layer) => {
         const root = one(layer, ".particle-btn");
         const button = one(root, "button");
@@ -792,13 +792,62 @@ const pileStage = (text: HTMLElement) =>
     "piled",
   );
 
+// Bounce: the same pile, nearly lossless and with a ceiling, so a handful of balls keep bouncing off the
+// floor, the walls, the top, and each other. A tap or click kicks them all; they slowly come to rest.
+const bounceStage = (text: HTMLElement) =>
+  live(
+    text,
+    `<div class="pile-box" aria-hidden="true"></div><div class="pile-btns"><button type="button" class="pill" data-kick>Kick</button></div>`,
+    (layer) => {
+      const box = one(layer, ".pile-box");
+      const balls = pile(box, { pieces: PILE_PIECES().filter((s) => s.style.borderRadius === "50%"), bounce: 0.88, grip: 0.995, ceiling: true });
+      balls.drop(9);
+      const kick = () => balls.shake();
+      const tap = (e: PointerEvent) => !(e.target as Element).closest("button") && balls.shake();
+      layer.addEventListener("pointerdown", tap);
+      one(layer, "[data-kick]").addEventListener("click", kick);
+      return [
+        () => {
+          layer.removeEventListener("pointerdown", tap);
+          one(layer, "[data-kick]").removeEventListener("click", kick);
+        },
+        balls.stop,
+      ];
+    },
+    "piled",
+  );
+
+// Launch: a slingshot. Pull the handle back and let go; the ball flies the opposite way, arcs, bounces, and
+// heaps on the floor. A row of dots shows the arc while aiming. Arrow keys aim and Enter fires.
+const launchStage = (text: HTMLElement) =>
+  live(
+    text,
+    `<div class="pile-box launch-box"></div><button type="button" class="launch-handle" aria-label="Slingshot: drag back and let go, or aim with the arrow keys and press Enter"></button><div class="pile-btns"><button type="button" class="pill" data-clear>Clear</button></div>`,
+    (layer) => {
+      const box = one(layer, ".pile-box");
+      const heap = pile(box, { pieces: PILE_PIECES().filter((s) => s.style.borderRadius === "50%"), bounce: 0.5 });
+      const handle = one(layer, ".launch-handle");
+      // The handle sits in the box's lower left; the recipe works in the box's own pixels.
+      box.append(handle);
+      const shoot = slingshot(box, handle, heap, { reach: 120, power: 12 });
+      const clear = () => heap.clear();
+      one(layer, "[data-clear]").addEventListener("click", clear);
+      return [() => one(layer, "[data-clear]").removeEventListener("click", clear), shoot, heap.stop];
+    },
+    "piled",
+  );
+
 const confetti = play(
-  ["Pile", "Confetti", "Emoji", "Rain"],
-  ["pile", "confetti", "emoji", "rain"],
+  ["Pile", "Bounce", "Launch", "Confetti", "Emoji", "Rain"],
+  ["pile", "bounce", "launch", "confetti", "emoji", "rain"],
   "Tap or click anywhere to drop more. Shake the heap, or clear it.",
   (text, p) =>
     p.variation === "pile"
       ? pileStage(text)
+      : p.variation === "bounce"
+      ? bounceStage(text)
+      : p.variation === "launch"
+      ? launchStage(text)
       : p.variation === "rain"
       ? live(text, `<div class="rain-layer" aria-hidden="true"></div><button type="button" class="pill big rain-btn">Make it rain</button>`, (layer) => {
           // Rain falls inside the stage: the skill's rain, from above its top edge to below its bottom.
@@ -1018,7 +1067,7 @@ const openAndCloseMerged = merge([
   { label: "Interruptible", key: "interruptible", def: enterAndExit },
 ]);
 
-// Flip: one exhibit, one tab per stage it gathers.
+// Rearrange: one exhibit, one tab per stage it gathers.
 const flipMerged = merge([
   { label: "Layout", key: "layout", def: layoutFlip },
   { label: "List", key: "list", def: arrange, variation: "list" },
@@ -1033,13 +1082,13 @@ export const POINTER_STAGES: Record<string, StageDef> = {
   "cursor": cursorMerged,
   "attract": attractMerged,
   open: openAndCloseMerged,
-  "flip": flipMerged,
+  rearrange: flipMerged,
   morph: morphMerged,
   tabs,
   particles,
   physics: {
     ...confetti,
-    hints: { pile: "Tap or click anywhere to drop more. Shake the heap, or clear it.", confetti: "Press the button.", emoji: "Press the button.", rain: "Press the button." },
+    hints: { pile: "Tap or click anywhere to drop more. Shake the heap, or clear it.", bounce: "Tap, click, or press Kick to send them flying.", launch: "Drag the slingshot back and let go. Or Tab to it, aim with the arrow keys, and press Enter.", confetti: "Press the button.", emoji: "Press the button.", rain: "Press the button." },
   },
   explode,
   // Throw: content you drag and throw, bounded, endless, or wrapping both ways.

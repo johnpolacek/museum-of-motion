@@ -508,11 +508,11 @@ const DATA: Exhibit[] = [
     ]
   },
   {
-    name: "Flip",
+    name: "Rearrange",
     group: "pointer",
     builders: "captureLayout, captureShared, playShared, shapeFlight",
     src: "layout-flip",
-    desc: "Flip records where things were and animates them to where they are: tiles sliding as a layout filters, stacks into a list, or shuffles, a thumbnail morphing into the hero it opens, or a card's picture flying into an arch and taking its shape.",
+    desc: "Things move from where they were to where they are now: tiles sliding as a layout filters, stacks into a list, or shuffles, a thumbnail morphing into the hero it opens, or a card's picture flying into an arch and taking its shape.",
     vars: [
       "List",
       "Shuffle",
@@ -537,10 +537,12 @@ const DATA: Exhibit[] = [
   {
     name: "Physics",
     group: "pointer",
-    builders: "pile, burst, burstFrom, rain",
+    builders: "pile, slingshot, burst, burstFrom, rain",
     src: "physics-effects",
-    desc: "Pieces under gravity: they fall, bounce off the floor and each other, and heap up, or a cone of confetti arcs up and falls away, or it rains from above.",
+    desc: "Pieces under gravity: they fall, bounce off the floor and each other, and heap up, bounce around a box, fly from a slingshot, or a cone of confetti arcs up and falls away, or it rains from above.",
     vars: [
+      "Bounce",
+      "Launch",
       "Confetti",
       "Emoji",
       "Rain"

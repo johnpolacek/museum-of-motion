@@ -285,6 +285,10 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art.piled { place-items: end center; padding-bottom: 16px; touch-action: manipulation; }
 .ex .stage-art .pile-box { position: absolute; inset: 0; overflow: hidden; }
 .ex .stage-art .pile-box > * { position: absolute; left: 0; top: 0; display: block; will-change: transform; }
+.ex .stage-art .launch-box { color: #fff; }
+.ex .stage-art .pile-box > .launch-handle { left: clamp(40px, 12%, 140px); top: auto; bottom: 34%; width: 44px; height: 44px; padding: 0; border-radius: 50%; border: 3px solid #fff; background: var(--ink); cursor: grab; will-change: auto; }
+.ex .stage-art .launch-handle:active { cursor: grabbing; }
+.ex .stage-art .launch-handle:focus-visible { outline: 2px solid #fff; outline-offset: 6px; }
 .ex .stage-art .pile-btns { position: relative; z-index: 1; display: flex; gap: 10px; align-self: start; margin-top: 16px; }
 .ex .stage-art .rain-layer > * { position: absolute; left: 0; top: 0; font-size: clamp(22px, 3vw, 40px); line-height: 1; }
 .ex .stage-art .rain-layer .confetto { display: block; width: 10px; height: 14px; font-size: 0; }
@@ -936,3 +940,6 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .amb-center { grid-area: 1 / 1; font: 800 clamp(64px, 10vw, 140px)/1 var(--sans); font-stretch: 75%; }
 .ex .stage-art .amb-orbit .amb-shape { grid-area: 1 / 1; position: relative; }
 .ex .stage-art .amb-pause { margin-top: 18px; }
+
+/* Ignite runs along a rule under its text, so it takes a large text link rather than a pill. */
+.ex .stage-art .ignite-link { padding: 0 0 10px; border: 0; background: none; color: #fff; cursor: pointer; font: 800 clamp(44px, 7vw, 104px)/1 var(--sans); font-stretch: 75%; text-transform: uppercase; letter-spacing: -0.01em; }
