@@ -7,10 +7,10 @@ import { play, type StageDef } from "../stage-core";
 import { windowed } from "./scroll";
 import { parallax, revealOnScroll, scrubStatement } from "../recipes/scroll-effects";
 import { pressFeedback } from "../recipes/press-feedback";
-import { beadUnderline, imageZoom, jelly, pourFill, textRoll, underlineSweep } from "../recipes/hover-effects";
+import { beadUnderline, imageZoom, jelly, textRoll, underlineSweep } from "../recipes/hover-effects";
 import { dragPull, inkText, paintReveal, pullCorner, registrationSlip, writeOn, type Pull } from "../recipes/print-effects";
-import { liquidImage } from "../recipes/webgl/liquid-image";
-import { melt, pourStream, type Melt } from "../recipes/webgl/metaballs";
+import { pourStream } from "../recipes/webgl/metaballs";
+import { pourReveal } from "../recipes/media-effects";
 import { cursorFollower, spotlight, tilt } from "../recipes/pointer-effects";
 import { burstFrom, pile } from "../recipes/physics-effects";
 import { horizontalRun } from "../recipes/scroll-effects";
@@ -1226,118 +1226,127 @@ const printed = vibe("printed", {
 
 /* ---------- Liquid ---------- */
 
-const LQ_SCENTS: Array<[string, string, string]> = [
-  ["Mercure", "Aldehydes, cold iris, wet stone", "€140"],
-  ["Lac Noir", "Black tea, fig leaf, cedar", "€140"],
-  ["Pluie d’Argent", "Rain, violet, white musk", "€150"],
-  ["Verre", "Vetiver, grapefruit peel, glass", "€130"],
-  ["Mercredi", "Neroli, linen, warm skin", "€130"],
-  ["Nuit Fondue", "Oud, plum, melted amber", "€180"],
-  ["Ozone", "Sea air, sage, mineral salt", "€140"],
-  ["Lune Liquide", "Pear, magnolia, sandalwood", "€150"],
+// After the Living Exhibition poster: ivory and black, a liquid-chrome sculpture with the sky showing
+// through a window in it, a big serif title, and four arched works. The sculpture, the sky, and the
+// handwriting are that poster's own images; the works are its artwork.
+const LQ = "/vibes/liquid";
+const LQ_WORKS: Array<[string, string, string]> = [
+  ["117934", "Soft Assembly", "Form Practice"],
+  ["117627", "Odd Company", "Form Practice"],
+  ["117491", "Everyday Orbit", "Orbit Office"],
+  ["119952", "Big Little Things", "Paper Social"],
 ];
-/** The bottle, as an image the liquid view can read: a data URL never taints the canvas. */
-const lqBottle = (() => {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1100" viewBox="0 0 300 366"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#2b2a35"/><stop offset=".45" stop-color="#d9dde6"/><stop offset=".55" stop-color="#f5f6fa"/><stop offset="1" stop-color="#3a3946"/></linearGradient><linearGradient id="l" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c7b8ff"/><stop offset="1" stop-color="#6e5bd6"/></linearGradient><radialGradient id="bg" cx=".5" cy=".55" r=".7"><stop offset="0" stop-color="#2a2733"/><stop offset="1" stop-color="#0d0c12"/></radialGradient></defs><rect width="300" height="366" fill="url(#bg)"/>${Array.from({ length: 12 }, (_, i) => `<line x1="0" x2="300" y1="${18 + i * 30}" y2="${18 + i * 30}" stroke="#ffffff" stroke-opacity=".05"/>`).join("")}<rect x="126" y="62" width="48" height="40" rx="4" fill="url(#g)"/><rect x="72" y="110" width="156" height="196" rx="30" fill="#ffffff" fill-opacity=".08" stroke="#d9dde6" stroke-opacity=".5"/><rect x="80" y="170" width="140" height="128" rx="24" fill="url(#l)" opacity=".85"/><rect x="96" y="118" width="10" height="170" rx="5" fill="#fff" opacity=".25"/><text x="150" y="232" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="17" letter-spacing="5" fill="#0d0c12">MERCURE</text></svg>`;
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-})();
-/** The melts, by window, so the intro can form the one its page built. */
-const LQ_MELTS = new WeakMap<HTMLElement, { metal: Melt | null; ready: boolean; asked: boolean }>();
+const LQ_INDEX: Array<[string, string, string]> = [
+  ["Soft Assembly", "Form Practice", "Geometry · Color"],
+  ["Odd Company", "Form Practice", "Color · Collage"],
+  ["Everyday Orbit", "Orbit Office", "Geometry · Rhythm"],
+  ["Big Little Things", "Paper Social", "Lettering · Color"],
+  ["Aftertone", "Sine Workshop", "Audio · Geometry"],
+  ["Low Frequency", "Sine Workshop", "Audio · Rhythm"],
+  ["Echo Season", "Interval Press", "Audio · Color"],
+  ["Night Signal", "Interval Press", "Rhythm · Typography"],
+  ["Salt Horizon", "Tide Office", "Landscape · Color"],
+  ["Painted Quarter", "Block Studios", "Architecture · Collage"],
+  ["Moss House", "Block Studios", "Architecture · Geometry"],
+  ["Stillwater", "Tide Office", "Landscape · Rhythm"],
+];
+/** Where the ink pours from: the seam behind the sculpture, as a fraction of the poster's width. */
+const LQ_SEAM = 0.41;
+/** The black field's leading edge at `p`, 0 at the seam and 1 past the right edge: a slow wave, not a straight line. */
+const lqInk = (p: number, time: number) => {
+  const x = (y: number) => (LQ_SEAM + (1.06 - LQ_SEAM) * p) * 100 + Math.sin(y * 7 + time * 3) * 2.2 * (1 - p);
+  const edge = Array.from({ length: 17 }, (_, i) => `${x(i / 16).toFixed(1)}% ${((i / 16) * 100).toFixed(1)}%`);
+  return `polygon(0% 0%, ${edge.join(", ")}, 0% 100%)`;
+};
 
-// Molten and slow: the name pours together from liquid metal, a stream runs down the scents as you read,
-// links draw a bead into a line, the button wobbles like jelly, arrows fill like a glass, and the bottle
-// stirs under the hand. Unbounded and Manrope on near black.
+// Liquid, after a living poster: ink floods out from behind the sculpture, the chrome pours in, its
+// window opens onto the sky, and the title rises. Links draw a bead into a line, the pill wobbles like
+// jelly, the sky drifts with the pointer, and a chrome stream pours down the black index as you read.
 const liquid = vibe("liquid", {
   copy: { brand: "", links: ["", ""], kicker: "", head: "", sub: "", cta: "", cards: [], quote: "", foot: "" },
-  lenis: { lerp: 0.06 },
-  move: { duration: 1.6, ease: "power3.inOut" },
-  nav: [".lq-scents", ".lq-bottle"],
-  page: `<div class="lq-pour" aria-hidden="true"></div><header class="v-nav"><b class="v-brand">Mercure</b><span class="v-links"><a href="#v">Scents</a><a href="#v">The bottle</a></span></header>
-    <section class="v-hero lq-hero"><p class="v-kicker">Eaux de parfum · Paris</p><div class="lq-melt"><h3 class="v-head">Mercure</h3></div><p class="v-sub">Eight scents that move like quicksilver: cold at first, then warm on the skin.</p><button type="button" class="v-btn">Find your scent</button></section>
-    <section class="lq-scents"><p class="v-kicker">The collection</p><div class="lq-index"><div class="lq-gutter" aria-hidden="true"></div><ol class="lq-rows">${LQ_SCENTS.map(([name, notes, price], i) => `<li><span class="lq-no">${String(i + 1).padStart(2, "0")}</span><span class="lq-name"><b>${name}</b><small>${notes}</small></span><span class="lq-price">${price}</span><a href="#v" class="lq-go" aria-label="${name}, ${price}"><i class="lq-fill" aria-hidden="true"></i><span aria-hidden="true">→</span></a></li>`).join("")}</ol></div></section>
-    <section class="lq-bottle"><figure class="lq-glass"><img alt="The Mercure bottle, lilac liquid in clear glass with a chrome cap" src="${lqBottle}"></figure><p class="v-caption">Stir the glass with the pointer, or a held finger.</p></section>
-    <section class="v-quote"><p>Wear it the way mercury holds a shape: only for a moment.</p></section>
-    <footer class="v-foot"><span>Mercure Parfums</span><span>12 rue de Turenne, Paris</span></footer>`,
+  lenis: { lerp: 0.07 },
+  move: { duration: 1.4, ease: "power3.inOut" },
+  nav: [".lq-shelf", ".lq-index"],
+  page: `<div class="lq-stage">
+      <div class="lq-art" aria-hidden="true">
+        <div class="lq-ink"><div class="lq-field"></div></div>
+        <div class="lq-opening"><img class="lq-sky" src="${LQ}/opening-sky.webp" alt=""></div>
+        <div class="lq-chrome"><img src="${LQ}/chrome.webp" alt=""></div>
+      </div>
+      <img class="lq-hand" src="${LQ}/handwriting.webp" alt="Ideas change everything">
+      <header class="v-nav lq-mast"><b class="v-brand lq-mark"><span>Living</span> <span>Exhibition</span></b><p class="lq-tagline">An exhibition of imaginary projects</p><span class="v-links"><a href="#v">Exhibition</a><a href="#v">Index</a></span></header>
+      <section class="v-hero lq-intro"><h3 class="v-head"><span class="lq-word">Living</span> <span class="lq-word">Exhibition</span></h3><p class="v-kicker">Websites breathe too</p><p class="v-sub">An experimental design festival where the identity evolves with the work on display.</p><button type="button" class="v-btn lq-pill"><span class="lq-pill-label">Explore the projects</span> <span class="lq-pill-arrow" aria-hidden="true">→</span></button></section>
+      <p class="lq-margin">Different sites. A brighter internet.</p>
+      <div class="lq-notes"><p class="lq-note"><span class="lq-dot" aria-hidden="true"></span>Art<br>Code<br>People<br>A brighter web</p><p class="lq-claim">A living exhibition for a more curious internet.</p></div>
+      <ul class="lq-shelf">${LQ_WORKS.map(([id, title, by], i) => `<li><a class="lq-work" href="#v"><span class="lq-arch"><img src="${LQ}/${id}.svg" alt=""></span><span class="lq-meta"><span>0${i + 1}</span><span class="lq-ring" aria-hidden="true">→</span></span><b class="lq-title">${title}</b><span class="lq-by">by ${by}</span></a></li>`).join("")}</ul>
+    </div>
+    <section class="lq-index"><div class="lq-gutter" aria-hidden="true"></div><div class="lq-list"><h4 class="lq-index-head">Index <small>Every work in this edition, in the order it hangs.</small></h4><ol class="lq-rows">${LQ_INDEX.map(([title, by, tags], i) => `<li><span class="lq-no">${String(i + 1).padStart(2, "0")}</span><b>${title}</b><span>by ${by}</span><small>${tags}</small></li>`).join("")}</ol></div></section>
+    <footer class="v-foot lq-colophon"><span>Living Exhibition: an exhibition of imaginary projects.</span><span>Projects and studios are fictional.</span></footer>`,
   intro: (p, tl) => {
-    tl.from(p.nav, { autoAlpha: 0, duration: 0.8, ease: "power2.out", stagger: 0.1 }, 0)
-      .from(p.kicker, { autoAlpha: 0, y: 10, duration: 1.2, ease: "power3.out" }, 0.1)
-      // The name pours together; without WebGL the live heading is simply there.
-      .call(() => {
-        const m = LQ_MELTS.get(p.win);
-        if (!m) return;
-        m.asked = true;
-        if (m.ready) m.metal?.form({ duration: 2.4, from: "top" });
-      }, [], 0.2)
-      // Not split into lines: the face may still be loading, and lines split early would break wrong.
-      .from(p.sub, { autoAlpha: 0, y: 16, duration: 0.9, ease: "power3.out" }, 1.2)
-      .from(p.btn, { autoAlpha: 0, scale: 0.6, duration: 1, ease: "elastic.out(1, 0.5)" }, 1.6);
-    return () => {};
+    const all2 = (sel: string) => all(p.win, sel);
+    const ink = one(p.win, ".lq-ink");
+    const chrome = one(p.win, ".lq-chrome");
+    const sky = one(p.win, ".lq-sky");
+    const opening = one(p.win, ".lq-opening");
+    const pill = p.btn;
+    // The chrome pours in from the seam, the way the poster's sculpture forms.
+    const pour = pourReveal(chrome, { origin: [0.42, 0.62], duration: 1.5, from: 1.06 });
+    // The ink floods out from the seam to the right edge, its front a slow wave.
+    const flood = { p: 0 };
+    const width = pill.getBoundingClientRect();
+    const circle = width.width ? ((width.width - width.height) / width.width) * 100 : 0;
+    tl.fromTo(flood, { p: 0 }, { p: 1, duration: 1.1, ease: "power1.inOut", onUpdate: () => (ink.style.clipPath = lqInk(flood.p, tl.time())), onComplete: () => ink.style.removeProperty("clip-path") }, 0.2)
+      .add(pour.timeline, 0.1)
+      // The window opens onto the sky as the chrome settles.
+      .fromTo(opening, { clipPath: "circle(0% at 41% 36%)" }, { clipPath: "circle(75% at 41% 36%)", duration: 1.2, ease: "power2.inOut" }, 1.0)
+      .fromTo(sky, { scale: 1.14 }, { scale: 1, duration: 1.6, ease: "power2.out" }, 1.0)
+      .fromTo(all2(".lq-word"), { y: 28, clipPath: "inset(0% 0% 100% 0%)" }, { y: 0, clipPath: "inset(0% 0% -20% 0%)", duration: 0.85, ease: "power3.out", stagger: 0.1 }, 1.3)
+      .fromTo(all2(".lq-mark span"), { y: 10, clipPath: "inset(0% 0% 100% 0%)" }, { y: 0, clipPath: "inset(0% 0% -20% 0%)", duration: 0.7, ease: "power3.out", stagger: 0.08 }, 1.5)
+      .from([one(p.win, ".lq-tagline"), ...p.nav.filter((n) => n.tagName === "A")], { autoAlpha: 0, y: -8, duration: 0.5, ease: "power3.out", stagger: 0.07 }, 1.6)
+      .from([p.kicker, p.sub], { autoAlpha: 0, y: 12, duration: 0.7, ease: "power3.out", stagger: 0.1 }, 1.7)
+      // The pill grows out of the circle around its arrow, which appears first.
+      .fromTo(pill, { autoAlpha: 0, scale: 0.6, clipPath: `inset(0% 0% 0% ${circle}% round 999px)` }, { autoAlpha: 1, scale: 1, duration: 0.35, ease: "back.out(2)", transformOrigin: "100% 50%" }, 1.6)
+      .to(pill, { clipPath: "inset(0% 0% 0% 0% round 999px)", duration: 0.85, ease: "expo.inOut" }, 1.85)
+      .from(one(pill, ".lq-pill-label"), { autoAlpha: 0, x: -12, duration: 0.5, ease: "power3.out" }, 2.2)
+      .fromTo(one(p.win, ".lq-margin"), { clipPath: "inset(0% 0% 100% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.9, ease: "power2.inOut" }, 1.9)
+      .from(one(p.win, ".lq-dot"), { scale: 0, duration: 0.6, ease: "back.out(2)" }, 1.8)
+      .fromTo(one(p.win, ".lq-note"), { clipPath: "inset(0% 0% 100% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.8, ease: "power2.inOut" }, 1.9)
+      .fromTo(one(p.win, ".lq-claim"), { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.9, ease: "power2.inOut" }, 2.0)
+      // Written on, left to right, once the chrome it sits on has settled.
+      .fromTo(one(p.win, ".lq-hand"), { clipPath: "inset(-5% 100% -5% 0%)" }, { clipPath: "inset(-5% 0% -5% 0%)", duration: 1.3, ease: "power1.inOut" }, 2.1)
+      .from(all2(".lq-shelf li"), { autoAlpha: 0, yPercent: 18, duration: 0.8, ease: "power3.out", stagger: 0.08 }, 1.9);
+    return () => {
+      pour.revert();
+      ink.style.removeProperty("clip-path");
+      gsap.set([opening, sky, ...all2(".lq-word, .lq-mark span, .lq-tagline, .lq-margin, .lq-dot, .lq-note, .lq-claim, .lq-hand, .lq-shelf li, .lq-pill-label"), ...p.nav, p.kicker, p.sub, pill], { clearProps: "transform,opacity,visibility,clipPath" });
+    };
   },
-  wire: (p, layer) => {
-    // The melt draws in a layer from the window's top down to the name, so drops fall from the top of the
-    // frame. The name is drawn where the live heading sits in that layer.
-    const host = one(p.win, ".lq-pour");
-    const css = getComputedStyle(p.head);
-    const font = `${css.fontWeight} ${css.fontSize} ${css.fontFamily}`;
-    const place = () => {
-      const top = p.win.getBoundingClientRect().top - p.win.scrollTop;
-      host.style.height = `${p.head.getBoundingClientRect().bottom - top + 12}px`;
+  wire: (p) => {
+    // The sky drifts a little with the pointer, as if the window were deep. Mouse only.
+    const sky = one(p.win, ".lq-sky");
+    const toX = gsap.quickTo(sky, "xPercent", { duration: 1.2, ease: "power3.out" });
+    const toY = gsap.quickTo(sky, "yPercent", { duration: 1.2, ease: "power3.out" });
+    const drift = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse" || prefersReducedMotion()) return;
+      const box = p.win.getBoundingClientRect();
+      toX(((e.clientX - box.left) / box.width - 0.5) * -6);
+      toY(((e.clientY - box.top) / box.height - 0.5) * -4);
     };
-    /** The name, where the heading's text sits in the layer, at the canvas's scale. */
-    const drawName = (c: CanvasRenderingContext2D, w: number) => {
-      const scale = w / host.clientWidth;
-      const range = document.createRange();
-      range.selectNodeContents(p.head);
-      const text = range.getBoundingClientRect();
-      const layer = host.getBoundingClientRect();
-      c.font = `${css.fontWeight} ${parseFloat(css.fontSize) * scale}px ${css.fontFamily}`;
-      c.textAlign = "center";
-      c.textBaseline = "middle";
-      c.fillStyle = "#fff";
-      c.fillText(p.head.textContent ?? "", (text.left + text.width / 2 - layer.left) * scale, (text.top + text.height / 2 - layer.top) * scale);
-    };
-    const state: { metal: Melt | null; ready: boolean; asked: boolean } = { metal: null, ready: false, asked: false };
-    LQ_MELTS.set(p.win, state);
-    let gone = false;
-    // The melt draws the word once, so it waits for the face; otherwise it would pour a fallback font.
-    document.fonts.load(font).finally(() => {
-      if (gone) return;
-      place();
-      const metal = (state.metal = melt(host, { draw: drawName, poster: p.head, drops: 16, clip: p.win }));
-      metal.view.ready.then((drawn) => {
-        if (!drawn || gone) return;
-        state.ready = true;
-        if (state.asked) metal.form({ duration: 2.4, from: "top" });
-      });
-    });
-    // Replay drips the old name away first, so it pours again.
-    const replay = layer.querySelector(".v-replay");
-    const drip = () => state.ready && state.metal?.drip({ duration: 0 });
-    replay?.addEventListener("click", drip, { capture: true });
-    const stream = pourStream(one(p.win, ".lq-gutter"), { rows: all(p.win, ".lq-rows li"), width: 5, lead: 0.55, scroller: p.win });
-    // The bottle stirs under the hand, and one stroke pours across it as it scrolls in.
-    const glass = liquidImage(one<HTMLImageElement>(p.win, ".lq-glass img"), { touch: true, clip: p.win });
-    glass.uniforms.uStrength.value = 0.1;
-    const pouring = onView(one(p.win, ".lq-bottle"), p.win, () => glass.view.ready.then((drawn) => {
-      if (drawn && !gone) glass.pour({ duration: 1.6 });
-    }), "top 55%");
+    p.win.addEventListener("pointermove", drift);
+    // A chrome stream pours down the index beside its rows as you read, and a bead settles at each.
+    const stream = pourStream(one(p.win, ".lq-gutter"), { rows: all(p.win, ".lq-rows li"), width: 5, lead: 0.6, scroller: p.win });
     return [
       () => {
-        gone = true;
-        replay?.removeEventListener("click", drip, { capture: true });
-        LQ_MELTS.delete(p.win);
-        pouring.kill();
+        p.win.removeEventListener("pointermove", drift);
+        gsap.killTweensOf(sky);
+        gsap.set(sky, { clearProps: "transform" });
         stream.revert();
-        glass.revert();
-        state.metal?.revert();
       },
-      cta(p, one(p.win, ".lq-scents"), { duration: 1.6, ease: "power3.inOut" }),
-      jelly(p.btn, { highlight: "rgb(255 255 255 / 0.5)", touch: true }),
-      ...all(p.win, ".v-links a").map((a) => beadUnderline(a, { bead: 6, thickness: 1, touch: true })),
-      ...all(p.win, ".lq-go").map((a) => pourFill(a, one(a, ".lq-fill"), { touch: true })),
-      revealOnScroll(all(p.win, ".lq-rows li"), { scroller: p.win, y: 16, duration: 0.9, stagger: 0.06, ease: "power3.out" }),
-      scrubStatement(p.quote, { by: "words", scroller: p.win, scrub: 1.2 }),
-      pressFeedback(p.btn, { squash: 0.97, ink: 0.15 }),
+      cta(p, one(p.win, ".lq-index"), { duration: 1.4, ease: "power3.inOut" }),
+      jelly(p.btn, { highlight: "rgb(255 255 255 / 0.4)", touch: true }),
+      ...all(p.win, ".v-links a").map((a) => beadUnderline(a, { bead: 5, thickness: 1, touch: true })),
+      ...all(p.win, ".lq-work").map((a) => imageZoom(a, { image: one<HTMLElement>(a, ".lq-arch img"), scale: 1.06, duration: 0.8, touch: true })),
+      revealOnScroll(all(p.win, ".lq-rows li"), { scroller: p.win, y: 14, duration: 0.8, stagger: 0.05, ease: "power3.out" }),
     ];
   },
 });

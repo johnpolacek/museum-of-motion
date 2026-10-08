@@ -656,9 +656,9 @@ const DATA: Exhibit[] = [
   {
     name: "Liquid",
     group: "vibes",
-    builders: "melt, pourStream, liquidImage, beadUnderline, pourFill, jelly",
+    builders: "pourReveal, pourStream, beadUnderline, jelly, imageZoom, revealOnScroll",
     src: "metaballs",
-    desc: "Molten and slow: the name pours together from liquid metal, a stream runs down the scents as you read, links draw a bead into a line, and the bottle stirs under the hand.",
+    desc: "After a living poster: ink floods out from behind a liquid-chrome sculpture, the chrome pours in, its window opens onto the sky, and a chrome stream runs down the index as you read.",
     gl: true
   }
 ];

@@ -877,40 +877,6 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win.vibe-printed .v-foot { display: flex; justify-content: space-between; gap: 12px; border-top: 2px solid var(--v-fg); text-transform: uppercase; letter-spacing: 0.06em; }
 .ex .win.vibe-printed button:focus-visible, .ex .win.vibe-printed a:focus-visible { outline: 2px solid var(--v-blue); outline-offset: 4px; }
 
-/* Liquid: a fragrance house. Near black, chrome, a lilac accent. Unbounded and Manrope. */
-.ex .win.vibe-liquid { --v-bg: #0d0c12; --v-fg: #e9eaf0; --v-muted: #9a98a8; --v-accent: #c7b8ff; --v-on-accent: #0d0c12; --v-chrome: #d9dde6; --v-font: var(--font-manrope), "Manrope", system-ui, sans-serif; --v-display: var(--font-unbounded), "Unbounded", system-ui, sans-serif; font-size: 16px; }
-/* The WebGL canvas sits above the page, so nothing may scroll under a sticky nav: this one scrolls away. */
-.ex .win.vibe-liquid .v-nav { position: relative; }
-.ex .win.vibe-liquid .v-brand { font-family: var(--v-display); font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; font-size: 13px; }
-.ex .win.vibe-liquid .v-links { font-size: 13px; letter-spacing: 0.08em; gap: 26px; --underline-color: var(--v-accent); }
-.ex .win.vibe-liquid .v-kicker { font-size: 12px; letter-spacing: 0.3em; color: var(--v-accent); }
-.ex .win.vibe-liquid .lq-hero { justify-items: center; text-align: center; gap: 22px; }
-.ex .win.vibe-liquid .lq-melt { position: relative; width: 100%; display: grid; place-items: center; min-height: clamp(110px, 22cqw, 240px); }
-/* The melt draws here: from the window's top down to the name, so drops fall from the top of the frame. */
-.ex .win.vibe-liquid .lq-pour { position: absolute; left: 0; right: 0; top: 0; pointer-events: none; color: var(--v-chrome); }
-.ex .win.vibe-liquid .v-head { font-family: var(--v-display); font-weight: 800; font-size: clamp(48px, 13cqw, 168px); line-height: 1; letter-spacing: -0.03em; max-width: none; color: var(--v-chrome); }
-.ex .win.vibe-liquid .v-sub { max-width: 34ch; }
-.ex .win.vibe-liquid .v-btn { font-weight: 600; letter-spacing: 0.04em; border-radius: 999px; padding: 16px 30px; }
-.ex .win.vibe-liquid .lq-scents { padding: 56px 24px 40px; }
-.ex .win.vibe-liquid .lq-index { position: relative; display: grid; grid-template-columns: 34px 1fr; gap: 12px; margin-top: 18px; }
-.ex .win.vibe-liquid .lq-gutter { position: relative; color: var(--v-chrome); }
-.ex .win.vibe-liquid .lq-rows { list-style: none; margin: 0; padding: 0; }
-.ex .win.vibe-liquid .lq-rows li { display: grid; grid-template-columns: 3ch 1fr auto auto; align-items: center; gap: 18px; min-height: 96px; border-top: 1px solid rgb(217 221 230 / 0.16); }
-.ex .win.vibe-liquid .lq-no { font-size: 12px; color: var(--v-muted); }
-.ex .win.vibe-liquid .lq-name { display: grid; gap: 4px; }
-.ex .win.vibe-liquid .lq-name b { font-family: var(--v-display); font-weight: 500; font-size: clamp(18px, 2.6cqw, 28px); letter-spacing: -0.01em; }
-.ex .win.vibe-liquid .lq-name small { font-size: 13px; color: var(--v-muted); }
-.ex .win.vibe-liquid .lq-price { font-size: 14px; color: var(--v-muted); }
-.ex .win.vibe-liquid .lq-go { position: relative; isolation: isolate; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; overflow: hidden; border: 1px solid rgb(217 221 230 / 0.5); font-size: 18px; }
-.ex .win.vibe-liquid .lq-fill { position: absolute; inset: 0; z-index: -1; border-radius: 50%; background: var(--v-accent); }
-.ex .win.vibe-liquid .lq-go[data-poured] { color: var(--v-on-accent); }
-@container (max-width: 560px) { .ex .win.vibe-liquid .lq-rows li { grid-template-columns: 1fr auto; gap: 10px; } .ex .win.vibe-liquid .lq-no, .ex .win.vibe-liquid .lq-price { display: none; } .ex .win.vibe-liquid .lq-index { grid-template-columns: 22px 1fr; } }
-.ex .win.vibe-liquid .lq-bottle { padding: 40px 24px; }
-.ex .win.vibe-liquid .lq-glass { margin: 0 auto; width: min(100%, 420px); aspect-ratio: 300 / 366; }
-.ex .win.vibe-liquid .lq-glass img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 18px; }
-.ex .win.vibe-liquid .v-quote p { font-family: var(--v-display); font-weight: 300; font-size: clamp(26px, 4.6cqw, 52px); line-height: 1.15; letter-spacing: -0.02em; }
-.ex .win.vibe-liquid .v-foot { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid rgb(217 221 230 / 0.16); }
-.ex .win.vibe-liquid button:focus-visible, .ex .win.vibe-liquid a:focus-visible { outline: 2px solid var(--v-accent); outline-offset: 4px; }
 
 /* Pulse: a live dot, a heart, a bell with a count. White and ink on the blue; nothing tweens color. */
 .ex .stage-art .pulse-stage { display: grid; justify-items: center; gap: 28px; }
@@ -960,3 +926,66 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .stage-art .tp-row { display: flex; align-items: flex-end; gap: clamp(12px, 3.4vw, 40px); height: clamp(110px, 20vw, 190px); padding-right: clamp(110px, 20vw, 190px); max-width: 100%; border-bottom: 2px solid rgb(255 255 255 / 0.6); }
 .ex .stage-art .tp-domino { display: block; width: clamp(10px, 1.5vw, 18px); height: 100%; background: #fff; }
 .ex .stage-art .tp-domino.first { cursor: pointer; }
+
+/* Liquid: after the Living Exhibition poster. Ivory and black, liquid chrome, Instrument Serif and Jost. The poster is one
+   stage at the image's own ratio, so the sculpture, its window, and the black field line up at every width. */
+.ex .win.vibe-liquid { --v-bg: #f1ede4; --v-fg: #0b0b0c; --v-muted: #5c5a55; --v-black: #0b0b0c; --v-light: #ebe7df; --v-accent: #0b0b0c; --v-on-accent: #f1ede4; --v-font: var(--font-jost), "Jost", system-ui, sans-serif; --v-serif: var(--font-instrument), "Instrument Serif", Georgia, serif; font-size: 15px; }
+.ex .win.vibe-liquid .lq-stage { position: relative; width: 100%; aspect-ratio: 1672 / 941; overflow: hidden; container-type: inline-size; background: linear-gradient(90deg, var(--v-bg) 70%, var(--v-black) 70%); }
+.ex .win.vibe-liquid .lq-art, .ex .win.vibe-liquid .lq-ink, .ex .win.vibe-liquid .lq-chrome, .ex .win.vibe-liquid .lq-opening { position: absolute; inset: 0; }
+.ex .win.vibe-liquid .lq-field { position: absolute; inset: 0; background: var(--v-black); clip-path: polygon(41.3% 0, 100% 0, 100% 100%, 42% 100%, 46.5% 84%, 46.4% 66%, 44% 58%, 44% 20%, 40.2% 16%, 41.3% 13.4%); }
+.ex .win.vibe-liquid .lq-opening { -webkit-mask: url("/vibes/liquid/opening-mask.webp") 0 0 / 100% 100% no-repeat; mask: url("/vibes/liquid/opening-mask.webp") 0 0 / 100% 100% no-repeat; }
+.ex .win.vibe-liquid .lq-sky { position: absolute; left: 33%; top: 11.4%; width: 16.9%; height: 51%; max-width: none; object-fit: cover; object-position: 62% 38%; }
+.ex .win.vibe-liquid .lq-chrome img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ex .win.vibe-liquid .lq-hand { position: absolute; left: 33.6%; top: 71.5%; width: 9.4%; height: auto; pointer-events: none; }
+.ex .win.vibe-liquid .lq-mast { position: absolute; inset: 0 0 auto 0; padding: 1.6cqw 2.2cqw; background: none; align-items: flex-start; }
+.ex .win.vibe-liquid .lq-mark { display: grid; font: 400 max(13px, 1.5cqw)/0.9 var(--v-serif); letter-spacing: -0.01em; }
+.ex .win.vibe-liquid .lq-tagline { position: absolute; left: 9.2cqw; top: 1.7cqw; margin: 0; max-width: 7em; font-size: max(7px, 0.6cqw); line-height: 1.5; letter-spacing: 0.16em; text-transform: uppercase; }
+.ex .win.vibe-liquid .lq-mast .v-links { color: var(--v-light); gap: 2.4cqw; font-size: max(9px, 0.7cqw); letter-spacing: 0.14em; text-transform: uppercase; --underline-color: var(--v-light); --underline-offset: 6px; }
+.ex .win.vibe-liquid .lq-intro { position: absolute; left: 2.2cqw; top: 14%; min-height: 0; padding: 0; display: block; width: 30%; }
+.ex .win.vibe-liquid .v-head { font: 400 7.6cqw/0.86 var(--v-serif); letter-spacing: -0.02em; max-width: none; }
+.ex .win.vibe-liquid .lq-word { display: block; }
+.ex .win.vibe-liquid .v-kicker { margin-top: 2.2cqw; font-size: max(8px, 0.82cqw); letter-spacing: 0.42em; color: var(--v-fg); }
+.ex .win.vibe-liquid .v-sub { margin-top: 1.6cqw; max-width: 24ch; font-size: max(10px, 1cqw); line-height: 1.45; color: var(--v-muted); }
+.ex .win.vibe-liquid .lq-pill { display: inline-flex; align-items: center; gap: 1.2em; margin-top: 1.8cqw; padding: 0.95em 1.1em 0.95em 1.6em; border-radius: 999px; font-size: max(9px, 0.74cqw); letter-spacing: 0.16em; text-transform: uppercase; }
+.ex .win.vibe-liquid .lq-margin { position: absolute; left: 2.2cqw; bottom: 6%; margin: 0; max-width: 8em; padding-left: 1em; border-left: 1px solid var(--v-fg); font-size: max(7px, 0.62cqw); line-height: 1.6; letter-spacing: 0.16em; text-transform: uppercase; }
+.ex .win.vibe-liquid .lq-notes { position: absolute; left: 50%; right: 2.2cqw; top: 11%; display: flex; justify-content: space-between; color: var(--v-light); font-size: max(7px, 0.62cqw); line-height: 1.6; letter-spacing: 0.16em; text-transform: uppercase; }
+.ex .win.vibe-liquid .lq-note, .ex .win.vibe-liquid .lq-claim { margin: 0; }
+.ex .win.vibe-liquid .lq-claim { max-width: 13em; }
+.ex .win.vibe-liquid .lq-dot { display: block; width: 1.4cqw; height: 1.4cqw; margin-bottom: 0.8cqw; border: 1px solid var(--v-light); border-radius: 50%; }
+.ex .win.vibe-liquid .lq-shelf { position: absolute; left: 50.5%; right: 2.2cqw; top: 33%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.15cqw; margin: 0; padding: 0; list-style: none; color: var(--v-light); }
+.ex .win.vibe-liquid .lq-work { display: block; }
+.ex .win.vibe-liquid .lq-arch { display: block; aspect-ratio: 0.63; overflow: hidden; border: 1px solid rgb(235 231 223 / 0.18); border-radius: 999px 999px 0.4cqw 0.4cqw; background: #19191b; }
+.ex .win.vibe-liquid .lq-arch img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 65% 48%; }
+.ex .win.vibe-liquid .lq-meta { display: flex; justify-content: space-between; margin-top: 1cqw; font-size: max(8px, 0.72cqw); letter-spacing: 0.1em; color: rgb(235 231 223 / 0.65); }
+.ex .win.vibe-liquid .lq-ring { display: grid; place-items: center; width: 1.9cqw; height: 1.9cqw; border: 1px solid rgb(235 231 223 / 0.6); border-radius: 50%; color: var(--v-light); }
+.ex .win.vibe-liquid .lq-title { display: block; margin-top: 0.3cqw; font: 400 max(12px, 1.3cqw)/1.08 var(--v-serif); }
+.ex .win.vibe-liquid .lq-by { display: block; font: 400 max(10px, 0.95cqw)/1.25 var(--v-serif); color: rgb(235 231 223 / 0.65); }
+.ex .win.vibe-liquid .lq-index { position: relative; display: grid; grid-template-columns: 6% 1fr; padding: 6% 4% 8% 2%; background: var(--v-black); color: var(--v-light); clip-path: polygon(0 26px, 12% 14px, 30% 30px, 52% 8px, 74% 26px, 100% 10px, 100% 100%, 0 100%); margin-top: -18px; }
+.ex .win.vibe-liquid .lq-gutter { position: relative; color: #d9dde6; }
+.ex .win.vibe-liquid .lq-index-head { margin: 0 0 1.4em; font: 400 clamp(36px, 5cqw, 64px)/1 var(--v-serif); }
+.ex .win.vibe-liquid .lq-index-head small { margin-left: 1em; font: 400 13px/1 var(--v-font); color: rgb(235 231 223 / 0.6); }
+.ex .win.vibe-liquid .lq-rows { list-style: none; margin: 0; padding: 0; }
+.ex .win.vibe-liquid .lq-rows li { display: grid; grid-template-columns: 3ch 1.3fr 1fr 1fr; align-items: baseline; gap: 18px; padding: 14px 0; border-top: 1px solid rgb(235 231 223 / 0.14); }
+.ex .win.vibe-liquid .lq-rows b { font: 400 clamp(20px, 2.2cqw, 30px)/1.1 var(--v-serif); }
+.ex .win.vibe-liquid .lq-rows span, .ex .win.vibe-liquid .lq-no { font-size: 13px; color: rgb(235 231 223 / 0.65); }
+.ex .win.vibe-liquid .lq-rows small { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgb(235 231 223 / 0.55); }
+.ex .win.vibe-liquid .lq-colophon { display: flex; justify-content: space-between; gap: 12px; padding: 28px 2.2cqw 40px; }
+.ex .win.vibe-liquid a:focus-visible, .ex .win.vibe-liquid button:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+@container (max-width: 640px) {
+  .ex .win.vibe-liquid .lq-stage { aspect-ratio: auto; height: auto; padding-bottom: 6px; background: var(--v-bg); }
+  .ex .win.vibe-liquid .lq-art { position: relative; inset: auto; width: 170%; margin-left: -48%; aspect-ratio: 1672 / 941; }
+  .ex .win.vibe-liquid .lq-hand, .ex .win.vibe-liquid .lq-notes, .ex .win.vibe-liquid .lq-margin, .ex .win.vibe-liquid .lq-tagline, .ex .win.vibe-liquid .lq-mark { display: none; }
+  .ex .win.vibe-liquid .lq-mast { justify-content: flex-end; }
+  .ex .win.vibe-liquid .lq-index { padding-top: 48px; }
+  .ex .win.vibe-liquid .lq-index-head small { display: block; margin: 10px 0 0; }
+  .ex .win.vibe-liquid .lq-mast .v-links { color: var(--v-light); }
+  .ex .win.vibe-liquid .lq-intro { position: relative; left: auto; top: auto; width: auto; padding: 18px 18px 26px; }
+  .ex .win.vibe-liquid .v-head { font-size: 15cqw; }
+  .ex .win.vibe-liquid .v-sub, .ex .win.vibe-liquid .lq-pill { font-size: 13px; }
+  .ex .win.vibe-liquid .v-kicker { font-size: 10px; }
+  .ex .win.vibe-liquid .lq-shelf { position: relative; left: auto; right: auto; top: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 22px 18px; background: var(--v-black); }
+  .ex .win.vibe-liquid .lq-meta { margin-top: 8px; }
+  .ex .win.vibe-liquid .lq-ring { width: 22px; height: 22px; }
+  .ex .win.vibe-liquid .lq-rows li { grid-template-columns: 3ch 1fr; }
+  .ex .win.vibe-liquid .lq-rows li span:not(.lq-no), .ex .win.vibe-liquid .lq-rows small { grid-column: 2; }
+}
