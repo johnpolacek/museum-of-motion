@@ -194,7 +194,8 @@ export function scrubStatement(
         opacity: 1,
         ease: "none",
         stagger: 0.1,
-        scrollTrigger: { trigger: element, start: "top 80%", end: "bottom 45%", scrub, scroller },
+        // clamp(): a statement near the page's end finishes at the bottom of the scroll instead of never.
+        scrollTrigger: { trigger: element, start: "clamp(top 80%)", end: "clamp(bottom 45%)", scrub, scroller },
       },
     );
   });
@@ -240,8 +241,6 @@ export function pinnedScene(
   if (prefersReducedMotion()) return () => {};
   return own((_dispose, after) => {
     const saved = new Map(gsap.utils.toArray<HTMLElement>("*", section).map((element) => [element, snapshotStyles([element])]));
-    // A closure below reads it before it is assigned, so it must stay `let`.
-    // eslint-disable-next-line prefer-const
     let animated: Set<unknown> | undefined;
     // Restore only what the scene animates; other effects inside it keep their inline values. A failed build restores all.
     after(() => saved.forEach((restore, element) => (!animated || animated.has(element)) && restore()));
@@ -719,3 +718,4 @@ export function zoomThrough(
       .fromTo(behind, { scale: 1.15 }, { scale: 1, ease: "power2.out" }, 0);
   });
 }
+

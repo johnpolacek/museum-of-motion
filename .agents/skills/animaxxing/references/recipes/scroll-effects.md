@@ -227,7 +227,8 @@ export function scrubStatement(
         opacity: 1,
         ease: "none",
         stagger: 0.1,
-        scrollTrigger: { trigger: element, start: "top 80%", end: "bottom 45%", scrub, scroller },
+        // clamp(): a statement near the page's end finishes at the bottom of the scroll instead of never.
+        scrollTrigger: { trigger: element, start: "clamp(top 80%)", end: "clamp(bottom 45%)", scrub, scroller },
       },
     );
   });
