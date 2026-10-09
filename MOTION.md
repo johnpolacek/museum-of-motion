@@ -4,7 +4,7 @@ Read this before adding or changing any animation.
 
 ## Personality: kinetic poster
 
-The type is alive. The site is a poster mid-performance: letters stretch, swell, and settle. Motion is bold and a little springy, never timid and never sloppy.
+The type is alive. The site is a poster giving a performance: letters stretch, swell, and settle. Motion is bold, precise, and a little springy.
 
 ## Principles
 
