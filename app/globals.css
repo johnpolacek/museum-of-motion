@@ -6,7 +6,8 @@
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
-body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.5 var(--sans); }
+/* A column at least a viewport tall: on a short page the footer sits at the bottom, not under the content. */
+body { margin: 0; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; background: var(--paper); color: var(--ink); font: 400 16px/1.5 var(--sans); }
 a { color: inherit; text-decoration: none; }
 a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .wrap { padding: 0 var(--gut); }
@@ -485,7 +486,7 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .about { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 5fr); gap: var(--gut); padding-top: clamp(64px, 8vw, 128px); padding-bottom: clamp(64px, 8vw, 128px); }
 .about p { margin: 0 0 0.7em; font-weight: 500; font-size: clamp(26px, 3vw, 48px); line-height: 1.12; letter-spacing: -0.02em; max-width: 26ch; }
 .about p a { color: var(--blue); }
-.foot { padding-top: 24px; padding-bottom: 28px; display: grid; gap: 20px; }
+.foot { margin-top: auto; padding-top: 24px; padding-bottom: 28px; display: grid; gap: 20px; }
 .foot .big { font-weight: 800; font-stretch: 125%; text-transform: uppercase; font-size: clamp(30px, 7vw, 132px); line-height: 0.9; letter-spacing: -0.02em; white-space: nowrap; }
 .foot nav { display: flex; flex-wrap: wrap; gap: 8px 28px; }
 .foot .out { white-space: nowrap; }
