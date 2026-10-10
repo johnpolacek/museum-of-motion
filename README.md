@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Museum of Motion
 
-## Getting Started
+A fictional museum where every exhibit is a way a web page can move. Built with AI coding agents, GSAP, and the [Animaxxing skills](https://github.com/johnpolacek/animaxxing-skills), as the demo for a Codrops article.
 
-First, run the development server:
+**Live:** [museum.animaxxing.com](https://museum.animaxxing.com)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## What's inside
+
+- 57 exhibits in six groups: Type, Play, Scroll, Pointer, Drag, and Vibes. Each exhibit performs on its own stage, with variation tabs, and the timed ones loop with pause, scrub, and timing controls.
+- Vibes: eight small sites, each combining effects into one feeling.
+- Page transitions on the Next.js App Router: every page gets an intro, a resting state, and an outro, and a collection name flies into its exhibit's title.
+- Reduced motion, keyboard focus, touch, and no-JavaScript fallbacks throughout.
+
+## The motion brief
+
+[`MOTION.md`](MOTION.md) sets the site's personality, curves, timing, and rules. Every agent session reads it before touching animation: `AGENTS.md` points to it, and `CLAUDE.md` imports it. It is also served at [museum.animaxxing.com/MOTION.md](https://museum.animaxxing.com/MOTION.md).
+
+## Agent skills
+
+The skills the agents worked with are checked in, so you can see exactly what they had:
+
+- `.agents/skills`: [Animaxxing skills](https://github.com/johnpolacek/animaxxing-skills) (`animaxxing`, `animaxxing-webgl`, `gsap-nextjs`).
+- `.claude/skills`: the [official GSAP skills](https://github.com/greensock/gsap-skills), plus links to the Animaxxing skills.
+
+To add them to your own project:
+
+```
+npx skills add https://github.com/greensock/gsap-skills
+npx skills add https://github.com/johnpolacek/animaxxing-skills
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Run it
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+pnpm install
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Then open [localhost:3000](http://localhost:3000). For a production build, `pnpm build && pnpm start`. Browser tests run with `pnpm test:e2e`.
 
-## Learn More
+## Where things live
 
-To learn more about Next.js, take a look at the following resources:
+- `lib/exhibits.ts`: every exhibit, its group, builders, and description.
+- `lib/motion/`: page motion (hero, collection, exhibit pages, transitions) and the recipe builders from the skills.
+- `lib/motion/stages/`: each exhibit's stage.
+- `components/motion/`: the transition provider and links that play outros before navigating.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## The build log
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The commit history is the build, step by step: each commit is one finished step, from the static poster to the last exhibit.
 
-## Deploy on Vercel
+## Credits
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Built by [John Polacek](https://johnpolacek.com). Animation by [GSAP](https://gsap.com). Type is [Archivo](https://fonts.google.com/specimen/Archivo).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+
+MIT
