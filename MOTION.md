@@ -46,7 +46,7 @@ Exits are roughly half as long as entrances.
 
 ## By surface
 
-**Home hero.** Each headline word performs the exhibit it is numbered with, then lands at rest: 02 Stagger on "Every", 30 Hover (its Underline tab) on "way", 08 Wave (its Weight tab) on "page", 03 Slide on "can", 01 Mask on "move." The hero reads these numbers from the collection, so they follow any renumbering. The headline settles as a straight sentence, so it reads as finished. The mock's frozen frames are moments from these moves, not the rest.
+**Home hero.** Each headline word performs the exhibit it is numbered with, then lands at rest: 02 Stagger on "Every", 30 Hover (its Underline tab) on "way", 08 Wave (its Weight tab) on "page", 03 Slide on "can", 01 Mask on "move." The hero reads these numbers from the collection, so they follow any renumbering. The headline settles as a straight sentence, so it reads as finished. The mock's frozen frames are moments from these moves, not the rest. A Replay control plays the headline again from the top. Only the headline replays: the rule, the text under it, and the controls stay put.
 
 **Collection.** Group rules draw across. Names arrive with a weight gain as they scroll in. On hover and keyboard focus, a name widens. Its blue color swaps instantly, as in the static site, and is never tweened.
 

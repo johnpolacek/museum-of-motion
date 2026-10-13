@@ -26,7 +26,7 @@ function parts(root: HTMLElement) {
     rule: one("[data-rule]"),
     sub: one("[data-sub]"),
     list: one("[data-list]"),
-    items: [...all("[data-list] li"), ...all("[data-wave-toggle]:not([hidden])")],
+    items: [...all("[data-list] li"), ...all("[data-hero-control]:not([hidden])")],
   };
 }
 
@@ -45,8 +45,12 @@ export type HeroIntro = {
   finish: () => void;
 };
 
-/** Builds the paused intro. Start values are applied at build, so call it before the first paint. */
-export function heroIntro(root: HTMLElement): HeroIntro {
+/**
+ * Builds the paused intro. Start values are applied at build, so call it before the first paint.
+ * A replay performs the headline alone: the rule, the text under it, and the controls stay put,
+ * so nothing moves under the pointer and the pressed button keeps focus.
+ */
+export function heroIntro(root: HTMLElement, { replay = false } = {}): HeroIntro {
   const p = parts(root);
   const splits: SplitText[] = [];
   const touched = new Set<Element>();
@@ -65,16 +69,16 @@ export function heroIntro(root: HTMLElement): HeroIntro {
     for (const t of ([] as HTMLElement[]).concat(targets)) touched.add(t);
     tl.from(targets, { ...vars, immediateRender: true }, at);
   };
-  const reveal = [p.h1, p.rule, p.sub, p.list, ...p.items];
+  const reveal = replay ? [] : [p.h1, p.rule, p.sub, p.list, ...p.items];
   for (const el of reveal) touched.add(el);
 
   if (prefersReducedMotion()) {
-    tl.set(reveal, { autoAlpha: 1 });
+    if (reveal.length) tl.set(reveal, { autoAlpha: 1 });
     return { timeline: tl, finish };
   }
 
   try {
-    tl.set([p.h1, p.sub, p.list], { autoAlpha: 1 }, 0);
+    if (!replay) tl.set([p.h1, p.sub, p.list], { autoAlpha: 1 }, 0);
     // Each superscript arrives after its word lands.
     const sup = (key: string, at: number) =>
       tween(p.sup(key), { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: ENTER }, at);
@@ -114,6 +118,7 @@ export function heroIntro(root: HTMLElement): HeroIntro {
     // 01 Mask on "move.": the line rises from behind its mask.
     land(p.leaf("move"), { yPercent: 110, duration: 0.8, ease: ENTER }, 0.95);
     sup("move", 1.7);
+    if (replay) return { timeline: tl, finish };
 
     // Rule draws across. power3.out, not the signature: an overshoot would push it past the page edge.
     tween(p.rule, { autoAlpha: 1, scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: 0.7, ease: "power3.out" }, 1.55);

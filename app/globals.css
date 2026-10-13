@@ -41,8 +41,10 @@ a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .hero .under p { margin: 0; max-width: 40ch; font-size: 18px; }
 .hero .side { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: baseline; gap: 6px 22px; }
 .hero .under ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 22px; justify-content: flex-end; }
-.wave-toggle { font-family: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid currentColor; border-radius: 0; padding: 0; cursor: pointer; }
-.wave-toggle:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.hero-ctl { font-family: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid currentColor; border-radius: 0; padding: 0; cursor: pointer; position: relative; }
+/* The label is 15px tall. This widens what a finger can hit without moving anything. */
+.hero-ctl::after { content: ""; position: absolute; inset: -12px -8px; }
+.hero-ctl:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 
 /* Motion first paint: entering targets stay hidden only while the boot marker is pending and their owner is initial. */
 html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data-intro] { visibility: hidden; }

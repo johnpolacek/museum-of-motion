@@ -1,6 +1,7 @@
 "use client";
 
 // Home hero controller: initial state → intro → settled (ambient wave) → outro → end state.
+// Replay sends settled back through the intro, for the headline alone.
 import { useEffect, useRef, useState } from "react";
 import { finished, fontsReady, gsap, prefersReducedMotion, useGSAP } from "@/lib/motion/gsap";
 import { armRecovery, claimVisit, disarm, handOff } from "@/lib/motion/boot";
@@ -27,6 +28,8 @@ export function Hero() {
   const wave = useRef<WaveStop | null>(null);
   const userPaused = useRef(false);
   const offscreen = useRef(false);
+  const replay = useRef<() => void>(() => {});
+  const [canReplay, setCanReplay] = useState(false);
   const [waveOn, setWaveOn] = useState(false);
   const [paused, setPaused] = useState(false);
   const { registerOutro } = useTransitionController();
@@ -42,16 +45,22 @@ export function Hero() {
       visit.current ??= claimVisit(OWNER);
       const reduced = prefersReducedMotion();
       const animate = visit.current === "animate" && !reduced;
+      // The wave follows any intro that ran: the first one, or a replay.
+      let ambient = animate;
       let alive = true;
+      // The boot deadline passed before the intro could start.
+      let rolledBack = false;
       let intro: HeroIntro | null = null;
       let io: IntersectionObserver | null = null;
+      let waveCall: gsap.core.Tween | null = null;
       let lastWidth = window.innerWidth;
       let resizeTimer: ReturnType<typeof setTimeout> | undefined;
 
-      // The wave control exists only when the wave can run. Rendered before the first paint.
+      // Each control exists only when it can do something. Rendered before the first paint.
       userPaused.current = readPaused();
       setPaused(userPaused.current);
       setWaveOn(animate);
+      setCanReplay(!reduced);
 
       const targets = Array.from(el.querySelectorAll<HTMLElement>("[data-intro]"));
 
@@ -66,16 +75,41 @@ export function Hero() {
         gsap.set(targets, { clearProps: "opacity,visibility" });
         el.dataset.phase = "settled";
         cueWordmark();
-        if (!animate) return;
+        if (!ambient) return;
         // The wave's split waits until the wordmark tour is done, so the two never share a frame's work.
-        gsap.delayedCall(2.4, () => {
+        waveCall?.kill();
+        waveCall = gsap.delayedCall(2.4, () => {
           if (alive && el.dataset.phase === "settled") runWave();
         });
+        if (io) return;
         io = new IntersectionObserver(([entry]) => {
           offscreen.current = !entry.isIntersecting;
           applyPause();
         });
         io.observe(el.querySelector("h1")!);
+      });
+
+      // Replay: the wave steps aside and the headline performs again from the top.
+      replay.current = contextSafe!(() => {
+        const phase = el.dataset.phase;
+        if (!alive || reduced || !(phase === "settled" || (phase === "intro" && intro))) return;
+        waveCall?.kill();
+        wave.current?.();
+        wave.current = null;
+        intro?.timeline.kill();
+        intro?.finish();
+        try {
+          intro = heroIntro(el, { replay: true });
+        } catch (error) {
+          console.error(error);
+          settled();
+          return;
+        }
+        ambient = true;
+        setWaveOn(true);
+        el.dataset.phase = "intro";
+        intro.timeline.eventCallback("onComplete", settled);
+        intro.timeline.play();
       });
 
       // Width changes invalidate the wave's pinned letter widths: rebuild it at rest.
@@ -110,6 +144,7 @@ export function Hero() {
 
       const cleanup = () => {
         alive = false;
+        replay.current = () => {};
         unregister();
         disarm(OWNER);
         window.removeEventListener("resize", onResize);
@@ -128,7 +163,9 @@ export function Hero() {
 
       // Initial state: hide every entering target inline, then let the boot gate go.
       armRecovery(OWNER, () => {
-        alive = false;
+        rolledBack = true;
+        ambient = false;
+        setWaveOn(false);
         intro?.timeline.kill();
         intro?.finish();
         gsap.set(targets, { clearProps: "opacity,visibility" });
@@ -140,7 +177,7 @@ export function Hero() {
       // Splits need final font metrics. Bounded well inside the boot deadline.
       fontsReady(600).then(
         contextSafe!(() => {
-          if (!alive) return;
+          if (!alive || rolledBack) return;
           try {
             intro = heroIntro(el);
           } catch (error) {
@@ -238,7 +275,10 @@ export function Hero() {
               </li>
             ))}
           </ol>
-          <button type="button" className="lab wave-toggle" data-wave-toggle data-intro hidden={!waveOn} onClick={toggle}>
+          <button type="button" className="lab hero-ctl" data-hero-control data-intro hidden={!canReplay} aria-label="Replay the headline animation" onClick={() => replay.current()}>
+            Replay
+          </button>
+          <button type="button" className="lab hero-ctl" data-hero-control data-intro hidden={!waveOn} onClick={toggle}>
             {paused ? "Play wave" : "Pause wave"}
           </button>
         </div>
