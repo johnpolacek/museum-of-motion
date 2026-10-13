@@ -130,7 +130,7 @@ function vibe(key: string, v: Vibe): StageDef {
     windowed(
       text,
       v.page ?? markup(v.copy, v.extra),
-      (win, layer) => {
+      (win, layer, jump) => {
         // A vibe's faces load on first use. Laid out in a fallback first, its lines would break one way and
         // then jump when the face arrives, so the page stays hidden until its faces are in, briefly at most.
         let alive = true;
@@ -139,7 +139,7 @@ function vibe(key: string, v: Vibe): StageDef {
         facesIn(win).then(() => {
           if (!alive) return;
           win.style.removeProperty("visibility");
-          teardowns = setup(win, layer);
+          teardowns = setup(win, layer, jump);
           ScrollTrigger.refresh();
         });
         return [
@@ -155,7 +155,7 @@ function vibe(key: string, v: Vibe): StageDef {
     ),
   );
 
-  function setup(win: HTMLElement, layer: HTMLElement): Array<() => void> {
+  function setup(win: HTMLElement, layer: HTMLElement, jump: (y: number) => void): Array<() => void> {
     const page: Page = {
       win,
       nav: all(win, ".v-brand, .v-links a"),
@@ -183,7 +183,7 @@ function vibe(key: string, v: Vibe): StageDef {
     replay.className = "pill v-replay";
     replay.textContent = "Replay";
     const again = () => {
-      win.scrollTo({ top: 0 });
+      jump(0);
       start();
     };
     replay.addEventListener("click", again);

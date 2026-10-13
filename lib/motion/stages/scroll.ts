@@ -51,7 +51,7 @@ const END = `<section class="w-pad"><p class="lab">End</p></section>`;
 export function windowed(
   text: HTMLElement,
   inner: string,
-  wire: (win: HTMLElement, layer: HTMLElement) => Array<() => void>,
+  wire: (win: HTMLElement, layer: HTMLElement, jump: (y: number) => void) => Array<() => void>,
   className = "",
   lenis: Partial<LenisOptions> = {},
 ): Play {
@@ -63,8 +63,14 @@ export function windowed(
       // The skill's Lenis drives the window's scroll from GSAP's ticker, so pins and scrubbed transforms
       // land in the same frame as the scroll. Left native, the browser scrolls first and a pinned
       // section shakes a frame behind.
+      const smoothed = !prefersReducedMotion();
       const smooth = lenisScroll({ wrapper: win, content: win, ...lenis });
-      const offs = wire(win, layer);
+      // Jumps the window's scroll and ends any glide in progress. Mid-glide, Lenis puts a native jump back.
+      const jump = (y: number) => {
+        if (smoothed) smooth.scrollTo(y, { immediate: true });
+        win.scrollTo({ top: y });
+      };
+      const offs = wire(win, layer, jump);
       const frame = requestAnimationFrame(() => ScrollTrigger.refresh());
       let alive = true;
       document.fonts?.ready.then(() => alive && ScrollTrigger.refresh());
