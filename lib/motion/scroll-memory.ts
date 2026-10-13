@@ -8,6 +8,18 @@ const KEY = "mom:scroll";
 
 let positions: Record<string, number> = {};
 let pending: "history" | "reload" | null = null;
+/** The page on screen. A popstate that keeps it, such as a hash on this page, is not a move between pages. */
+let shown = "";
+
+/** The element the address's hash names on this page, if any. A hash that names nothing is only state. */
+const hashTarget = () => {
+  const id = window.location.hash.slice(1);
+  try {
+    return id ? document.getElementById(decodeURIComponent(id)) : null;
+  } catch {
+    return null;
+  }
+};
 
 const read = () => {
   try {
@@ -27,6 +39,7 @@ const write = () => {
 /** Takes over restoration and starts recording. Returns the teardown. */
 export function startScrollMemory(): () => void {
   positions = read();
+  shown = window.location.pathname;
   window.history.scrollRestoration = "manual";
   const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
   if (nav?.type === "reload" || nav?.type === "back_forward") pending = "reload";
@@ -47,6 +60,8 @@ export function startScrollMemory(): () => void {
     });
   };
   const onPop = () => {
+    // Same page, so no new page will be drawn to settle on: the move would stay pending and misfire later.
+    if (window.location.pathname === shown) return;
     pending = "history";
     // Any re-measure from here on must not put back the page being left.
     ScrollTrigger.clearScrollMemory("manual");
@@ -66,10 +81,11 @@ export function startScrollMemory(): () => void {
  * after a link it stays where the router put it, the top or the link's target.
  */
 export function settleScroll(pathname: string): void {
+  shown = pathname;
   if (!pending) return;
   pending = null;
   // A hash being followed wins: the landing scrolls to it.
-  if (window.location.hash) return;
+  if (hashTarget()) return;
   const y = positions[pathname] ?? 0;
   window.scrollTo(0, y);
   // ScrollTrigger records the scroll when the new page's motion is set up, before this runs, and puts
@@ -84,4 +100,15 @@ export function settleScroll(pathname: string): void {
   ScrollTrigger.addEventListener("refresh", again);
   for (const type of ["wheel", "touchstart", "keydown", "pointerdown"]) window.addEventListener(type, stop, { once: true, passive: true });
   const timer = setTimeout(stop, 2000);
+}
+
+/**
+ * A link has put a new page on screen: it starts at the top. The router scrolls only when the new
+ * page's top edge is out of view, so a page left a few pixels down, or a short page in a tall window,
+ * would keep the old offset. Call it in the layout phase, before paint and before any intro measures.
+ */
+export function startAtTop(): void {
+  // Back and Forward return to where the page was left, and a hash scrolls to what it names.
+  if (pending || hashTarget()) return;
+  if (window.scrollY) window.scrollTo(0, 0);
 }

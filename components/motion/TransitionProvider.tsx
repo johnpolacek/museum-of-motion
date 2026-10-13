@@ -3,11 +3,11 @@
 // Route transition controller. Each owner on the page registers an outro. A transition-aware link
 // cancels its navigation, waits for every outro to reach its end state, then pushes.
 // Back and forward never run an outro: they arrive through the router as usual.
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ScrollTrigger } from "@/lib/motion/gsap";
 import type { SharedState } from "@/lib/motion/shared";
-import { settleScroll, startScrollMemory } from "@/lib/motion/scroll-memory";
+import { settleScroll, startAtTop, startScrollMemory } from "@/lib/motion/scroll-memory";
 
 /** Where the navigation came from: the destination, and the link element clicked, if any. */
 export type OutroContext = { href: string; source: Element | null };
@@ -45,6 +45,14 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
   const shared = useRef<{ pathname: string; state: SharedState } | null>(null);
 
   useEffect(() => startScrollMemory(), []);
+
+  // A link's new page starts at the top. Same commit as the page, so nothing paints at the old offset
+  // and the page's intro, built a microtask later, measures from the top.
+  const loaded = useRef(false);
+  useLayoutEffect(() => {
+    if (loaded.current) startAtTop();
+    loaded.current = true;
+  }, [pathname]);
 
   // A new route is showing: release the lock and invalidate any pending push (back or forward mid-outro).
   useEffect(() => {
