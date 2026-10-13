@@ -30,9 +30,6 @@ function parts(root: HTMLElement) {
   };
 }
 
-/** The headline's text leaves, for the wave. */
-export const heroLeaves = (root: HTMLElement) => parts(root).leaves;
-
 /** Holds a word's layout box at its current width while its type changes width or weight. */
 function pinWidth(el: HTMLElement) {
   // Layout width, unaffected by any transform on the element.
@@ -128,7 +125,7 @@ export function heroIntro(root: HTMLElement, { replay = false } = {}): HeroIntro
     splits.push(sub);
     tween(sub.lines as HTMLElement[], { yPercent: 110 }, { yPercent: 0, duration: 0.6, ease: ENTER, stagger: 0.06 }, 1.65);
 
-    // Exhibit list and the wave control rise in quickly.
+    // Exhibit list and the Replay control rise in quickly.
     tween(p.items, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.4, ease: ENTER, stagger: 0.04 }, 1.75);
   } catch (error) {
     tl.kill();

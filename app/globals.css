@@ -27,7 +27,7 @@ a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .w { display: inline-block; position: relative; white-space: nowrap; }
 .w .t { display: inline-block; }
 .w sup { position: absolute; top: 0.12em; right: -0.12em; transform: translateX(100%); font-size: max(11px, 0.075em); font-weight: 600; letter-spacing: 0.02em; font-stretch: 100%; }
-/* Mask for the line rise. Only the bottom edge clips, so the overshoot and the wave have room on the other three sides. */
+/* Mask for the line rise. Only the bottom edge clips, so the overshoot has room on the other three sides. */
 .mk { display: inline-block; vertical-align: top; padding-bottom: 0.06em; clip-path: inset(-0.3em -0.3em 0 -0.3em); }
 /* The headline rests as a straight sentence. Letters are spans so the intro can move them one by one. */
 .ch { display: inline-block; }
