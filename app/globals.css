@@ -21,13 +21,13 @@ a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .mast nav { display: flex; gap: 28px; }
 
 /* Hero */
-.hero { min-height: calc(100svh - 64px); display: grid; grid-template-rows: 1fr auto; padding-bottom: 28px; }
+.hero { min-height: calc(100svh - 64px); display: grid; grid-template-rows: 1fr auto auto; padding-bottom: 28px; }
 /* Sized so "Every way a page" holds one line with the gutters at 2.4vw: the line is 7.70em wide, the room 7.74em. */
 .hero h1 { margin: 0; align-self: center; font-weight: 700; font-stretch: 100%; font-size: clamp(64px, 12.3vw, 228px); line-height: 0.92; letter-spacing: -0.035em; font-kerning: none; text-rendering: optimizeSpeed; }
 .w { display: inline-block; position: relative; white-space: nowrap; }
 .w .t { display: inline-block; }
 .w sup { position: absolute; top: 0.12em; right: -0.12em; transform: translateX(100%); font-size: max(11px, 0.075em); font-weight: 600; letter-spacing: 0.02em; font-stretch: 100%; }
-/* Mask for the line rise. Only the bottom edge clips, so the overshoot has room on the other three sides. */
+/* Mask for the line rise. Only the bottom edge clips, so the overshoot and the wave have room on the other three sides. */
 .mk { display: inline-block; vertical-align: top; padding-bottom: 0.06em; clip-path: inset(-0.3em -0.3em 0 -0.3em); }
 /* The headline rests as a straight sentence. Letters are spans so the intro can move them one by one. */
 .ch { display: inline-block; }
@@ -36,6 +36,10 @@ a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 /* Underline sweep. At rest it has swept away. The intro draws it in and out. */
 .us i { position: absolute; left: 0; bottom: 0.02em; width: 100%; height: 0.07em; background: currentColor; transform: scaleX(0); }
 [data-word="page"] .ch { text-align: center; }
+/* The ambient wave's label and its pause sit just above the rule, at the right. */
+.hero .over { display: flex; justify-content: flex-end; align-items: baseline; gap: 22px; padding-bottom: 10px; }
+/* Hidden, the row keeps its space, so the headline holds its place when the wave is off. */
+.hero .over[hidden] { display: flex; visibility: hidden; }
 .hero .under { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--gut); align-items: end; padding-top: 16px; border-top: 1px solid transparent; }
 .hero .under .rule { position: absolute; top: -1px; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.35); }
 .hero .under p { margin: 0; max-width: 40ch; font-size: 18px; }

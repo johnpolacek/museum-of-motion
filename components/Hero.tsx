@@ -1,23 +1,43 @@
 "use client";
 
-// Home hero controller: initial state → intro → settled → outro → end state.
+// Home hero controller: initial state → intro → settled (ambient wave) → outro → end state.
 // Replay sends settled back through the intro, for the headline alone.
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { finished, fontsReady, gsap, prefersReducedMotion, useGSAP } from "@/lib/motion/gsap";
 import { armRecovery, claimVisit, disarm, handOff } from "@/lib/motion/boot";
-import { heroIntro, heroOutro, type HeroIntro } from "@/lib/motion/hero";
+import { heroIntro, heroLeaves, heroOutro, type HeroIntro } from "@/lib/motion/hero";
+import { startWave, type WaveStop } from "@/lib/motion/wave";
 import { cueWordmark } from "@/lib/motion/events";
 import { useTransitionController } from "./motion/TransitionProvider";
 import { COUNT_WORDS, numberOf } from "@/lib/exhibits";
 
 const OWNER = "hero";
+const PAUSE_KEY = "mom:wave-paused";
+
+function readPaused(): boolean {
+  try {
+    return localStorage.getItem(PAUSE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 export function Hero() {
   const root = useRef<HTMLElement>(null);
   const visit = useRef<"animate" | "settle">(null);
+  const wave = useRef<WaveStop | null>(null);
+  const userPaused = useRef(false);
+  const offscreen = useRef(false);
   const replay = useRef<() => void>(() => {});
   const [canReplay, setCanReplay] = useState(false);
+  const [waveOn, setWaveOn] = useState(false);
+  const [paused, setPaused] = useState(false);
   const { registerOutro } = useTransitionController();
+
+  const applyPause = () => {
+    if (userPaused.current || offscreen.current) wave.current?.pause();
+    else wave.current?.resume();
+  };
 
   useGSAP(
     (_, contextSafe) => {
@@ -25,28 +45,57 @@ export function Hero() {
       visit.current ??= claimVisit(OWNER);
       const reduced = prefersReducedMotion();
       const animate = visit.current === "animate" && !reduced;
+      // The wave follows any intro that ran: the first one, or a replay.
+      let ambient = animate;
       let alive = true;
       // The boot deadline passed before the intro could start.
       let rolledBack = false;
       let intro: HeroIntro | null = null;
+      let io: IntersectionObserver | null = null;
+      let waveCall: gsap.core.Tween | null = null;
+      let lastWidth = window.innerWidth;
+      let resizeTimer: ReturnType<typeof setTimeout> | undefined;
 
-      // Replay exists only when there is motion to replay. Rendered before the first paint.
+      // Each control exists only when it can do something. Rendered before the first paint.
+      userPaused.current = readPaused();
+      setPaused(userPaused.current);
+      setWaveOn(animate);
       setCanReplay(!reduced);
 
       const targets = Array.from(el.querySelectorAll<HTMLElement>("[data-intro]"));
 
-      // Settled: the headline rests as plain type until a replay or the outro.
+      const runWave = contextSafe!(() => {
+        wave.current?.();
+        wave.current = startWave(heroLeaves(el));
+        applyPause();
+      });
+
       const settled = contextSafe!(() => {
         intro?.finish();
         gsap.set(targets, { clearProps: "opacity,visibility" });
         el.dataset.phase = "settled";
         cueWordmark();
+        if (!ambient) return;
+        // The wave's split waits until the wordmark tour is done, so the two never share a frame's work.
+        waveCall?.kill();
+        waveCall = gsap.delayedCall(2.4, () => {
+          if (alive && el.dataset.phase === "settled") runWave();
+        });
+        if (io) return;
+        io = new IntersectionObserver(([entry]) => {
+          offscreen.current = !entry.isIntersecting;
+          applyPause();
+        });
+        io.observe(el.querySelector("h1")!);
       });
 
-      // Replay: the headline performs again from the top, even when a slow start skipped the intro.
+      // Replay: the wave steps aside and the headline performs again from the top.
       replay.current = contextSafe!(() => {
         const phase = el.dataset.phase;
         if (!alive || reduced || !(phase === "settled" || (phase === "intro" && intro))) return;
+        waveCall?.kill();
+        wave.current?.();
+        wave.current = null;
         intro?.timeline.kill();
         intro?.finish();
         try {
@@ -56,16 +105,32 @@ export function Hero() {
           settled();
           return;
         }
+        ambient = true;
+        setWaveOn(true);
         el.dataset.phase = "intro";
         intro.timeline.eventCallback("onComplete", settled);
         intro.timeline.play();
       });
+
+      // Width changes invalidate the wave's pinned letter widths: rebuild it at rest.
+      const onResize = () => {
+        if (window.innerWidth === lastWidth) return;
+        lastWidth = window.innerWidth;
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          if (alive && wave.current && el.dataset.phase === "settled") runWave();
+        }, 200);
+      };
+      window.addEventListener("resize", onResize);
 
       // Outro: only when the hero is on screen. Starts from current values, even mid-intro.
       const outro = contextSafe!(() => {
         const box = el.querySelector("h1")!.getBoundingClientRect();
         if (box.bottom <= 0 || box.top >= window.innerHeight) return null;
         alive = false;
+        wave.current?.();
+        wave.current = null;
+        io?.disconnect();
         intro?.timeline.kill();
         el.dataset.phase = "outro";
         const tl = heroOutro(el);
@@ -82,6 +147,11 @@ export function Hero() {
         replay.current = () => {};
         unregister();
         disarm(OWNER);
+        window.removeEventListener("resize", onResize);
+        clearTimeout(resizeTimer);
+        io?.disconnect();
+        wave.current?.();
+        wave.current = null;
         intro?.finish();
       };
 
@@ -94,6 +164,8 @@ export function Hero() {
       // Initial state: hide every entering target inline, then let the boot gate go.
       armRecovery(OWNER, () => {
         rolledBack = true;
+        ambient = false;
+        setWaveOn(false);
         intro?.timeline.kill();
         intro?.finish();
         gsap.set(targets, { clearProps: "opacity,visibility" });
@@ -126,6 +198,20 @@ export function Hero() {
     },
     { scope: root },
   );
+
+  // The user's pause control. Remembered across visits.
+  useEffect(() => {
+    userPaused.current = paused;
+    applyPause();
+  });
+
+  const toggle = () => {
+    const next = !paused;
+    setPaused(next);
+    try {
+      localStorage.setItem(PAUSE_KEY, next ? "1" : "0");
+    } catch {}
+  };
 
   return (
     <section ref={root} className="hero wrap blue" aria-labelledby="h" data-motion-owner={OWNER} data-phase="initial">
@@ -169,6 +255,15 @@ export function Hero() {
           <sup>{numberOf("mask")}</sup>
         </span>
       </h1>
+      {/* The ambient wave's exhibit and its pause, just above the rule. Hidden, the row keeps its space, so the headline never shifts. */}
+      <div className="over" hidden={!waveOn}>
+        <span className="lab" data-hero-item data-intro>
+          {numberOf("wave")} Wave
+        </span>
+        <button type="button" className="lab hero-ctl" data-hero-item data-intro onClick={toggle}>
+          {paused ? "Play wave" : "Pause wave"}
+        </button>
+      </div>
       <div className="under">
         <i className="rule" data-rule data-intro aria-hidden="true"></i>
         <p data-sub data-intro>
@@ -189,7 +284,7 @@ export function Hero() {
               </li>
             ))}
           </ol>
-          <button type="button" className="lab hero-ctl" data-hero-control data-intro hidden={!canReplay} aria-label="Replay the headline animation" onClick={() => replay.current()}>
+          <button type="button" className="lab hero-ctl" data-hero-item data-intro hidden={!canReplay} aria-label="Replay the headline animation" onClick={() => replay.current()}>
             Replay
           </button>
         </div>
