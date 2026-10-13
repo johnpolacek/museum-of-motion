@@ -35,7 +35,7 @@ export const heroLeaves = (root: HTMLElement) => parts(root).leaves;
 
 /** Holds a word's layout box at its current width while its type changes width or weight. */
 function pinWidth(el: HTMLElement) {
-  // Layout width, unaffected by resting transforms such as the skew on "can".
+  // Layout width, unaffected by any transform on the element.
   gsap.set(el, { width: parseFloat(getComputedStyle(el).width) });
 }
 
@@ -79,25 +79,26 @@ export function heroIntro(root: HTMLElement): HeroIntro {
     const sup = (key: string, at: number) =>
       tween(p.sup(key), { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: ENTER }, at);
 
-    // Headline words land on the poster's frozen poses, which live in globals.css.
-    // `from` tweens read those resting values, so CSS stays the one source of the pose.
+    // Headline words land as a straight sentence. `from` tweens read the resting values,
+    // so globals.css stays the one source of the rest.
 
-    // 02 Stagger on "Every": letters drop in one after another and land mid-flight, fading as they rise.
+    // 02 Stagger on "Every": letters drop in one after another and bounce to rest.
     const everyChars = p.chars("every");
     land(everyChars, { yPercent: -70, autoAlpha: 0, duration: 0.8, ease: ENTER, stagger: 0.04 }, 0);
     sup("every", 0.85);
 
-    // 30 Hover, its Underline tab, on "way": the word widens from condensed while its underline sweeps in from the start.
+    // 30 Hover, its Underline tab, on "way": the word widens from condensed while a rule sweeps under it and away.
     pinWidth(p.word("way"));
     touched.add(p.word("way"));
     land(p.leaf("way"), { fontStretch: "62%", autoAlpha: 0, duration: 0.8, ease: ENTER }, 0.22);
-    land(p.underline, { scaleX: 0, transformOrigin: "0% 50%", duration: 0.6, ease: "power2.out" }, 0.3);
+    tween(p.underline, { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: 0.45, ease: "power2.out" }, 0.3);
+    tl.to(p.underline, { scaleX: 0, transformOrigin: "100% 50%", duration: 0.35, ease: EXIT }, 0.85);
     sup("way", 1.0);
 
     // "a" has no exhibit. It simply rises.
     land(p.leaf("a"), { yPercent: 40, autoAlpha: 0, duration: 0.6, ease: ENTER }, 0.42);
 
-    // 08 Wave, its Weight tab, on "page": letters arrive hairline and gain weight, each to its own pose weight.
+    // 08 Wave, its Weight tab, on "page": letters arrive hairline and gain weight in a wave.
     const pageChars = p.chars("page");
     // Pinned at resting width so the weight axis moves without reflowing the line.
     for (const c of pageChars) pinWidth(c);
@@ -105,12 +106,12 @@ export function heroIntro(root: HTMLElement): HeroIntro {
     land(pageChars, { fontWeight: 100, autoAlpha: 0, duration: 0.9, ease: ENTER, stagger: 0.08 }, 0.5);
     sup("page", 1.4);
 
-    // 03 Slide on "can": it zips in from the side leaning hard and springs back to its resting lean. The screen's one elastic.
-    land(p.leaf("can"), { xPercent: 60, skewX: -40, duration: 1.0, ease: "elastic.out(1, 0.5)" }, 0.72);
+    // 03 Slide on "can": it zips in from the side leaning hard and springs upright. The screen's one elastic.
+    land(p.leaf("can"), { xPercent: 60, skewX: -30, duration: 1.0, ease: "elastic.out(1, 0.5)" }, 0.72);
     land(p.leaf("can"), { autoAlpha: 0, duration: 0.2, ease: "none" }, 0.72);
     sup("can", 1.45);
 
-    // 01 Mask on "move.": the line rises from behind its mask and holds partway, as on the poster.
+    // 01 Mask on "move.": the line rises from behind its mask.
     land(p.leaf("move"), { yPercent: 110, duration: 0.8, ease: ENTER }, 0.95);
     sup("move", 1.7);
 

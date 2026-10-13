@@ -1,12 +1,12 @@
 // Animaxxing recipe: the wave. Adapted to ripple across several text leaves as one line,
-// with weight moves returning to each letter's pose weight and moves scaled to the font size.
+// with weight moves returning to each letter's resting weight and moves scaled to the font size.
 import { gsap, SplitText, prefersReducedMotion } from "./gsap";
 
 /** Delay between neighbouring letters starting their move. */
 const RIPPLE = 0.03;
 /** Each letter is back at rest this many seconds after it starts. */
 const LETTER_TIME = 0.25;
-/** A letter's resting weight, inherited from its pose (globals.css). */
+/** A letter's resting weight, inherited from its leaf (globals.css). */
 const restWeight = (_: number, el: Element) => getComputedStyle(el.parentElement ?? el).fontWeight;
 
 const rnd = gsap.utils.random;
@@ -31,7 +31,7 @@ function sweep(chars: HTMLElement[], vars: gsap.TweenVars, ease = "power2.inOut"
     .set(chars, { clearProps: "transform,opacity,fontWeight" });
 }
 
-/** Every weight move returns to the letter's own pose weight when its inline weight clears. */
+/** Every weight move returns to the letter's resting weight when its inline weight clears. */
 const MOVES: Move[] = [
   // Hop: each letter lifts and lands.
   (chars) => ripple(chars, { y: (_: number, el: Element) => -0.06 * em(el) }, "power2.out"),
@@ -61,7 +61,7 @@ const MOVES: Move[] = [
 
 /** Pins each letter to its resting width so weight changes cannot reflow the line. */
 function pinWidths(chars: HTMLElement[]): void {
-  // Layout width, not the box on screen: a pose like the skew on "can" would inflate it.
+  // Layout width, not the box on screen: a transform mid-move would inflate it.
   const widths = chars.map((char) => parseFloat(getComputedStyle(char).width));
   chars.forEach((char, i) => {
     char.style.display = "inline-block";

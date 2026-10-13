@@ -178,7 +178,7 @@ export function Hero() {
 
   return (
     <section ref={root} className="hero wrap blue" aria-labelledby="h" data-motion-owner={OWNER} data-phase="initial">
-      {/* Each word performs its numbered exhibit, then rests frozen mid-effect, as on the poster. Poses live in globals.css. */}
+      {/* Each word performs its numbered exhibit, then rests as plain type: a straight sentence. */}
       <h1 id="h" aria-label="Every way a page can move." data-intro>
         <span className="w" data-word="every" aria-hidden="true">
           <span className="t">
