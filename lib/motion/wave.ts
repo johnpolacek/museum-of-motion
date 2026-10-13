@@ -10,7 +10,8 @@ const LETTER_TIME = 0.25;
 const restWeight = (_: number, el: Element) => getComputedStyle(el.parentElement ?? el).fontWeight;
 
 const rnd = gsap.utils.random;
-type Move = (chars: HTMLElement[]) => gsap.core.Timeline;
+/** A named move. The hero shows the name while the move plays. */
+type Move = { name: string; play: (chars: HTMLElement[]) => gsap.core.Timeline };
 
 /** Font size of a letter, so moves scale with the headline from phone to desktop. */
 const em = (el: Element) => parseFloat(getComputedStyle(el).fontSize) || 16;
@@ -33,30 +34,33 @@ function sweep(chars: HTMLElement[], vars: gsap.TweenVars, ease = "power2.inOut"
 
 /** Every weight move returns to the letter's resting weight when its inline weight clears. */
 const MOVES: Move[] = [
-  // Hop: each letter lifts and lands.
-  (chars) => ripple(chars, { y: (_: number, el: Element) => -0.06 * em(el) }, "power2.out"),
-  // Breathe: a swell from the baseline.
-  (chars) => ripple(chars, { scale: 1.07, transformOrigin: "50% 100%" }),
-  // Lean: a nod to the right and back.
-  (chars) => ripple(chars, { rotation: 7, transformOrigin: "50% 100%" }),
-  // Flip: a full turn about the vertical axis.
-  (chars) => sweep(chars, { rotationY: 360, transformOrigin: "50% 50%" }),
-  // Lighten: the weight axis eases down and back.
-  (chars) => ripple(chars, { fontWeight: 400 }),
-  // Hairline: weight drops to the floor while the letter stretches to keep its footprint.
-  (chars) => ripple(chars, { fontWeight: 200, scaleX: 1.14, transformOrigin: "50% 100%" }, "power2.inOut"),
-  // Ink: weight snaps to thin, then fills back in.
-  (chars) =>
-    gsap
-      .timeline({ defaults: { overwrite: "auto" } })
-      .fromTo(chars, { fontWeight: 200 }, { fontWeight: restWeight, duration: LETTER_TIME, ease: "power2.out", stagger: RIPPLE, immediateRender: false })
-      .set(chars, { clearProps: "fontWeight" }),
-  // Shear: a quick italic slant.
-  (chars) => ripple(chars, { skewX: 12 }, "power2.inOut"),
-  // Squash: pressed flat and released.
-  (chars) => ripple(chars, { scaleY: 0.82, transformOrigin: "50% 100%" }, "power2.inOut"),
-  // Twist: each letter swells with its own small twist.
-  (chars) => ripple(chars, { scale: 1.1, rotation: () => rnd(-12, 12), transformOrigin: "50% 50%" }, "power2.inOut"),
+  // Each letter lifts and lands.
+  { name: "Hop", play: (chars) => ripple(chars, { y: (_: number, el: Element) => -0.06 * em(el) }, "power2.out") },
+  // A swell from the baseline.
+  { name: "Breathe", play: (chars) => ripple(chars, { scale: 1.07, transformOrigin: "50% 100%" }) },
+  // A nod to the right and back.
+  { name: "Lean", play: (chars) => ripple(chars, { rotation: 7, transformOrigin: "50% 100%" }) },
+  // A full turn about the vertical axis.
+  { name: "Flip", play: (chars) => sweep(chars, { rotationY: 360, transformOrigin: "50% 50%" }) },
+  // The weight axis eases down and back.
+  { name: "Lighten", play: (chars) => ripple(chars, { fontWeight: 400 }) },
+  // Weight drops to the floor while the letter stretches to keep its footprint.
+  { name: "Hairline", play: (chars) => ripple(chars, { fontWeight: 200, scaleX: 1.14, transformOrigin: "50% 100%" }, "power2.inOut") },
+  // Weight snaps to thin, then fills back in.
+  {
+    name: "Ink",
+    play: (chars) =>
+      gsap
+        .timeline({ defaults: { overwrite: "auto" } })
+        .fromTo(chars, { fontWeight: 200 }, { fontWeight: restWeight, duration: LETTER_TIME, ease: "power2.out", stagger: RIPPLE, immediateRender: false })
+        .set(chars, { clearProps: "fontWeight" }),
+  },
+  // A quick italic slant.
+  { name: "Shear", play: (chars) => ripple(chars, { skewX: 12 }, "power2.inOut") },
+  // Pressed flat and released.
+  { name: "Squash", play: (chars) => ripple(chars, { scaleY: 0.82, transformOrigin: "50% 100%" }, "power2.inOut") },
+  // Each letter swells with its own small twist.
+  { name: "Twist", play: (chars) => ripple(chars, { scale: 1.1, rotation: () => rnd(-12, 12), transformOrigin: "50% 50%" }, "power2.inOut") },
 ];
 
 /** Pins each letter to its resting width so weight changes cannot reflow the line. */
@@ -74,8 +78,15 @@ export type WaveStop = (() => void) & { pause: () => void; resume: () => void };
 
 const noop: WaveStop = Object.assign(() => {}, { pause: () => {}, resume: () => {} });
 
+export type WaveOptions = {
+  /** Seconds between moves. */
+  period?: number;
+  /** Called with a move's name as it starts. */
+  onMove?: (name: string) => void;
+};
+
 /** Starts the wave across `leaves`, in document order. Returns stop, which carries pause and resume. */
-export function startWave(leaves: HTMLElement[], { period = 4.5 } = {}): WaveStop {
+export function startWave(leaves: HTMLElement[], { period = 4.5, onMove }: WaveOptions = {}): WaveStop {
   if (prefersReducedMotion() || !leaves.length) return noop;
   const splits: SplitText[] = [];
   const revert = () => {
@@ -105,7 +116,9 @@ export function startWave(leaves: HTMLElement[], { period = 4.5 } = {}): WaveSto
       index = 0;
     }
     current?.kill();
-    current = move?.(chars);
+    if (!move) return;
+    current = move.play(chars);
+    onMove?.(move.name);
   };
 
   const clock = gsap.delayedCall(period, () => {

@@ -32,6 +32,8 @@ export function Hero() {
   const [canReplay, setCanReplay] = useState(false);
   const [waveOn, setWaveOn] = useState(false);
   const [paused, setPaused] = useState(false);
+  // The wave move in play, or the last one played. Null until the first.
+  const [move, setMove] = useState<string | null>(null);
   const { registerOutro } = useTransitionController();
 
   const applyPause = () => {
@@ -66,7 +68,8 @@ export function Hero() {
 
       const runWave = contextSafe!(() => {
         wave.current?.();
-        wave.current = startWave(heroLeaves(el));
+        setMove(null);
+        wave.current = startWave(heroLeaves(el), { onMove: setMove });
         applyPause();
       });
 
@@ -96,6 +99,7 @@ export function Hero() {
         waveCall?.kill();
         wave.current?.();
         wave.current = null;
+        setMove(null);
         intro?.timeline.kill();
         intro?.finish();
         try {
@@ -255,13 +259,19 @@ export function Hero() {
           <sup>{numberOf("mask")}</sup>
         </span>
       </h1>
-      {/* The ambient wave's exhibit and its pause, just above the rule. Hidden, the row keeps its space, so the headline never shifts. */}
+      {/* The ambient wave's exhibit, its move in play, and its pause, just above the rule. Hidden, the row keeps its space, so the headline never shifts. */}
       <div className="over" hidden={!waveOn}>
         <span className="lab" data-hero-item data-intro>
           {numberOf("wave")} Wave
+          {move && (
+            <>
+              {" "}
+              <span aria-hidden="true">|</span> {move}
+            </>
+          )}
         </span>
-        <button type="button" className="lab hero-ctl" data-hero-item data-intro onClick={toggle}>
-          {paused ? "Play wave" : "Pause wave"}
+        <button type="button" className="lab hero-ctl" data-hero-item data-intro aria-label={paused ? "Play the wave" : "Pause the wave"} onClick={toggle}>
+          {paused ? "Play" : "Pause"}
         </button>
       </div>
       <div className="under">

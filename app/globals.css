@@ -36,8 +36,8 @@ a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 /* Underline sweep. At rest it has swept away. The intro draws it in and out. */
 .us i { position: absolute; left: 0; bottom: 0.02em; width: 100%; height: 0.07em; background: currentColor; transform: scaleX(0); }
 [data-word="page"] .ch { text-align: center; }
-/* The ambient wave's label and its pause sit just above the rule, at the right. */
-.hero .over { display: flex; justify-content: flex-end; align-items: baseline; gap: 22px; padding-bottom: 10px; }
+/* The ambient wave's label and its pause sit just above the rule, at the right. The label names each move, so it changes length: one line, always. */
+.hero .over { display: flex; justify-content: flex-end; align-items: baseline; gap: 22px; padding-bottom: 10px; white-space: nowrap; }
 /* Hidden, the row keeps its space, so the headline holds its place when the wave is off. */
 .hero .over[hidden] { display: flex; visibility: hidden; }
 .hero .under { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--gut); align-items: end; padding-top: 16px; border-top: 1px solid transparent; }
