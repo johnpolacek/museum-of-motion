@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
 import { Archivo, Bowlby_One, Bricolage_Grotesque, Caveat, Cormorant_Garamond, Fraunces, Geist, Geist_Mono, IBM_Plex_Mono, Instrument_Serif, JetBrains_Mono, Jost, Manrope, Space_Grotesk, Unbounded, VT323 } from "next/font/google";
-import { Footer } from "@/components/Footer";
-import { Masthead } from "@/components/Masthead";
-import { TransitionProvider } from "@/components/motion/TransitionProvider";
-import { BOOT_SCRIPT } from "@/lib/motion/boot";
 import { COUNT_WORDS } from "@/lib/exhibits";
 import "./globals.css";
 
@@ -45,15 +41,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${archivo.variable} ${cormorant.variable} ${jost.variable} ${fraunces.variable} ${manrope.variable} ${bricolage.variable} ${geist.variable} ${geistMono.variable} ${vt323.variable} ${jetbrains.variable} ${bowlby.variable} ${plexMono.variable} ${caveat.variable} ${unbounded.variable} ${instrument.variable} ${spaceGrotesk.variable}`} suppressHydrationWarning>
-      <body>
-        {/* Sets the motion marker before content paints. The marker itself is never in server HTML. */}
-        <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
-        <TransitionProvider>
-          <Masthead />
-          {children}
-          <Footer />
-        </TransitionProvider>
-      </body>
+      {/* The museum's frame lives in app/(museum)/layout.tsx. A vibe opened in its own tab has none. */}
+      <body>{children}</body>
     </html>
   );
 }

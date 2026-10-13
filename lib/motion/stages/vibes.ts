@@ -124,7 +124,7 @@ function markup({ brand, links, kicker, head, sub, cta, cards, quote, foot }: Co
     <footer class="v-foot">${foot}</footer>`;
 }
 
-/** One vibe, as an exhibit: the page in a scrolling window, its intro, and a Replay control. */
+/** One vibe, as an exhibit: the page in a scrolling window, its intro, a Replay control, and a link to the page at full size. */
 function vibe(key: string, v: Vibe): StageDef {
   return play([key[0]!.toUpperCase() + key.slice(1)], [key], "Scroll the page. Press the button. Replay to see it arrive again.", (text) =>
     windowed(
@@ -187,7 +187,21 @@ function vibe(key: string, v: Vibe): StageDef {
       start();
     };
     replay.addEventListener("click", again);
-    layer.append(replay);
+    // The page can be seen whole, in a tab of its own. There, the same pill leads back to the exhibit.
+    const full = !!layer.closest(".vibe-full");
+    const open = document.createElement("a");
+    open.className = "pill v-open";
+    open.href = full ? `/exhibits/${key}` : `/vibes/${key}`;
+    open.textContent = full ? "← Exhibit" : "Full page ↗";
+    if (!full) {
+      open.target = "_blank";
+      open.rel = "noopener";
+      open.setAttribute("aria-label", "Full page, opens in a new tab");
+    }
+    const tools = document.createElement("div");
+    tools.className = "v-tools";
+    tools.append(open, replay);
+    layer.append(tools);
     // The nav links go to the vibe's own sections, moving the way the vibe moves.
     const links = all(win, ".v-links a");
     const goes = links.map((a, i) => {
@@ -201,7 +215,7 @@ function vibe(key: string, v: Vibe): StageDef {
     return [
       () => {
         replay.removeEventListener("click", again);
-        replay.remove();
+        tools.remove();
         goes.forEach((off) => off());
       },
       ...v.wire(page, layer),

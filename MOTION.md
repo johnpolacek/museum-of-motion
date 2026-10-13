@@ -52,6 +52,8 @@ Exits are roughly half as long as entrances.
 
 **Exhibit page.** The title widens into place. The stage plays its exhibit. Specs and labels rise in quickly.
 
+**Vibe, full page.** A vibe opens in its own tab at `/vibes/[slug]`, filling the window with no masthead or footer. It is the same page as in the exhibit's stage, with the same intro, Replay, and reduced-motion behavior. No page transition: it is a separate document.
+
 **Page transitions.** Outgoing display type squeezes and drops behind masks. Incoming display type stretches up with the signature bounce. The blue field never flashes white between pages.
 
 ## Rules

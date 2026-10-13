@@ -40,6 +40,7 @@ Then open [localhost:3000](http://localhost:3000). For a production build, `pnpm
 
 ## Where things live
 
+- `app/(museum)/`: the museum's pages, inside its masthead and footer. `app/vibes/[slug]` shows one vibe at full size, with no frame.
 - `lib/exhibits.ts`: every exhibit, its group, builders, and description.
 - `lib/motion/`: page motion (hero, collection, exhibit pages, transitions) and the recipe builders from the skills.
 - `lib/motion/stages/`: each exhibit's stage.

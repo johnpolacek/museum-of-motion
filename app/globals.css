@@ -560,7 +560,16 @@ html[data-motion-boot="pending"] [data-motion-owner][data-phase="initial"] [data
 .ex .win.vibe .v-quote { min-height: 80cqh; display: grid; place-items: center; padding: 40px 24px; }
 .ex .win.vibe .v-quote p { font-size: clamp(28px, 5.5cqw, 60px); line-height: 1.1; max-width: 18ch; text-align: center; }
 .ex .win.vibe .v-foot { padding: 28px 24px 40px; font-size: 13px; color: var(--v-muted); }
-.ex .stage-art .v-replay { position: absolute; right: 12px; bottom: 12px; z-index: 3; background: rgb(11 11 11 / 0.72); color: #fff; border-color: transparent; }
+/* The window's own controls, over the page: the full-page link and Replay. */
+.ex .stage-art .v-tools { position: absolute; right: 12px; bottom: 12px; z-index: 3; display: flex; gap: 8px; }
+.ex .stage-art .v-tools .pill { background: rgb(11 11 11 / 0.72); color: #fff; border-color: transparent; white-space: nowrap; }
+.ex .stage-art .v-tools .pill:focus-visible { outline: 2px solid #fff; outline-offset: 2px; box-shadow: 0 0 0 4px rgb(11 11 11 / 0.72); }
+/* A vibe in its own tab: the same window, filling the viewport, outside the museum's frame. */
+.ex.vibe-full { height: 100vh; height: 100dvh; padding: 0; display: block; }
+.ex.vibe-full .stage, .ex.vibe-full .stage:has(.win.vibe) { height: 100%; min-height: 0; padding: 0; border: 0; }
+.ex.vibe-full .stage > h1 { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.ex.vibe-full .stage noscript p { margin: 0; padding: var(--gut); font-size: 18px; }
+.ex.vibe-full .stage noscript a { border-bottom: 1px solid #fff; }
 .ex .stage-art .v-burst { position: absolute; inset: 0; z-index: 2; overflow: hidden; pointer-events: none; }
 .ex .stage-art .v-burst > * { position: absolute; left: 0; top: 0; }
 .ex .stage-art .v-burst .confetto { display: block; width: 10px; height: 14px; }
