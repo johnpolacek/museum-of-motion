@@ -5,8 +5,8 @@
 import { useEffect, useRef, useState } from "react";
 import { finished, fontsReady, gsap, prefersReducedMotion, useGSAP } from "@/lib/motion/gsap";
 import { armRecovery, claimVisit, disarm, handOff } from "@/lib/motion/boot";
-import { heroIntro, heroLeaves, heroOutro, type HeroIntro } from "@/lib/motion/hero";
-import { startWave, type WaveStop } from "@/lib/motion/wave";
+import { heroIntro, heroLeaves, heroOutro, waveNamer, type HeroIntro } from "@/lib/motion/hero";
+import { MOVE_NAMES, startWave, type WaveStop } from "@/lib/motion/wave";
 import { cueWordmark } from "@/lib/motion/events";
 import { useTransitionController } from "./motion/TransitionProvider";
 import { COUNT_WORDS, numberOf } from "@/lib/exhibits";
@@ -66,10 +66,16 @@ export function Hero() {
 
       const targets = Array.from(el.querySelectorAll<HTMLElement>("[data-intro]"));
 
+      // The label names each move as it starts. Null clears it.
+      const namer = waveNamer(el);
+      const showMove = contextSafe!((name: string | null) => {
+        setMove(name);
+        namer(name);
+      });
+
       const runWave = contextSafe!(() => {
         wave.current?.();
-        setMove(null);
-        wave.current = startWave(heroLeaves(el), { onMove: setMove });
+        wave.current = startWave(heroLeaves(el), { onMove: showMove });
         applyPause();
       });
 
@@ -99,7 +105,7 @@ export function Hero() {
         waveCall?.kill();
         wave.current?.();
         wave.current = null;
-        setMove(null);
+        showMove(null);
         intro?.timeline.kill();
         intro?.finish();
         try {
@@ -262,16 +268,26 @@ export function Hero() {
       {/* The ambient wave's exhibit, its move in play, and its pause, just above the rule. Hidden, the row keeps its space, so the headline never shifts. */}
       <div className="over" hidden={!waveOn}>
         <span className="lab" data-hero-item data-intro>
-          {numberOf("wave")} Wave
-          {move && (
-            <>
-              {" "}
-              <span aria-hidden="true">|</span> {move}
-            </>
-          )}
+          {numberOf("wave")} Wave{" "}
+          {/* Every name, stacked in one cell sized to the longest. Only the move in play shows. */}
+          <span className="mvw" aria-hidden="true">
+            <i data-move-bar>|</i>{" "}
+            <span className="mvs">
+              {MOVE_NAMES.map((name) => (
+                <span key={name} data-move={name}>
+                  {[...name].map((c, i) => (
+                    <span key={i}>{c}</span>
+                  ))}
+                </span>
+              ))}
+            </span>
+          </span>
+          <span className="sr">{move}</span>
         </span>
-        <button type="button" className="lab hero-ctl" data-hero-item data-intro aria-label={paused ? "Play the wave" : "Pause the wave"} onClick={toggle}>
-          {paused ? "Play" : "Pause"}
+        {/* Both words stacked, so the button keeps one width and the label beside it holds still. */}
+        <button type="button" className="lab hero-ctl swap" data-hero-item data-intro aria-label={paused ? "Play the wave" : "Pause the wave"} onClick={toggle}>
+          <span hidden={paused}>Pause</span>
+          <span hidden={!paused}>Play</span>
         </button>
       </div>
       <div className="under">

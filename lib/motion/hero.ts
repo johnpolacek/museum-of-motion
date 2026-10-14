@@ -140,6 +140,56 @@ export function heroIntro(root: HTMLElement, { replay = false } = {}): HeroIntro
 }
 
 /**
+ * The wave label's move name. The old name squeezes and drops behind the slot's mask, then the new one
+ * stretches up from the baseline and gains weight, letter by letter. The bar arrives with the first name
+ * and leaves with the last. Every name sits stacked in one cell sized to the longest, so "08 Wave |" holds still.
+ */
+export function waveNamer(root: HTMLElement): (name: string | null) => void {
+  const bar = root.querySelector<HTMLElement>("[data-move-bar]")!;
+  const names = new Map(Array.from(root.querySelectorAll<HTMLElement>("[data-move]")).map((el) => [el.dataset.move!, el]));
+  const letters = (el: HTMLElement) => Array.from(el.children) as HTMLElement[];
+  let shown: HTMLElement | null = null;
+  let pinned = false;
+  let tl: gsap.core.Timeline | undefined;
+
+  return (name) => {
+    const next = (name && names.get(name)) || null;
+    // A swap still in flight lands at once, so the next one starts from rest.
+    tl?.progress(1);
+    if (next === shown) return;
+    const prev = shown;
+    shown = next;
+    if (prefersReducedMotion()) {
+      if (prev) gsap.set(prev, { visibility: "hidden" });
+      gsap.set(bar, { visibility: next ? "inherit" : "hidden" });
+      if (next) gsap.set(next, { visibility: "inherit" });
+      return;
+    }
+    if (!pinned) {
+      // The bar and each letter keep their resting widths, so the weight and width axes never move "08 Wave".
+      // Exact widths, set directly: the computed style's string and GSAP's pixel rounding would each shift the label a fraction.
+      // Nothing is transformed yet, so the box is the resting width.
+      for (const c of [bar, ...[...names.values()].flatMap(letters)]) c.style.width = `${c.getBoundingClientRect().width}px`;
+      pinned = true;
+    }
+    tl = gsap.timeline({ defaults: { overwrite: "auto" } });
+    if (prev) {
+      const out = next ? letters(prev) : [bar, ...letters(prev)];
+      tl.to(out, { fontStretch: "62%", yPercent: 110, duration: 0.28, ease: EXIT, stagger: 0.02 }, 0)
+        .set(next ? prev : [prev, bar], { visibility: "hidden" })
+        .set(out, { clearProps: "transform,fontStretch" });
+    }
+    if (next) {
+      const arrive = prev ? letters(next) : [bar, ...letters(next)];
+      const at = prev ? 0.2 : 0;
+      tl.set(prev ? next : [next, bar], { visibility: "inherit" }, 0)
+        .from(arrive, { scaleY: 0, fontWeight: 300, transformOrigin: "50% 100%", duration: 0.4, ease: ENTER, stagger: 0.04, immediateRender: true }, at)
+        .set(arrive, { clearProps: "transform,transformOrigin,fontWeight" });
+    }
+  };
+}
+
+/**
  * The outro, from whatever values are on screen now (settled, or mid-intro).
  * Display type squeezes to condensed and drops behind a mask. UI leaves first.
  */

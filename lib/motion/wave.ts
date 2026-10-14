@@ -63,6 +63,9 @@ const MOVES: Move[] = [
   { name: "Twist", play: (chars) => ripple(chars, { scale: 1.1, rotation: () => rnd(-12, 12), transformOrigin: "50% 50%" }, "power2.inOut") },
 ];
 
+/** Every move's name, in a fixed order. The hero's label stacks them all to size its slot. */
+export const MOVE_NAMES = MOVES.map((move) => move.name);
+
 /** Pins each letter to its resting width so weight changes cannot reflow the line. */
 function pinWidths(chars: HTMLElement[]): void {
   // Layout width, not the box on screen: a transform mid-move would inflate it.
