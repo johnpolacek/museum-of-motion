@@ -84,12 +84,14 @@ const noop: WaveStop = Object.assign(() => {}, { pause: () => {}, resume: () => 
 export type WaveOptions = {
   /** Seconds between moves. */
   period?: number;
+  /** Seconds before the first move. Defaults to `period`. */
+  first?: number;
   /** Called with a move's name as it starts. */
   onMove?: (name: string) => void;
 };
 
 /** Starts the wave across `leaves`, in document order. Returns stop, which carries pause and resume. */
-export function startWave(leaves: HTMLElement[], { period = 4.5, onMove }: WaveOptions = {}): WaveStop {
+export function startWave(leaves: HTMLElement[], { period = 4.5, first = period, onMove }: WaveOptions = {}): WaveStop {
   if (prefersReducedMotion() || !leaves.length) return noop;
   const splits: SplitText[] = [];
   const revert = () => {
@@ -124,9 +126,9 @@ export function startWave(leaves: HTMLElement[], { period = 4.5, onMove }: WaveO
     onMove?.(move.name);
   };
 
-  const clock = gsap.delayedCall(period, () => {
+  const clock = gsap.delayedCall(first, () => {
     wave();
-    clock.restart(true);
+    clock.delay(period).restart(true);
   });
 
   let stopped = false;

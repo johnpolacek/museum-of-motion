@@ -4,7 +4,7 @@
 // Its wordmark performs last, a letter-by-letter tour of the collection.
 import { useRef } from "react";
 import { fontsReady, gsap, prefersReducedMotion, useGSAP } from "@/lib/motion/gsap";
-import { wordmarkCue } from "@/lib/motion/events";
+import { markWordmarkDone, wordmarkCue } from "@/lib/motion/events";
 import { wordmarkTour, type WordmarkTour } from "@/lib/motion/wordmark";
 import { armRecovery, claimVisit, disarm, handOff } from "@/lib/motion/boot";
 import { collectionTargets, glideTo } from "@/lib/motion/home-nav";
@@ -40,6 +40,8 @@ export function Masthead() {
         tour?.finish();
         gsap.set([leaf, ...links], { clearProps: "opacity,visibility,transform" });
         el.dataset.phase = "settled";
+        // The hero's wave waits for this, so the two never perform at once.
+        markWordmarkDone();
       };
       if (visit.current === "settle" || prefersReducedMotion()) {
         settle();

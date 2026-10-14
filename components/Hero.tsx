@@ -7,12 +7,14 @@ import { finished, fontsReady, gsap, prefersReducedMotion, useGSAP } from "@/lib
 import { armRecovery, claimVisit, disarm, handOff } from "@/lib/motion/boot";
 import { heroIntro, heroLeaves, heroOutro, waveNamer, type HeroIntro } from "@/lib/motion/hero";
 import { MOVE_NAMES, startWave, type WaveStop } from "@/lib/motion/wave";
-import { cueWordmark } from "@/lib/motion/events";
+import { cueWordmark, wordmarkDone } from "@/lib/motion/events";
 import { useTransitionController } from "./motion/TransitionProvider";
 import { COUNT_WORDS, numberOf } from "@/lib/exhibits";
 
 const OWNER = "hero";
 const PAUSE_KEY = "mom:wave-paused";
+/** Seconds the headline rests between landing, or the wordmark finishing, and the wave's first move. */
+const FIRST_MOVE = 1;
 
 function readPaused(): boolean {
   try {
@@ -54,7 +56,8 @@ export function Hero() {
       let rolledBack = false;
       let intro: HeroIntro | null = null;
       let io: IntersectionObserver | null = null;
-      let waveCall: gsap.core.Tween | null = null;
+      // Counts wave starts. A Replay or the outro bumps it, so a start still waiting on the wordmark is dropped.
+      let waveGen = 0;
       let lastWidth = window.innerWidth;
       let resizeTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -73,9 +76,9 @@ export function Hero() {
         namer(name);
       });
 
-      const runWave = contextSafe!(() => {
+      const runWave = contextSafe!((first?: number) => {
         wave.current?.();
-        wave.current = startWave(heroLeaves(el), { onMove: showMove });
+        wave.current = startWave(heroLeaves(el), { first, onMove: showMove });
         applyPause();
       });
 
@@ -86,10 +89,14 @@ export function Hero() {
         cueWordmark();
         if (!ambient) return;
         // The wave's split waits until the wordmark tour is done, so the two never share a frame's work.
-        waveCall?.kill();
-        waveCall = gsap.delayedCall(2.4, () => {
-          if (alive && el.dataset.phase === "settled") runWave();
-        });
+        // After that, or after a Replay, the first move comes a beat after the headline rests.
+        const gen = ++waveGen;
+        wordmarkDone(4000).then(() =>
+          // A frame after the wordmark's own cleanup.
+          requestAnimationFrame(() => {
+            if (alive && gen === waveGen && el.dataset.phase === "settled") runWave(FIRST_MOVE);
+          }),
+        );
         if (io) return;
         io = new IntersectionObserver(([entry]) => {
           offscreen.current = !entry.isIntersecting;
@@ -102,7 +109,7 @@ export function Hero() {
       replay.current = contextSafe!(() => {
         const phase = el.dataset.phase;
         if (!alive || reduced || !(phase === "settled" || (phase === "intro" && intro))) return;
-        waveCall?.kill();
+        waveGen++;
         wave.current?.();
         wave.current = null;
         showMove(null);
