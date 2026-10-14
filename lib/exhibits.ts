@@ -141,7 +141,10 @@ const DATA: Exhibit[] = [
       "Hop",
       "Breathe",
       "Lean",
+      "Flip",
       "Lighten",
+      "Hairline",
+      "Ink",
       "Shear",
       "Squash",
       "Twist"

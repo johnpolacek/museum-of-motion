@@ -475,14 +475,23 @@ const WAVE_MOVES: Record<string, Move> = {
   breathe: () => ({ scale: 1.07, transformOrigin: "50% 100%" }),
   lean: () => ({ rotation: 7, transformOrigin: "50% 100%" }),
   lighten: () => ({ fontWeight: 100 }),
+  // Weight drops to the floor while the letter stretches to keep its footprint.
+  hairline: () => ({ fontWeight: 100, scaleX: 1.14, transformOrigin: "50% 100%", ease: "power2.inOut" }),
   shear: () => ({ skewX: 12, ease: "power2.inOut" }),
   squash: () => ({ scaleY: 0.82, transformOrigin: "50% 100%", ease: "power2.inOut" }),
   twist: () => ({ scale: 1.1, rotation: () => rnd(-12, 12), transformOrigin: "50% 50%", ease: "power2.inOut" }),
 };
-const WAVE_KEYS = Object.keys(WAVE_MOVES);
+type Sweep = (rest: number) => [from: gsap.TweenVars, to: gsap.TweenVars];
+/** Moves that run one way, from a fixed start: a full turn, and weight snapping thin then filling back in. */
+const WAVE_SWEEPS: Record<string, Sweep> = {
+  flip: () => [{ rotationY: 0 }, { rotationY: 360, transformOrigin: "50% 50%", ease: "power2.inOut" }],
+  ink: (rest) => [{ fontWeight: 100 }, { fontWeight: rest, ease: "power2.out" }],
+};
+/** The hero's order, so the tabs read as the headline's wave does. */
+const WAVE_KEYS = ["hop", "breathe", "lean", "flip", "lighten", "hairline", "ink", "shear", "squash", "twist"];
 
 export const letterWave = def(
-  ["All", "Hop", "Breathe", "Lean", "Lighten", "Shear", "Squash", "Twist"],
+  ["All", "Hop", "Breathe", "Lean", "Flip", "Lighten", "Hairline", "Ink", "Shear", "Squash", "Twist"],
   ["all", ...WAVE_KEYS],
   ["duration", "stagger", "hold"],
   { duration: 0.25, stagger: 0.03, hold: 1, ease: "sine.inOut" },
@@ -491,13 +500,21 @@ export const letterWave = def(
     const chars = split(text, { type: "words,chars" }, splits).chars as HTMLElement[];
     pinWidths(chars);
     const em = parseFloat(getComputedStyle(text).fontSize) || 16;
+    const rest = Number(getComputedStyle(text).fontWeight) || 400;
     const keys = p.variation === "all" ? WAVE_KEYS : [p.variation];
     const pass = p.duration + p.stagger * (chars.length - 1);
     return assemble(text, p, splits, {
       enter: (tl) => {
         keys.forEach((key, i) => {
           const at = i * (pass + p.hold);
-          const { ease, ...vars } = WAVE_MOVES[key](chars, p, em);
+          const sweep = WAVE_SWEEPS[key];
+          if (sweep) {
+            // One way per letter, over the same time an out-and-back takes.
+            const [from, { ease, ...to }] = sweep(rest);
+            tl.fromTo(chars, from, { ...to, duration: p.duration, ease: (ease as string) ?? p.ease, stagger: p.stagger }, at);
+            return;
+          }
+          const { ease, ...vars } = WAVE_MOVES[key]!(chars, p, em);
           // Out and back per letter: repeat and yoyo inside the stagger, so each letter turns on its own beat.
           tl.to(chars, { ...vars, duration: p.duration / 2, ease: (ease as string) ?? p.ease, stagger: { each: p.stagger, yoyo: true, repeat: 1 } }, at);
         });
